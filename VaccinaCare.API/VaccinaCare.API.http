@@ -1,0 +1,6 @@
+@VaccinaCare.API_HostAddress = http://localhost:5027
+
+GET {{VaccinaCare.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
