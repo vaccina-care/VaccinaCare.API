@@ -1,4 +1,13 @@
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
+{
+    Args = args,
+    WebRootPath = "wwwroot",
+    ApplicationName = "VaccinaCare.API",
+    ContentRootPath = AppContext.BaseDirectory,
+    // Chỉ cần dòng sau để app bind đúng khi chạy trong Docker
+    EnvironmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
+});
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
 // Add services to the container.
 
@@ -13,10 +22,15 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "VaccinaCare API v1");
+        c.RoutePrefix = string.Empty; // Để Swagger UI ở root (http://localhost:5000)
+    });
+
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseAuthorization();
 

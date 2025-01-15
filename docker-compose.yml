@@ -1,0 +1,10 @@
+services:
+  vaccina-care-api:
+    build:
+      context: ./VaccinaCare.API
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000" # Chỉ để HTTP
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    restart: always

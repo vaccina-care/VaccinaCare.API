@@ -1,26 +1,22 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-USER $APP_UID
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
+# Sử dụng .NET SDK để build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["VaccinaCare.API/VaccinaCare.API.csproj", "VaccinaCare.API/"]
-COPY ["VaccinaCare.Application/VaccinaCare.Application.csproj", "VaccinaCare.Application/"]
-COPY ["VaccinaCare.Repository/VaccinaCare.Repository.csproj", "VaccinaCare.Repository/"]
-COPY ["VaccinaCare.Domain/VaccinaCare.Domain.csproj", "VaccinaCare.Domain/"]
-RUN dotnet restore "VaccinaCare.API/VaccinaCare.API.csproj"
-COPY . .
-WORKDIR "/src/VaccinaCare.API"
-RUN dotnet build "VaccinaCare.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "VaccinaCare.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
-
-FROM base AS final
 WORKDIR /app
-COPY --from=publish /app/publish .
+
+# Copy file csproj vào container để build
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy toàn bộ source code và build
+COPY . ./
+RUN dotnet publish -c Release -o out
+
+# Sử dụng .NET runtime để chạy app
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/out .
+
+# Set cổng chạy app
+EXPOSE 5000
+EXPOSE 5001
+
 ENTRYPOINT ["dotnet", "VaccinaCare.API.dll"]
