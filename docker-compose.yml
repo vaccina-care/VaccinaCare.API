@@ -1,8 +1,11 @@
+version: '3.8'
+
 services:
   vaccina-care-api:
     build:
       context: ./VaccinaCare.API
       dockerfile: Dockerfile
+    image: phuctran362003/vaccina-care:latest # Đặt đúng tên repository
     ports:
       - "5000:5000" # Chỉ để HTTP
     environment:
