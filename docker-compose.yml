@@ -27,3 +27,9 @@ services:
 
 volumes:
   sql_data:
+
+
+# login sql server sau khi chạy docker-compose up --build
+# server: localhost,1433 ( ! lưu ý là dấu phẩy )
+# login: sa
+# password: YourStrongPassword123
