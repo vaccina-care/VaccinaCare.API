@@ -1,13 +1,29 @@
-version: '3.8'
-
 services:
-  vaccina-care-api:
+  vaccinacareapi:
     build:
       context: ./VaccinaCare.API
       dockerfile: Dockerfile
-    image: phuctran362003/vaccina-care:latest # Đặt đúng tên repository
+    image: phuctran362003/vaccina-care:latest
     ports:
-      - "5000:5000" # Chỉ để HTTP
+      - "5000:5000"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=vaccinacareapi-database,1433;Database=VaccinaCareDB;User Id=sa;Password=YourStrongPassword123;
+    depends_on:
+      - vaccinacareapi-database
     restart: always
+
+  vaccinacareapi-database:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: vaccinacareapi-database
+    ports:
+      - "1433:1433"
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrongPassword123
+    restart: always
+    volumes:
+      - sql_data:/var/opt/mssql
+
+volumes:
+  sql_data:
