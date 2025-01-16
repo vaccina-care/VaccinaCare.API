@@ -22,7 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
+    <Folder Include="DTOs\AuthDTO\" />
+    <Folder Include="DTOs\UserDTO\" />
     <Folder Include="Enums\" />
   </ItemGroup>
 
