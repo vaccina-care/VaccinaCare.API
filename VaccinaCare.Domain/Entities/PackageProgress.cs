@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class PackageProgress
+public partial class PackageProgress : BaseEntity
 {
-    public int ProgressId { get; set; }
 
     public int? ParentId { get; set; }
 

@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class CancellationPolicy
+public partial class CancellationPolicy : BaseEntity
 {
-    public int PolicyId { get; set; }
 
     public string? PolicyName { get; set; }
 

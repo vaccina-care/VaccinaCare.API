@@ -1,35 +1,10 @@
 services:
-  vaccinacareapi:
+  vaccinacare.api:
+    image: ${DOCKER_REGISTRY-}vaccinacareapi
     build:
-      context: ./VaccinaCare.API
-      dockerfile: Dockerfile
-    image: phuctran362003/vaccina-care:latest
-    ports:
-      - "5000:5000"
+      context: .
+      dockerfile: VaccinaCare.API/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=vaccinacareapi-database,1433;Database=VaccinaCareDB;User Id=sa;Password=YourStrongPassword123;
-    depends_on:
-      - vaccinacareapi-database
-    restart: always
+      - "ConnectionStrings__DefaultConnection=Host=goodsdesignapi-database;Port=5432;Database=goodsdesignapi;Username=postgres;Password=YourStrong!Passw0rd;"
 
-  vaccinacareapi-database:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    container_name: vaccinacareapi-database
-    ports:
-      - "1433:1433"
-    environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourStrongPassword123
-    restart: always
-    volumes:
-      - sql_data:/var/opt/mssql
-
-volumes:
-  sql_data:
-
-
-# login sql server sau khi chạy docker-compose up --build
-# server: localhost,1433 ( ! lưu ý là dấu phẩy )
-# login: sa
-# password: YourStrongPassword123

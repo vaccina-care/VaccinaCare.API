@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class Payment
+public partial class Payment : BaseEntity
 {
-    public int PaymentId { get; set; }
 
     public int? AppointmentId { get; set; }
 

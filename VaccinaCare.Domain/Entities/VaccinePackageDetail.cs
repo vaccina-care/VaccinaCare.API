@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class VaccinePackageDetail
+public partial class VaccinePackageDetail : BaseEntity
 {
-    public int PackageDetailId { get; set; }
 
     public int? PackageId { get; set; }
 

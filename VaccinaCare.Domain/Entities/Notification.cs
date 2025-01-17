@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class Notification
+public partial class Notification : BaseEntity
 {
-    public int NotificationId { get; set; }
 
     public int? AppointmentId { get; set; }
 

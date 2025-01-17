@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class ServiceAvailability
+public partial class ServiceAvailability : BaseEntity
 {
-    public int AvailabilityId { get; set; }
 
     public int? ServiceId { get; set; }
 

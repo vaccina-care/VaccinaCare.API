@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class VaccineSuggestion
+public partial class VaccineSuggestion : BaseEntity
 {
-    public int SuggestionId { get; set; }
-
     public int? ChildId { get; set; }
 
     public int? ServiceId { get; set; }

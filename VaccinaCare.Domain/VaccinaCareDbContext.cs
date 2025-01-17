@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Domain;
@@ -56,9 +54,9 @@ public partial class VaccinaCareDbContext : DbContext
     {
         modelBuilder.Entity<Appointment>(entity =>
         {
-            entity.HasKey(e => e.AppointmentId).HasName("PK__Appointm__8ECDFCA21C61A137");
+            entity.HasKey(e => e.Id).HasName("PK__Appointm__8ECDFCA21C61A137");
 
-            entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
+            entity.Property(e => e.Id).HasColumnName("AppointmentID");
             entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
             entity.Property(e => e.CancellationReason).HasColumnType("text");
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
@@ -74,9 +72,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<AppointmentsService>(entity =>
         {
-            entity.HasKey(e => e.AppointmentServiceId).HasName("PK__Appointm__3B38F27613FAC7C2");
+            entity.HasKey(e => e.Id).HasName("PK__Appointm__3B38F27613FAC7C2");
 
-            entity.Property(e => e.AppointmentServiceId).HasColumnName("AppointmentServiceID");
+            entity.Property(e => e.Id).HasColumnName("AppointmentServiceID");
             entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
             entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
@@ -92,9 +90,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<CancellationPolicy>(entity =>
         {
-            entity.HasKey(e => e.PolicyId).HasName("PK__Cancella__2E13394436566048");
+            entity.HasKey(e => e.Id).HasName("PK__Cancella__2E13394436566048");
 
-            entity.Property(e => e.PolicyId).HasColumnName("PolicyID");
+            entity.Property(e => e.Id).HasColumnName("PolicyID");
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.PenaltyFee).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PolicyName).HasMaxLength(255);
@@ -102,9 +100,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Child>(entity =>
         {
-            entity.HasKey(e => e.ChildId).HasName("PK__Children__BEFA0736B495D423");
+            entity.HasKey(e => e.Id).HasName("PK__Children__BEFA0736B495D423");
 
-            entity.Property(e => e.ChildId).HasColumnName("ChildID");
+            entity.Property(e => e.Id).HasColumnName("ChildID");
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.Gender).HasMaxLength(255);
             entity.Property(e => e.MedicalHistory).HasColumnType("text");
@@ -113,20 +111,20 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Feedback>(entity =>
         {
-            entity.HasKey(e => e.FeedbackId).HasName("PK__Feedback__6A4BEDF6FC881C6D");
+            entity.HasKey(e => e.Id).HasName("PK__Feedback__6A4BEDF6FC881C6D");
 
             entity.ToTable("Feedback");
 
-            entity.Property(e => e.FeedbackId).HasColumnName("FeedbackID");
+            entity.Property(e => e.Id).HasColumnName("FeedbackID");
             entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
             entity.Property(e => e.Comments).HasColumnType("text");
         });
 
         modelBuilder.Entity<Invoice>(entity =>
         {
-            entity.HasKey(e => e.InvoiceId).HasName("PK__Invoices__D796AAD503D01278");
+            entity.HasKey(e => e.Id).HasName("PK__Invoices__D796AAD503D01278");
 
-            entity.Property(e => e.InvoiceId).HasColumnName("InvoiceID");
+            entity.Property(e => e.Id).HasColumnName("InvoiceID");
             entity.Property(e => e.PaymentId).HasColumnName("PaymentID");
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.UserId).HasColumnName("UserID");
@@ -142,9 +140,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.NotificationId).HasName("PK__Notifica__20CF2E321E0C5AD9");
+            entity.HasKey(e => e.Id).HasName("PK__Notifica__20CF2E321E0C5AD9");
 
-            entity.Property(e => e.NotificationId).HasColumnName("NotificationID");
+            entity.Property(e => e.Id).HasColumnName("NotificationID");
             entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
             entity.Property(e => e.Message).HasColumnType("text");
             entity.Property(e => e.ReadStatus).HasMaxLength(255);
@@ -156,11 +154,11 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<PackageProgress>(entity =>
         {
-            entity.HasKey(e => e.ProgressId).HasName("PK__PackageP__BAE29C85940767EF");
+            entity.HasKey(e => e.Id).HasName("PK__PackageP__BAE29C85940767EF");
 
             entity.ToTable("PackageProgress");
 
-            entity.Property(e => e.ProgressId).HasColumnName("ProgressID");
+            entity.Property(e => e.Id).HasColumnName("ProgressID");
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
             entity.Property(e => e.PackageId).HasColumnName("PackageID");
             entity.Property(e => e.ParentId).HasColumnName("ParentID");
@@ -180,9 +178,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.PaymentId).HasName("PK__Payments__9B556A5845D2C0DA");
+            entity.HasKey(e => e.Id).HasName("PK__Payments__9B556A5845D2C0DA");
 
-            entity.Property(e => e.PaymentId).HasColumnName("PaymentID");
+            entity.Property(e => e.Id).HasColumnName("PaymentID");
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.AppointmentId).HasColumnName("AppointmentID");
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
@@ -190,17 +188,17 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__Roles__8AFACE3A24D2CA60");
+            entity.HasKey(e => e.Id).HasName("PK__Roles__8AFACE3A24D2CA60");
 
-            entity.Property(e => e.RoleId).HasColumnName("RoleID");
+            entity.Property(e => e.Id).HasColumnName("RoleID");
             entity.Property(e => e.RoleName).HasMaxLength(255);
         });
 
         modelBuilder.Entity<Service>(entity =>
         {
-            entity.HasKey(e => e.ServiceId).HasName("PK__Services__C51BB0EAC48FC5F7");
+            entity.HasKey(e => e.Id).HasName("PK__Services__C51BB0EAC48FC5F7");
 
-            entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
+            entity.Property(e => e.Id).HasColumnName("ServiceID");
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.PicUrl).HasMaxLength(255);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
@@ -210,11 +208,10 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<ServiceAvailability>(entity =>
         {
-            entity.HasKey(e => e.AvailabilityId).HasName("PK__ServiceA__DA3979916362444E");
+            entity.HasKey(e => e.Id).HasName("PK__ServiceA__DA3979916362444E");
 
             entity.ToTable("ServiceAvailability");
-
-            entity.Property(e => e.AvailabilityId).HasColumnName("AvailabilityID");
+            entity.Property(e => e.Id).HasColumnName("AvailabilityID");
             entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
             entity.Property(e => e.TimeSlot).HasMaxLength(255);
 
@@ -223,13 +220,14 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasConstraintName("FK__ServiceAv__Servi__5AEE82B9");
         });
 
+
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.UserId).HasName("PK__Users__1788CCACCB8B101C");
+            entity.HasKey(e => e.Id).HasName("PK__Users__1788CCACCB8B101C");
 
             entity.HasIndex(e => e.Email, "UQ__Users__A9D10534C392CBE6").IsUnique();
 
-            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.Id).HasColumnName("UserID");
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
@@ -239,9 +237,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<UsersVaccinationService>(entity =>
         {
-            entity.HasKey(e => e.UserServiceId).HasName("PK__UsersVac__C737CAF988A390FD");
+            entity.HasKey(e => e.Id).HasName("PK__UsersVac__C737CAF988A390FD");
 
-            entity.Property(e => e.UserServiceId).HasColumnName("UserServiceID");
+            entity.Property(e => e.Id).HasColumnName("UserServiceID");
             entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
             entity.Property(e => e.UserId).HasColumnName("UserID");
 
@@ -256,9 +254,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<VaccinationRecord>(entity =>
         {
-            entity.HasKey(e => e.RecordId).HasName("PK__Vaccinat__FBDF78C9C662C0AA");
+            entity.HasKey(e => e.Id).HasName("PK__Vaccinat__FBDF78C9C662C0AA");
 
-            entity.Property(e => e.RecordId).HasColumnName("RecordID");
+            entity.Property(e => e.Id).HasColumnName("RecordID");
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
             entity.Property(e => e.ReactionDetails).HasColumnType("text");
             entity.Property(e => e.VaccinationDate).HasColumnType("datetime");
@@ -266,9 +264,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<VaccinePackage>(entity =>
         {
-            entity.HasKey(e => e.PackageId).HasName("PK__VaccineP__322035EC4EC08B28");
+            entity.HasKey(e => e.Id).HasName("PK__VaccineP__322035EC4EC08B28");
 
-            entity.Property(e => e.PackageId).HasColumnName("PackageID");
+            entity.Property(e => e.Id).HasColumnName("PackageID");
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.PackageName).HasMaxLength(255);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
@@ -276,9 +274,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<VaccinePackageDetail>(entity =>
         {
-            entity.HasKey(e => e.PackageDetailId).HasName("PK__VaccineP__A7D8258AB9F62DF6");
+            entity.HasKey(e => e.Id).HasName("PK__VaccineP__A7D8258AB9F62DF6");
 
-            entity.Property(e => e.PackageDetailId).HasColumnName("PackageDetailID");
+            entity.Property(e => e.Id).HasColumnName("PackageDetailID");
             entity.Property(e => e.PackageId).HasColumnName("PackageID");
             entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
 
@@ -293,9 +291,9 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<VaccineSuggestion>(entity =>
         {
-            entity.HasKey(e => e.SuggestionId).HasName("PK__VaccineS__94099528E1251CFB");
+            entity.HasKey(e => e.Id).HasName("PK__VaccineS__94099528E1251CFB");
 
-            entity.Property(e => e.SuggestionId).HasColumnName("SuggestionID");
+            entity.Property(e => e.Id).HasColumnName("SuggestionID");
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
             entity.Property(e => e.ServiceId).HasColumnName("ServiceID");
             entity.Property(e => e.Status).HasMaxLength(255);

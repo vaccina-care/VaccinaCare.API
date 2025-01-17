@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Domain.Entities;
-
-public partial class User
+public partial class User : BaseEntity
 {
-    public int UserId { get; set; }
 
     public string? FullName { get; set; }
 
