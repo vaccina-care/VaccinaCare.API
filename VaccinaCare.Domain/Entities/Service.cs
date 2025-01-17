@@ -3,7 +3,6 @@
 public partial class Service : BaseEntity
 {
 
-
     public string? ServiceName { get; set; }
 
     public string? Description { get; set; }

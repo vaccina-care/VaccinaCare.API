@@ -4,7 +4,7 @@
     <ProjectVersion>2.1</ProjectVersion>
     <DockerTargetOS>Linux</DockerTargetOS>
     <DockerPublishLocally>False</DockerPublishLocally>
-    <ProjectGuid>d199b924-e6be-4329-b5bc-4528ee7b3a14</ProjectGuid>
+    <ProjectGuid>08f30fcf-806c-4f10-86f1-d457d75ad725</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
     <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
     <DockerServiceName>vaccinacare.api</DockerServiceName>

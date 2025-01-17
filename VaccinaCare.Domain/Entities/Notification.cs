@@ -2,7 +2,6 @@
 
 public partial class Notification : BaseEntity
 {
-
     public int? AppointmentId { get; set; }
 
     public string? Message { get; set; }

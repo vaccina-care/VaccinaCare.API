@@ -2,6 +2,7 @@
 
 public partial class VaccineSuggestion : BaseEntity
 {
+
     public int? ChildId { get; set; }
 
     public int? ServiceId { get; set; }

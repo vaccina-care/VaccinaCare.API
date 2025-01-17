@@ -62,7 +62,7 @@ namespace VaccinaCare.Repository.Repositories
             return query.ToListAsync();
         }
 
-        public async Task<TEntity?> GetByIdAsync(Guid id, params Expression<Func<TEntity, object>>[] includes)
+        public async Task<TEntity?> GetByIdAsync(int id, params Expression<Func<TEntity, object>>[] includes)
         {
             IQueryable<TEntity> query = _dbSet;
             foreach (var include in includes)
@@ -98,7 +98,7 @@ namespace VaccinaCare.Repository.Repositories
             return true;
         }
 
-        public async Task<bool> SoftRemoveRangeById(List<Guid> entitiesId) // update hàng loạt cùng 1 trường thì làm y chang
+        public async Task<bool> SoftRemoveRangeById(List<int> entitiesId) // update hàng loạt cùng 1 trường thì làm y chang
         {
             var entities = await _dbSet.Where(e => entitiesId.Contains(e.Id)).ToListAsync();
 
