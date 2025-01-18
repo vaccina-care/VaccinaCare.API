@@ -20,5 +20,6 @@ public partial class Appointment : BaseEntity
     public virtual CancellationPolicy? CancellationPolicy { get; set; } // Tham chiếu đến CancellationPolicy
     public virtual ICollection<AppointmentsService> AppointmentsServices { get; set; } = new List<AppointmentsService>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
 }
 

@@ -12,39 +12,6 @@ namespace VaccinaCare.Domain.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Appointments",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ParentId = table.Column<int>(type: "int", nullable: true),
-                    ChildId = table.Column<int>(type: "int", nullable: true),
-                    PolicyId = table.Column<int>(type: "int", nullable: true),
-                    AppointmentDate = table.Column<DateTime>(type: "datetime", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Notes = table.Column<string>(type: "text", nullable: true),
-                    ServiceType = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Duration = table.Column<int>(type: "int", nullable: true),
-                    Room = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    ReminderSent = table.Column<bool>(type: "bit", nullable: true),
-                    CancellationReason = table.Column<string>(type: "text", nullable: true),
-                    Confirmed = table.Column<bool>(type: "bit", nullable: true),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
-                    PreferredTimeSlot = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Appointm__8ECDFCA28A60492C", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "CancellationPolicies",
                 columns: table => new
                 {
@@ -65,52 +32,6 @@ namespace VaccinaCare.Domain.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK__Cancella__2E1339442FD3D154", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Children",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ParentId = table.Column<int>(type: "int", nullable: true),
-                    FullName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: true),
-                    Gender = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    MedicalHistory = table.Column<string>(type: "text", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Children__BEFA0736DBF1AE94", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Feedbacks",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    AppointmentId = table.Column<int>(type: "int", nullable: true),
-                    Rating = table.Column<int>(type: "int", nullable: true),
-                    Comments = table.Column<string>(type: "text", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Feedback__6A4BEDF6E20C695E", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -152,7 +73,7 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Roles__8AFACE3A871094E6", x => x.Id);
+                    table.PrimaryKey("PK__Roles__ABCDEF123", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -180,52 +101,6 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    RoleId = table.Column<int>(type: "int", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "VaccinationRecords",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ChildId = table.Column<int>(type: "int", nullable: true),
-                    VaccinationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    ReactionDetails = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_VaccinationRecords", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "VaccinePackages",
                 columns: table => new
                 {
@@ -248,14 +123,25 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Notifications",
+                name: "Appointments",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    AppointmentId = table.Column<int>(type: "int", nullable: true),
-                    Message = table.Column<string>(type: "text", nullable: true),
-                    ReadStatus = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true),
+                    ChildId = table.Column<int>(type: "int", nullable: true),
+                    PolicyId = table.Column<int>(type: "int", nullable: true),
+                    AppointmentDate = table.Column<DateTime>(type: "datetime", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Notes = table.Column<string>(type: "text", nullable: true),
+                    ServiceType = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Duration = table.Column<int>(type: "int", nullable: true),
+                    Room = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ReminderSent = table.Column<bool>(type: "bit", nullable: true),
+                    CancellationReason = table.Column<string>(type: "text", nullable: true),
+                    Confirmed = table.Column<bool>(type: "bit", nullable: true),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
+                    PreferredTimeSlot = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -266,11 +152,103 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Notifica__20CF2E3258A2D1E2", x => x.Id);
+                    table.PrimaryKey("PK__Appointm__8ECDFCA28A60492C", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Notifications_Appointments_AppointmentId",
-                        column: x => x.AppointmentId,
-                        principalTable: "Appointments",
+                        name: "FK_Appointments_CancellationPolicies_PolicyId",
+                        column: x => x.PolicyId,
+                        principalTable: "CancellationPolicies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FullName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    PasswordHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    RoleId = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Users__123456789", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Roles_RoleId",
+                        column: x => x.RoleId,
+                        principalTable: "Roles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ServiceAvailabilities",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ServiceId = table.Column<int>(type: "int", nullable: true),
+                    Date = table.Column<DateOnly>(type: "date", nullable: true),
+                    TimeSlot = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Capacity = table.Column<int>(type: "int", nullable: true),
+                    Booked = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServiceAvailabilities", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServiceAvailabilities_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VaccinePackageDetails",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PackageId = table.Column<int>(type: "int", nullable: true),
+                    ServiceId = table.Column<int>(type: "int", nullable: true),
+                    DoseOrder = table.Column<int>(type: "int", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VaccinePackageDetails", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VaccinePackageDetails_Services_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Services",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_VaccinePackageDetails_VaccinePackages_PackageId",
+                        column: x => x.PackageId,
+                        principalTable: "VaccinePackages",
                         principalColumn: "Id");
                 });
 
@@ -308,16 +286,14 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ServiceAvailabilities",
+                name: "Feedbacks",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ServiceId = table.Column<int>(type: "int", nullable: true),
-                    Date = table.Column<DateOnly>(type: "date", nullable: true),
-                    TimeSlot = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Capacity = table.Column<int>(type: "int", nullable: true),
-                    Booked = table.Column<int>(type: "int", nullable: true),
+                    AppointmentId = table.Column<int>(type: "int", nullable: true),
+                    Rating = table.Column<int>(type: "int", nullable: true),
+                    Comments = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -328,24 +304,53 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServiceAvailabilities", x => x.Id);
+                    table.PrimaryKey("PK__Feedback__6A4BEDF6E20C695E", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServiceAvailabilities_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
+                        name: "FK_Feedbacks_Appointments_AppointmentId",
+                        column: x => x.AppointmentId,
+                        principalTable: "Appointments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AppointmentId = table.Column<int>(type: "int", nullable: true),
+                    Message = table.Column<string>(type: "text", nullable: true),
+                    ReadStatus = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Notifica__20CF2E3258A2D1E2", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Appointments_AppointmentId",
+                        column: x => x.AppointmentId,
+                        principalTable: "Appointments",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccineSuggestions",
+                name: "Children",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ChildId = table.Column<int>(type: "int", nullable: true),
-                    ServiceId = table.Column<int>(type: "int", nullable: true),
-                    SuggestedVaccine = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    ParentId = table.Column<int>(type: "int", nullable: true),
+                    FullName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    DateOfBirth = table.Column<DateOnly>(type: "date", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    MedicalHistory = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -356,17 +361,13 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__VaccineS__940995287532A581", x => x.Id);
+                    table.PrimaryKey("PK__Children__BEFA0736DBF1AE94", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VaccineSuggestions_Children_ChildId",
-                        column: x => x.ChildId,
-                        principalTable: "Children",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_VaccineSuggestions_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
-                        principalColumn: "Id");
+                        name: "FK_Children_Users_ParentId",
+                        column: x => x.ParentId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -453,7 +454,7 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__PackageP__BAE29C85C1B611E7", x => x.Id);
+                    table.PrimaryKey("PK_PackageProgress", x => x.Id);
                     table.ForeignKey(
                         name: "FK_PackageProgresses_Children_ChildId",
                         column: x => x.ChildId,
@@ -463,7 +464,8 @@ namespace VaccinaCare.Domain.Migrations
                         name: "FK_PackageProgresses_Users_ParentId",
                         column: x => x.ParentId,
                         principalTable: "Users",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PackageProgresses_VaccinePackages_PackageId",
                         column: x => x.PackageId,
@@ -472,14 +474,14 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccinePackageDetails",
+                name: "VaccinationRecords",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    PackageId = table.Column<int>(type: "int", nullable: true),
-                    ServiceId = table.Column<int>(type: "int", nullable: true),
-                    DoseOrder = table.Column<int>(type: "int", nullable: true),
+                    ChildId = table.Column<int>(type: "int", nullable: true),
+                    VaccinationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReactionDetails = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -490,18 +492,52 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VaccinePackageDetails", x => x.Id);
+                    table.PrimaryKey("PK_VaccinationRecords", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VaccinePackageDetails_Services_ServiceId",
+                        name: "FK_VaccinationRecords_Children_ChildId",
+                        column: x => x.ChildId,
+                        principalTable: "Children",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VaccineSuggestions",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ChildId = table.Column<int>(type: "int", nullable: true),
+                    ServiceId = table.Column<int>(type: "int", nullable: true),
+                    SuggestedVaccine = table.Column<string>(type: "text", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__VaccineS__940995287532A581", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_VaccineSuggestions_Children_ChildId",
+                        column: x => x.ChildId,
+                        principalTable: "Children",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_VaccineSuggestions_Services_ServiceId",
                         column: x => x.ServiceId,
                         principalTable: "Services",
                         principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_VaccinePackageDetails_VaccinePackages_PackageId",
-                        column: x => x.PackageId,
-                        principalTable: "VaccinePackages",
-                        principalColumn: "Id");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_PolicyId",
+                table: "Appointments",
+                column: "PolicyId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppointmentsServices_AppointmentId",
@@ -512,6 +548,16 @@ namespace VaccinaCare.Domain.Migrations
                 name: "IX_AppointmentsServices_ServiceId",
                 table: "AppointmentsServices",
                 column: "ServiceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Children_ParentId",
+                table: "Children",
+                column: "ParentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Feedbacks_AppointmentId",
+                table: "Feedbacks",
+                column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_PaymentId",
@@ -549,6 +595,11 @@ namespace VaccinaCare.Domain.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Users_RoleId",
+                table: "Users",
+                column: "RoleId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_UsersVaccinationServices_ServiceId",
                 table: "UsersVaccinationServices",
                 column: "ServiceId");
@@ -557,6 +608,11 @@ namespace VaccinaCare.Domain.Migrations
                 name: "IX_UsersVaccinationServices_UserId",
                 table: "UsersVaccinationServices",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccinationRecords_ChildId",
+                table: "VaccinationRecords",
+                column: "ChildId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VaccinePackageDetails_PackageId",
@@ -586,9 +642,6 @@ namespace VaccinaCare.Domain.Migrations
                 name: "AppointmentsServices");
 
             migrationBuilder.DropTable(
-                name: "CancellationPolicies");
-
-            migrationBuilder.DropTable(
                 name: "Feedbacks");
 
             migrationBuilder.DropTable(
@@ -599,9 +652,6 @@ namespace VaccinaCare.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "PackageProgresses");
-
-            migrationBuilder.DropTable(
-                name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "ServiceAvailabilities");
@@ -625,9 +675,6 @@ namespace VaccinaCare.Domain.Migrations
                 name: "Appointments");
 
             migrationBuilder.DropTable(
-                name: "Users");
-
-            migrationBuilder.DropTable(
                 name: "VaccinePackages");
 
             migrationBuilder.DropTable(
@@ -635,6 +682,15 @@ namespace VaccinaCare.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "Services");
+
+            migrationBuilder.DropTable(
+                name: "CancellationPolicies");
+
+            migrationBuilder.DropTable(
+                name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Roles");
         }
     }
 }

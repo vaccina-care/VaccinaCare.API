@@ -8,4 +8,6 @@ public partial class Feedback : BaseEntity
     public int? Rating { get; set; }
 
     public string? Comments { get; set; }
+    public virtual Appointment? Appointment { get; set; } // Tham chiếu đến Appointment
+
 }

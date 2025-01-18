@@ -95,6 +95,12 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithMany(p => p.Appointments) // Một CancellationPolicy có nhiều Appointment
                 .HasForeignKey(e => e.PolicyId) // Khóa ngoại PolicyId trong Appointment
                 .OnDelete(DeleteBehavior.Restrict); // Không xóa Appointment khi xóa Policy (tùy chọn)
+
+            // Thiết lập quan hệ với Feedback
+            entity.HasMany(a => a.Feedbacks) // Một Appointment có nhiều Feedback
+                .WithOne(f => f.Appointment) // Một Feedback thuộc về một Appointment
+                .HasForeignKey(f => f.AppointmentId) // Khóa ngoại AppointmentId
+                .OnDelete(DeleteBehavior.Cascade); // Xóa Feedback khi xóa Appointment
         });
 
         modelBuilder.Entity<AppointmentsService>(entity =>
@@ -135,6 +141,12 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithMany(u => u.Children) // Một User có nhiều Child
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId trong Child
                 .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User (tùy chọn)
+
+            // Thiết lập quan hệ với VaccinationRecord
+            entity.HasMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
+                .WithOne(v => v.Children) // Một VaccinationRecord thuộc về một Child
+                .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
+                .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -159,6 +171,12 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithMany(r => r.Users) // Một Role có nhiều User
                 .HasForeignKey(e => e.RoleId) // Khóa ngoại RoleId trong User
                 .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Role
+
+            // Quan hệ với PackageProgress
+            entity.HasMany(u => u.PackageProgresses) // Một User có nhiều PackageProgress
+                .WithOne(p => p.Parent) // Một PackageProgress thuộc về một User
+                .HasForeignKey(p => p.ParentId) // Khóa ngoại ParentId
+                .OnDelete(DeleteBehavior.Restrict); // Không tự động xóa PackageProgress khi xóa User
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -194,8 +212,20 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<PackageProgress>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__PackageP__BAE29C85C1B611E7");
+            // Khóa chính
+            entity.HasKey(e => e.Id).HasName("PK_PackageProgress");
+
+            // Cấu hình thuộc tính
+            entity.Property(e => e.DosesCompleted).IsRequired(false);
+            entity.Property(e => e.DosesRemaining).IsRequired(false);
+
+            // Thiết lập quan hệ với User
+            entity.HasOne(e => e.Parent)
+                .WithMany(u => u.PackageProgresses) // Một User có nhiều PackageProgresses
+                .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId
+                .OnDelete(DeleteBehavior.Restrict); // Không tự động xóa PackageProgress khi xóa User
         });
+
 
         modelBuilder.Entity<Payment>(entity =>
         {
@@ -222,6 +252,23 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.SuggestedVaccine).HasColumnType("text");
             entity.Property(e => e.Status).HasMaxLength(255);
         });
+
+        modelBuilder.Entity<VaccinationRecord>(entity =>
+        {
+            // Thiết lập khóa chính
+            entity.HasKey(e => e.Id).HasName("PK_VaccinationRecords");
+
+            // Cấu hình các thuộc tính
+            entity.Property(e => e.VaccinationDate).IsRequired(false);
+            entity.Property(e => e.ReactionDetails).HasColumnType("text").IsRequired(false);
+
+            // Thiết lập quan hệ với Child
+            entity.HasOne(e => e.Children) // Một VaccinationRecord thuộc về một Child
+                .WithMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
+                .HasForeignKey(e => e.ChildId) // Khóa ngoại ChildId
+                .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
+        });
+
     }
 }
 

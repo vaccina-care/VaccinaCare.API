@@ -104,6 +104,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Appointm__8ECDFCA28A60492C");
 
+                    b.HasIndex("PolicyId");
+
                     b.ToTable("Appointments");
                 });
 
@@ -267,6 +269,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Children__BEFA0736DBF1AE94");
 
+                    b.HasIndex("ParentId");
+
                     b.ToTable("Children");
                 });
 
@@ -314,6 +318,8 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK__Feedback__6A4BEDF6E20C695E");
+
+                    b.HasIndex("AppointmentId");
 
                     b.ToTable("Feedbacks");
                 });
@@ -470,7 +476,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
-                        .HasName("PK__PackageP__BAE29C85C1B611E7");
+                        .HasName("PK_PackageProgress");
 
                     b.HasIndex("ChildId");
 
@@ -568,7 +574,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
-                        .HasName("PK__Roles__8AFACE3A871094E6");
+                        .HasName("PK__Roles__ABCDEF123");
 
                     b.ToTable("Roles");
                 });
@@ -708,10 +714,12 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("FullName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -719,10 +727,12 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
@@ -733,7 +743,10 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("PK__Users__123456789");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -817,7 +830,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("ReactionDetails")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -828,7 +841,10 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<DateTime?>("VaccinationDate")
                         .HasColumnType("datetime2");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("PK_VaccinationRecords");
+
+                    b.HasIndex("ChildId");
 
                     b.ToTable("VaccinationRecords");
                 });
@@ -987,6 +1003,16 @@ namespace VaccinaCare.Domain.Migrations
                     b.ToTable("VaccineSuggestions");
                 });
 
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.CancellationPolicy", "CancellationPolicy")
+                        .WithMany("Appointments")
+                        .HasForeignKey("PolicyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CancellationPolicy");
+                });
+
             modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsService", b =>
                 {
                     b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
@@ -1002,6 +1028,26 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Appointment");
 
                     b.Navigation("Service");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.User", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Parent");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Feedback", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
+                        .WithMany("Feedbacks")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Appointment");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Invoice", b =>
@@ -1040,7 +1086,8 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasOne("VaccinaCare.Domain.Entities.User", "Parent")
                         .WithMany("PackageProgresses")
-                        .HasForeignKey("ParentId");
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Child");
 
@@ -1058,6 +1105,16 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Role", "Role")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccinationService", b =>
                 {
                     b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
@@ -1071,6 +1128,16 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Service");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinationRecord", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Child", "Children")
+                        .WithMany("VaccinationRecords")
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Children");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackageDetail", b =>
@@ -1107,12 +1174,21 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     b.Navigation("AppointmentsServices");
 
+                    b.Navigation("Feedbacks");
+
                     b.Navigation("Notifications");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.CancellationPolicy", b =>
+                {
+                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
                 {
                     b.Navigation("PackageProgresses");
+
+                    b.Navigation("VaccinationRecords");
 
                     b.Navigation("VaccineSuggestions");
                 });
@@ -1120,6 +1196,11 @@ namespace VaccinaCare.Domain.Migrations
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
                     b.Navigation("Invoices");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Service", b =>
@@ -1137,6 +1218,8 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("Invoices");
 
                     b.Navigation("PackageProgresses");

@@ -17,5 +17,8 @@ public partial class Child : BaseEntity
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
 
     public virtual ICollection<VaccineSuggestion> VaccineSuggestions { get; set; } = new List<VaccineSuggestion>();
+
+    public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; } = new List<VaccinationRecord>();
+
 }
 
