@@ -2,8 +2,7 @@
 
 public partial class Child : BaseEntity
 {
-
-    public int? ParentId { get; set; }
+    public int? ParentId { get; set; } // ID của phụ huynh
 
     public string? FullName { get; set; }
 
@@ -13,7 +12,10 @@ public partial class Child : BaseEntity
 
     public string? MedicalHistory { get; set; }
 
+    public virtual User? Parent { get; set; } // Tham chiếu tới phụ huynh
+
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
 
     public virtual ICollection<VaccineSuggestion> VaccineSuggestions { get; set; } = new List<VaccineSuggestion>();
 }
+

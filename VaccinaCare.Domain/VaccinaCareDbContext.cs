@@ -15,6 +15,7 @@ public partial class VaccinaCareDbContext : DbContext
     {
     }
 
+    #region DbSet
     public virtual DbSet<Appointment> Appointments { get; set; }
     public virtual DbSet<AppointmentsService> AppointmentsServices { get; set; }
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
@@ -33,6 +34,9 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<VaccinePackage> VaccinePackages { get; set; }
     public virtual DbSet<VaccinePackageDetail> VaccinePackageDetails { get; set; }
     public virtual DbSet<VaccineSuggestion> VaccineSuggestions { get; set; }
+
+    #endregion
+
 
 
 
@@ -85,6 +89,12 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.ServiceType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
+
+            // Thiết lập quan hệ với CancellationPolicy
+            entity.HasOne(e => e.CancellationPolicy) // Một Appointment có một CancellationPolicy
+                .WithMany(p => p.Appointments) // Một CancellationPolicy có nhiều Appointment
+                .HasForeignKey(e => e.PolicyId) // Khóa ngoại PolicyId trong Appointment
+                .OnDelete(DeleteBehavior.Restrict); // Không xóa Appointment khi xóa Policy (tùy chọn)
         });
 
         modelBuilder.Entity<AppointmentsService>(entity =>
@@ -112,11 +122,56 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<Child>(entity =>
         {
+            // Thiết lập khóa chính
             entity.HasKey(e => e.Id).HasName("PK__Children__BEFA0736DBF1AE94");
+
+            // Cấu hình thuộc tính
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.Gender).HasMaxLength(255);
             entity.Property(e => e.MedicalHistory).HasColumnType("text");
+
+            // Thiết lập quan hệ với User
+            entity.HasOne(e => e.Parent) // Tham chiếu đến User (phụ huynh)
+                .WithMany(u => u.Children) // Một User có nhiều Child
+                .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId trong Child
+                .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User (tùy chọn)
         });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            // Thiết lập khóa chính
+            entity.HasKey(e => e.Id).HasName("PK__Users__123456789");
+
+            // Cấu hình các thuộc tính
+            entity.Property(e => e.FullName).HasMaxLength(255);
+            entity.Property(e => e.Email).HasMaxLength(255);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.PasswordHash).HasMaxLength(500);
+
+            // Thiết lập quan hệ với Child
+            entity.HasMany(u => u.Children) // Một User có nhiều Child
+                .WithOne(c => c.Parent) // Một Child có một Parent
+                .HasForeignKey(c => c.ParentId) // Khóa ngoại ParentId trong Child
+                .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User
+
+            // Thiết lập quan hệ với Role
+            entity.HasOne(e => e.Role) // Một User có một Role
+                .WithMany(r => r.Users) // Một Role có nhiều User
+                .HasForeignKey(e => e.RoleId) // Khóa ngoại RoleId trong User
+                .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Role
+        });
+
+        modelBuilder.Entity<Role>(entity =>
+        {
+            // Thiết lập khóa chính
+            entity.HasKey(e => e.Id).HasName("PK__Roles__ABCDEF123");
+
+            // Cấu hình các thuộc tính
+            entity.Property(e => e.RoleName).HasMaxLength(255);
+        });
+
+
+
 
         modelBuilder.Entity<Feedback>(entity =>
         {
@@ -149,11 +204,7 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
 
-        modelBuilder.Entity<Role>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__8AFACE3A871094E6");
-            entity.Property(e => e.RoleName).HasMaxLength(255);
-        });
+
 
         modelBuilder.Entity<Service>(entity =>
         {
