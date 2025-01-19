@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -11,7 +12,7 @@ namespace VaccinaCare.Domain.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "CancellationPolicies",
+                name: "CancellationPolicy",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -56,7 +57,7 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Roles",
+                name: "Role",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -76,7 +77,7 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Services",
+                name: "Vaccine",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -100,7 +101,7 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccinePackages",
+                name: "VaccinePackage",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -118,11 +119,11 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VaccinePackages", x => x.Id);
+                    table.PrimaryKey("PK_VaccinePackage", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "User",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -144,15 +145,15 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Users__123456789", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Users_Roles_RoleId",
+                        name: "FK_User_Role_RoleId",
                         column: x => x.RoleId,
-                        principalTable: "Roles",
+                        principalTable: "Role",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ServiceAvailabilities",
+                name: "VaccineAvailability",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -173,16 +174,16 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ServiceAvailabilities", x => x.Id);
+                    table.PrimaryKey("PK_VaccineAvailability", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ServiceAvailabilities_Services_VaccineId",
+                        name: "FK_VaccineAvailability_Vaccine_VaccineId",
                         column: x => x.VaccineId,
-                        principalTable: "Services",
+                        principalTable: "Vaccine",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccinePackageDetails",
+                name: "VaccinePackageDetail",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -200,21 +201,21 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VaccinePackageDetails", x => x.Id);
+                    table.PrimaryKey("PK_VaccinePackageDetail", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VaccinePackageDetails_Services_VaccineId",
-                        column: x => x.VaccineId,
-                        principalTable: "Services",
+                        name: "FK_VaccinePackageDetail_VaccinePackage_PackageId",
+                        column: x => x.PackageId,
+                        principalTable: "VaccinePackage",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_VaccinePackageDetails_VaccinePackages_PackageId",
-                        column: x => x.PackageId,
-                        principalTable: "VaccinePackages",
+                        name: "FK_VaccinePackageDetail_Vaccine_VaccineId",
+                        column: x => x.VaccineId,
+                        principalTable: "Vaccine",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Children",
+                name: "Child",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -236,15 +237,15 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Children__BEFA0736DBF1AE94", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Children_Users_ParentId",
+                        name: "FK_Child_User_ParentId",
                         column: x => x.ParentId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UsersVaccinationServices",
+                name: "UsersVaccination",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -261,21 +262,21 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UsersVaccinationServices", x => x.Id);
+                    table.PrimaryKey("PK_UsersVaccination", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UsersVaccinationServices_Services_ServiceId",
-                        column: x => x.ServiceId,
-                        principalTable: "Services",
+                        name: "FK_UsersVaccination_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_UsersVaccinationServices_Users_UserId",
-                        column: x => x.UserId,
-                        principalTable: "Users",
+                        name: "FK_UsersVaccination_Vaccine_ServiceId",
+                        column: x => x.ServiceId,
+                        principalTable: "Vaccine",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Appointments",
+                name: "Appointment",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -306,21 +307,21 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Appointm__8ECDFCA28A60492C", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Appointments_CancellationPolicies_PolicyId",
+                        name: "FK_Appointment_CancellationPolicy_PolicyId",
                         column: x => x.PolicyId,
-                        principalTable: "CancellationPolicies",
+                        principalTable: "CancellationPolicy",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Appointments_Children_ChildId",
+                        name: "FK_Appointment_Child_ChildId",
                         column: x => x.ChildId,
-                        principalTable: "Children",
+                        principalTable: "Child",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PackageProgresses",
+                name: "PackageProgress",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -342,25 +343,25 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK_PackageProgress", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PackageProgresses_Children_ChildId",
+                        name: "FK_PackageProgress_Child_ChildId",
                         column: x => x.ChildId,
-                        principalTable: "Children",
+                        principalTable: "Child",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_PackageProgresses_Users_ParentId",
+                        name: "FK_PackageProgress_User_ParentId",
                         column: x => x.ParentId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PackageProgresses_VaccinePackages_PackageId",
+                        name: "FK_PackageProgress_VaccinePackage_PackageId",
                         column: x => x.PackageId,
-                        principalTable: "VaccinePackages",
+                        principalTable: "VaccinePackage",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccinationRecords",
+                name: "VaccinationRecord",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -380,15 +381,15 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK_VaccinationRecords", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VaccinationRecords_Children_ChildId",
+                        name: "FK_VaccinationRecord_Child_ChildId",
                         column: x => x.ChildId,
-                        principalTable: "Children",
+                        principalTable: "Child",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "VaccineSuggestions",
+                name: "VaccineSuggestion",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -409,19 +410,19 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__VaccineS__940995287532A581", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_VaccineSuggestions_Children_ChildId",
+                        name: "FK_VaccineSuggestion_Child_ChildId",
                         column: x => x.ChildId,
-                        principalTable: "Children",
+                        principalTable: "Child",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_VaccineSuggestions_Services_VaccineId",
+                        name: "FK_VaccineSuggestion_Vaccine_VaccineId",
                         column: x => x.VaccineId,
-                        principalTable: "Services",
+                        principalTable: "Vaccine",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "AppointmentsServices",
+                name: "AppointmentsVaccine",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -444,17 +445,17 @@ namespace VaccinaCare.Domain.Migrations
                     table.ForeignKey(
                         name: "FK__Appointme__Appoi__5BE2A6F2",
                         column: x => x.AppointmentId,
-                        principalTable: "Appointments",
+                        principalTable: "Appointment",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK__Appointme__Servi__5CD6CB2B",
                         column: x => x.VaccineId,
-                        principalTable: "Services",
+                        principalTable: "Vaccine",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Feedbacks",
+                name: "Feedback",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -474,15 +475,15 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Feedback__6A4BEDF6E20C695E", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Feedbacks_Appointments_AppointmentId",
+                        name: "FK_Feedback_Appointment_AppointmentId",
                         column: x => x.AppointmentId,
-                        principalTable: "Appointments",
+                        principalTable: "Appointment",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Notifications",
+                name: "Notification",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -502,14 +503,14 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Notifica__20CF2E3258A2D1E2", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Notifications_Appointments_AppointmentId",
+                        name: "FK_Notification_Appointment_AppointmentId",
                         column: x => x.AppointmentId,
-                        principalTable: "Appointments",
+                        principalTable: "Appointment",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "Payments",
+                name: "Payment",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -530,12 +531,12 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Payments__9B556A587D9A7EB1", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Payments_Appointments_AppointmentId",
+                        name: "FK_Payment_Appointment_AppointmentId",
                         column: x => x.AppointmentId,
-                        principalTable: "Appointments",
+                        principalTable: "Appointment",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Payments_PaymentMethod_PaymentMethodId",
+                        name: "FK_Payment_PaymentMethod_PaymentMethodId",
                         column: x => x.PaymentMethodId,
                         principalTable: "PaymentMethod",
                         principalColumn: "Id",
@@ -543,7 +544,7 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Invoices",
+                name: "Invoice",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -563,130 +564,130 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     table.PrimaryKey("PK__Invoices__D796AAD560EDA138", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Invoices_Payments_PaymentId",
+                        name: "FK_Invoice_Payment_PaymentId",
                         column: x => x.PaymentId,
-                        principalTable: "Payments",
+                        principalTable: "Payment",
                         principalColumn: "Id");
                     table.ForeignKey(
-                        name: "FK_Invoices_Users_UserId",
+                        name: "FK_Invoice_User_UserId",
                         column: x => x.UserId,
-                        principalTable: "Users",
+                        principalTable: "User",
                         principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_ChildId",
-                table: "Appointments",
+                name: "IX_Appointment_ChildId",
+                table: "Appointment",
                 column: "ChildId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Appointments_PolicyId",
-                table: "Appointments",
+                name: "IX_Appointment_PolicyId",
+                table: "Appointment",
                 column: "PolicyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppointmentsServices_AppointmentId",
-                table: "AppointmentsServices",
+                name: "IX_AppointmentsVaccine_AppointmentId",
+                table: "AppointmentsVaccine",
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AppointmentsServices_VaccineId",
-                table: "AppointmentsServices",
+                name: "IX_AppointmentsVaccine_VaccineId",
+                table: "AppointmentsVaccine",
                 column: "VaccineId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Children_ParentId",
-                table: "Children",
+                name: "IX_Child_ParentId",
+                table: "Child",
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Feedbacks_AppointmentId",
-                table: "Feedbacks",
+                name: "IX_Feedback_AppointmentId",
+                table: "Feedback",
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Invoices_PaymentId",
-                table: "Invoices",
+                name: "IX_Invoice_PaymentId",
+                table: "Invoice",
                 column: "PaymentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Invoices_UserId",
-                table: "Invoices",
+                name: "IX_Invoice_UserId",
+                table: "Invoice",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Notifications_AppointmentId",
-                table: "Notifications",
+                name: "IX_Notification_AppointmentId",
+                table: "Notification",
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PackageProgresses_ChildId",
-                table: "PackageProgresses",
+                name: "IX_PackageProgress_ChildId",
+                table: "PackageProgress",
                 column: "ChildId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PackageProgresses_PackageId",
-                table: "PackageProgresses",
+                name: "IX_PackageProgress_PackageId",
+                table: "PackageProgress",
                 column: "PackageId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PackageProgresses_ParentId",
-                table: "PackageProgresses",
+                name: "IX_PackageProgress_ParentId",
+                table: "PackageProgress",
                 column: "ParentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payments_AppointmentId",
-                table: "Payments",
+                name: "IX_Payment_AppointmentId",
+                table: "Payment",
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payments_PaymentMethodId",
-                table: "Payments",
+                name: "IX_Payment_PaymentMethodId",
+                table: "Payment",
                 column: "PaymentMethodId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceAvailabilities_VaccineId",
-                table: "ServiceAvailabilities",
-                column: "VaccineId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Users_RoleId",
-                table: "Users",
+                name: "IX_User_RoleId",
+                table: "User",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UsersVaccinationServices_ServiceId",
-                table: "UsersVaccinationServices",
+                name: "IX_UsersVaccination_ServiceId",
+                table: "UsersVaccination",
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UsersVaccinationServices_UserId",
-                table: "UsersVaccinationServices",
+                name: "IX_UsersVaccination_UserId",
+                table: "UsersVaccination",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VaccinationRecords_ChildId",
-                table: "VaccinationRecords",
+                name: "IX_VaccinationRecord_ChildId",
+                table: "VaccinationRecord",
                 column: "ChildId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VaccinePackageDetails_PackageId",
-                table: "VaccinePackageDetails",
-                column: "PackageId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_VaccinePackageDetails_VaccineId",
-                table: "VaccinePackageDetails",
+                name: "IX_VaccineAvailability_VaccineId",
+                table: "VaccineAvailability",
                 column: "VaccineId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VaccineSuggestions_ChildId",
-                table: "VaccineSuggestions",
+                name: "IX_VaccinePackageDetail_PackageId",
+                table: "VaccinePackageDetail",
+                column: "PackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccinePackageDetail_VaccineId",
+                table: "VaccinePackageDetail",
+                column: "VaccineId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccineSuggestion_ChildId",
+                table: "VaccineSuggestion",
                 column: "ChildId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_VaccineSuggestions_VaccineId",
-                table: "VaccineSuggestions",
+                name: "IX_VaccineSuggestion_VaccineId",
+                table: "VaccineSuggestion",
                 column: "VaccineId");
         }
 
@@ -694,61 +695,61 @@ namespace VaccinaCare.Domain.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "AppointmentsServices");
+                name: "AppointmentsVaccine");
 
             migrationBuilder.DropTable(
-                name: "Feedbacks");
+                name: "Feedback");
 
             migrationBuilder.DropTable(
-                name: "Invoices");
+                name: "Invoice");
 
             migrationBuilder.DropTable(
-                name: "Notifications");
+                name: "Notification");
 
             migrationBuilder.DropTable(
-                name: "PackageProgresses");
+                name: "PackageProgress");
 
             migrationBuilder.DropTable(
-                name: "ServiceAvailabilities");
+                name: "UsersVaccination");
 
             migrationBuilder.DropTable(
-                name: "UsersVaccinationServices");
+                name: "VaccinationRecord");
 
             migrationBuilder.DropTable(
-                name: "VaccinationRecords");
+                name: "VaccineAvailability");
 
             migrationBuilder.DropTable(
-                name: "VaccinePackageDetails");
+                name: "VaccinePackageDetail");
 
             migrationBuilder.DropTable(
-                name: "VaccineSuggestions");
+                name: "VaccineSuggestion");
 
             migrationBuilder.DropTable(
-                name: "Payments");
+                name: "Payment");
 
             migrationBuilder.DropTable(
-                name: "VaccinePackages");
+                name: "VaccinePackage");
 
             migrationBuilder.DropTable(
-                name: "Services");
+                name: "Vaccine");
 
             migrationBuilder.DropTable(
-                name: "Appointments");
+                name: "Appointment");
 
             migrationBuilder.DropTable(
                 name: "PaymentMethod");
 
             migrationBuilder.DropTable(
-                name: "CancellationPolicies");
+                name: "CancellationPolicy");
 
             migrationBuilder.DropTable(
-                name: "Children");
+                name: "Child");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "User");
 
             migrationBuilder.DropTable(
-                name: "Roles");
+                name: "Role");
         }
     }
 }

@@ -77,6 +77,26 @@ public partial class VaccinaCareDbContext : DbContext
         }
 
 
+        // Map tables to match entity names
+        modelBuilder.Entity<Appointment>().ToTable(nameof(Appointment));
+        modelBuilder.Entity<AppointmentsVaccine>().ToTable(nameof(AppointmentsVaccine));
+        modelBuilder.Entity<CancellationPolicy>().ToTable(nameof(CancellationPolicy));
+        modelBuilder.Entity<Child>().ToTable(nameof(Child));
+        modelBuilder.Entity<Feedback>().ToTable(nameof(Feedback));
+        modelBuilder.Entity<Invoice>().ToTable(nameof(Invoice));
+        modelBuilder.Entity<Notification>().ToTable(nameof(Notification));
+        modelBuilder.Entity<PackageProgress>().ToTable(nameof(PackageProgress));
+        modelBuilder.Entity<Payment>().ToTable(nameof(Payment));
+        modelBuilder.Entity<Role>().ToTable(nameof(Role));
+        modelBuilder.Entity<Vaccine>().ToTable(nameof(Vaccine));
+        modelBuilder.Entity<VaccineAvailability>().ToTable(nameof(VaccineAvailability));
+        modelBuilder.Entity<User>().ToTable(nameof(User));
+        modelBuilder.Entity<UsersVaccination>().ToTable(nameof(UsersVaccination));
+        modelBuilder.Entity<VaccinationRecord>().ToTable(nameof(VaccinationRecord));
+        modelBuilder.Entity<VaccinePackage>().ToTable(nameof(VaccinePackage));
+        modelBuilder.Entity<VaccinePackageDetail>().ToTable(nameof(VaccinePackageDetail));
+        modelBuilder.Entity<VaccineSuggestion>().ToTable(nameof(VaccineSuggestion));
+
         // Entity-specific configurations
         modelBuilder.Entity<Appointment>(entity =>
         {

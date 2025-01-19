@@ -12,7 +12,7 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250119035754_init")]
+    [Migration("20250119041157_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -111,7 +111,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("PolicyId");
 
-                    b.ToTable("Appointments");
+                    b.ToTable("Appointment", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsVaccine", b =>
@@ -166,7 +166,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("VaccineId");
 
-                    b.ToTable("AppointmentsServices");
+                    b.ToTable("AppointmentsVaccine", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.CancellationPolicy", b =>
@@ -218,7 +218,7 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Cancella__2E1339442FD3D154");
 
-                    b.ToTable("CancellationPolicies");
+                    b.ToTable("CancellationPolicy", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
@@ -276,7 +276,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("Children");
+                    b.ToTable("Child", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Feedback", b =>
@@ -326,7 +326,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("AppointmentId");
 
-                    b.ToTable("Feedbacks");
+                    b.ToTable("Feedback", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Invoice", b =>
@@ -378,7 +378,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Invoices");
+                    b.ToTable("Invoice", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Notification", b =>
@@ -429,7 +429,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("AppointmentId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notification", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PackageProgress", b =>
@@ -489,7 +489,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("ParentId");
 
-                    b.ToTable("PackageProgresses");
+                    b.ToTable("PackageProgress", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
@@ -545,7 +545,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("PaymentMethodId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payment", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
@@ -635,7 +635,7 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Roles__ABCDEF123");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Role", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -695,7 +695,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("User", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccination", b =>
@@ -743,7 +743,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UsersVaccinationServices");
+                    b.ToTable("UsersVaccination", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinationRecord", b =>
@@ -793,7 +793,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("ChildId");
 
-                    b.ToTable("VaccinationRecords");
+                    b.ToTable("VaccinationRecord", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Vaccine", b =>
@@ -850,7 +850,7 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Services__C51BB0EAE3CBFA2E");
 
-                    b.ToTable("Services");
+                    b.ToTable("Vaccine", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
@@ -908,7 +908,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("VaccineId");
 
-                    b.ToTable("ServiceAvailabilities");
+                    b.ToTable("VaccineAvailability", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackage", b =>
@@ -955,7 +955,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VaccinePackages");
+                    b.ToTable("VaccinePackage", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackageDetail", b =>
@@ -1006,7 +1006,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("VaccineId");
 
-                    b.ToTable("VaccinePackageDetails");
+                    b.ToTable("VaccinePackageDetail", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineSuggestion", b =>
@@ -1062,7 +1062,7 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasIndex("VaccineId");
 
-                    b.ToTable("VaccineSuggestions");
+                    b.ToTable("VaccineSuggestion", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Appointment", b =>
