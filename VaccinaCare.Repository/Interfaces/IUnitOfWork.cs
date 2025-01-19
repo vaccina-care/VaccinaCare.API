@@ -1,10 +1,11 @@
-﻿namespace VaccinaCare.Repository.Interfaces
+﻿using VaccinaCare.Domain.Entities;
+
+namespace VaccinaCare.Repository.Interfaces
 {
     public interface IUnitOfWork
     {
-        //    IGenericRepository<Area> AreaGenericRepository { get; }
-        //    IGenericRepository<Category> CategoryGenericRepository { get; }
-
+        IGenericRepository<User> UserRepository { get; }
+        IGenericRepository<Notification> NotificationRepository { get; }
         Task<int> SaveChangesAsync();
     }
 

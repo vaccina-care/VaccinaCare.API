@@ -229,14 +229,15 @@ public partial class VaccinaCareDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Invoices__D796AAD560EDA138");
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
         });
-
+        
         modelBuilder.Entity<Notification>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Notifica__20CF2E3258A2D1E2");
-            entity.Property(e => e.Message).HasColumnType("text");
-            entity.Property(e => e.ReadStatus).HasMaxLength(255);
+            // Cấu hình enum NotificationType để lưu dưới dạng string
+            entity.Property(n => n.Type)
+                .HasConversion<string>() // Chuyển đổi enum thành string
+                .HasMaxLength(50); // Giới hạn độ dài chuỗi nếu cần
         });
-
+        
         modelBuilder.Entity<PackageProgress>(entity =>
         {
             // Khóa chính

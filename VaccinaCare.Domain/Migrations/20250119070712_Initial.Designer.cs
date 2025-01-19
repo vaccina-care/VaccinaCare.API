@@ -12,8 +12,8 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250119041157_init")]
-    partial class init
+    [Migration("20250119070712_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -392,6 +392,9 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<int?>("AppointmentId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -411,12 +414,19 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Message")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("ReadStatus")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -424,10 +434,17 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id")
-                        .HasName("PK__Notifica__20CF2E3258A2D1E2");
+                    b.Property<string>("Url")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("AppointmentId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Notification", (string)null);
                 });
@@ -1136,11 +1153,15 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
+                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", null)
                         .WithMany("Notifications")
                         .HasForeignKey("AppointmentId");
 
-                    b.Navigation("Appointment");
+                    b.HasOne("VaccinaCare.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PackageProgress", b =>

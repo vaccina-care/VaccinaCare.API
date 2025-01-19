@@ -2,6 +2,7 @@
 
 public partial class Appointment : BaseEntity
 {
+    public int Tesst { get; set; }
     public int? ParentId { get; set; }
     public int? ChildId { get; set; }
     public int? PolicyId { get; set; } // Khóa ngoại liên kết với CancellationPolicy

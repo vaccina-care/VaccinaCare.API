@@ -1,12 +1,18 @@
-﻿namespace VaccinaCare.Domain.Entities;
+﻿using VaccinaCare.Domain.Enums;
 
-public partial class Notification : BaseEntity
+namespace VaccinaCare.Domain.Entities;
+
+public class Notification : BaseEntity
 {
-    public int? AppointmentId { get; set; }
+    public string? Title { get; set; }
+    public string? Content { get; set; }
+    public string? Url { get; set; }
+    public bool IsRead { get; set; } = false;
 
-    public string? Message { get; set; }
+    public NotificationType Type { get; set; }
 
-    public string? ReadStatus { get; set; }
+    public int? UserId { get; set; }
+    public User? User { get; set; }
 
-    public virtual Appointment? Appointment { get; set; }
+    public string? Role { get; set; }
 }

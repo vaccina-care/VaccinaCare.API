@@ -9,6 +9,10 @@ public partial class User : BaseEntity
     public string? PhoneNumber { get; set; }
 
     public string? PasswordHash { get; set; }
+    
+    public bool? Gender { get; set; } = true;
+    public DateTime? DateOfBirth { get; set; } 
+    public string? ImageUrl { get; set; } 
 
     public int? RoleId { get; set; }
     public virtual Role? Role { get; set; } // Tham chiếu đến Role
