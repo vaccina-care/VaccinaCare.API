@@ -17,7 +17,7 @@ public partial class VaccinaCareDbContext : DbContext
 
     #region DbSet
     public virtual DbSet<Appointment> Appointments { get; set; }
-    public virtual DbSet<AppointmentsService> AppointmentsServices { get; set; }
+    public virtual DbSet<AppointmentsVaccine> AppointmentsServices { get; set; }
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
     public virtual DbSet<Child> Children { get; set; }
     public virtual DbSet<Feedback> Feedbacks { get; set; }
@@ -26,10 +26,10 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
-    public virtual DbSet<Service> Services { get; set; }
-    public virtual DbSet<ServiceAvailability> ServiceAvailabilities { get; set; }
+    public virtual DbSet<Vaccine> Services { get; set; }
+    public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
-    public virtual DbSet<UsersVaccinationService> UsersVaccinationServices { get; set; }
+    public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
     public virtual DbSet<VaccinationRecord> VaccinationRecords { get; set; }
     public virtual DbSet<VaccinePackage> VaccinePackages { get; set; }
     public virtual DbSet<VaccinePackageDetail> VaccinePackageDetails { get; set; }
@@ -86,12 +86,12 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.Notes).HasColumnType("text");
             entity.Property(e => e.PreferredTimeSlot).HasMaxLength(255);
             entity.Property(e => e.Room).HasMaxLength(255);
-            entity.Property(e => e.ServiceType).HasMaxLength(255);
+            entity.Property(e => e.VaccineType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
 
             // Thiết lập quan hệ với CancellationPolicy
-            entity.HasOne(e => e.CancellationPolicy) // Một Appointment có một CancellationPolicy
+            entity.HasOne(e => e.CancellationPolicies) // Một Appointment có một CancellationPolicy
                 .WithMany(p => p.Appointments) // Một CancellationPolicy có nhiều Appointment
                 .HasForeignKey(e => e.PolicyId) // Khóa ngoại PolicyId trong Appointment
                 .OnDelete(DeleteBehavior.Restrict); // Không xóa Appointment khi xóa Policy (tùy chọn)
@@ -101,20 +101,27 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithOne(f => f.Appointment) // Một Feedback thuộc về một Appointment
                 .HasForeignKey(f => f.AppointmentId) // Khóa ngoại AppointmentId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa Feedback khi xóa Appointment
+
+            // Thiết lập quan hệ với Child
+            entity.HasOne(a => a.Child) // Một Appointment thuộc về một Child
+                .WithMany(c => c.Appointments) // Một Child có nhiều Appointment
+                .HasForeignKey(a => a.ChildId) // Khóa ngoại ChildId trong Appointment
+                .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Child
+
         });
 
-        modelBuilder.Entity<AppointmentsService>(entity =>
+        modelBuilder.Entity<AppointmentsVaccine>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__3B38F27673DFA862");
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
             entity.HasOne(d => d.Appointment)
-                .WithMany(p => p.AppointmentsServices)
+                .WithMany(p => p.AppointmentsVaccines)
                 .HasForeignKey(d => d.AppointmentId)
                 .HasConstraintName("FK__Appointme__Appoi__5BE2A6F2");
 
-            entity.HasOne(d => d.Service)
-                .WithMany(p => p.AppointmentsServices)
-                .HasForeignKey(d => d.ServiceId)
+            entity.HasOne(d => d.Vaccine)
+                .WithMany(p => p.AppointmentsVaccines)
+                .HasForeignKey(d => d.VaccineId)
                 .HasConstraintName("FK__Appointme__Servi__5CD6CB2B");
         });
 
@@ -144,7 +151,7 @@ public partial class VaccinaCareDbContext : DbContext
 
             // Thiết lập quan hệ với VaccinationRecord
             entity.HasMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
-                .WithOne(v => v.Children) // Một VaccinationRecord thuộc về một Child
+                .WithOne(v => v.Child) // Một VaccinationRecord thuộc về một Child
                 .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
         });
@@ -236,13 +243,13 @@ public partial class VaccinaCareDbContext : DbContext
 
 
 
-        modelBuilder.Entity<Service>(entity =>
+        modelBuilder.Entity<Vaccine>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Services__C51BB0EAE3CBFA2E");
             entity.Property(e => e.Description).HasColumnType("text");
             entity.Property(e => e.PicUrl).HasMaxLength(255);
             entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.ServiceName).HasMaxLength(255);
+            entity.Property(e => e.VaccineName).HasMaxLength(255);
             entity.Property(e => e.Type).HasMaxLength(255);
         });
 
@@ -263,7 +270,7 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.ReactionDetails).HasColumnType("text").IsRequired(false);
 
             // Thiết lập quan hệ với Child
-            entity.HasOne(e => e.Children) // Một VaccinationRecord thuộc về một Child
+            entity.HasOne(e => e.Child) // Một VaccinationRecord thuộc về một Child
                 .WithMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
                 .HasForeignKey(e => e.ChildId) // Khóa ngoại ChildId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child

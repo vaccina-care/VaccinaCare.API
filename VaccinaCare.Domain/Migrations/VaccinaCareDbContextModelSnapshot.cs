@@ -84,10 +84,6 @@ namespace VaccinaCare.Domain.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("ServiceType")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<string>("Status")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -101,15 +97,21 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("VaccineType")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
                     b.HasKey("Id")
                         .HasName("PK__Appointm__8ECDFCA28A60492C");
+
+                    b.HasIndex("ChildId");
 
                     b.HasIndex("PolicyId");
 
                     b.ToTable("Appointments");
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsService", b =>
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsVaccine", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -142,9 +144,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<int?>("Quantity")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
-
                     b.Property<decimal?>("TotalPrice")
                         .HasColumnType("decimal(18, 0)");
 
@@ -154,12 +153,15 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("VaccineId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("PK__Appointm__3B38F27673DFA862");
 
                     b.HasIndex("AppointmentId");
 
-                    b.HasIndex("ServiceId");
+                    b.HasIndex("VaccineId");
 
                     b.ToTable("AppointmentsServices");
                 });
@@ -520,6 +522,9 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<int>("PaymentMethodId")
+                        .HasColumnType("int");
+
                     b.Property<string>("PaymentStatus")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -533,7 +538,58 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id")
                         .HasName("PK__Payments__9B556A587D9A7EB1");
 
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("PaymentMethodId");
+
                     b.ToTable("Payments");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("Active")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("MethodName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethod");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>
@@ -577,118 +633,6 @@ namespace VaccinaCare.Domain.Migrations
                         .HasName("PK__Roles__ABCDEF123");
 
                     b.ToTable("Roles");
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.Service", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("PicUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<decimal?>("Price")
-                        .HasColumnType("decimal(18, 0)");
-
-                    b.Property<string>("ServiceName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Type")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id")
-                        .HasName("PK__Services__C51BB0EAE3CBFA2E");
-
-                    b.ToTable("Services");
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.ServiceAvailability", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("Booked")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Capacity")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateOnly?>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TimeSlot")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ServiceId");
-
-                    b.ToTable("ServiceAvailabilities");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -751,7 +695,7 @@ namespace VaccinaCare.Domain.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccinationService", b =>
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccination", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -849,6 +793,121 @@ namespace VaccinaCare.Domain.Migrations
                     b.ToTable("VaccinationRecords");
                 });
 
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Vaccine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("PicUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(18, 0)");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VaccineName")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id")
+                        .HasName("PK__Services__C51BB0EAE3CBFA2E");
+
+                    b.ToTable("Services");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AvailabilityId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Booked")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("TimeSlot")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("VaccineId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VaccineId");
+
+                    b.ToTable("ServiceAvailabilities");
+                });
+
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackage", b =>
                 {
                     b.Property<int>("Id")
@@ -929,20 +988,20 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<int?>("PackageId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("VaccineId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PackageId");
 
-                    b.HasIndex("ServiceId");
+                    b.HasIndex("VaccineId");
 
                     b.ToTable("VaccinePackageDetails");
                 });
@@ -977,9 +1036,6 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Status")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -993,41 +1049,51 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("VaccineId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id")
                         .HasName("PK__VaccineS__940995287532A581");
 
                     b.HasIndex("ChildId");
 
-                    b.HasIndex("ServiceId");
+                    b.HasIndex("VaccineId");
 
                     b.ToTable("VaccineSuggestions");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Appointment", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.CancellationPolicy", "CancellationPolicy")
+                    b.HasOne("VaccinaCare.Domain.Entities.Child", "Child")
+                        .WithMany("Appointments")
+                        .HasForeignKey("ChildId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("VaccinaCare.Domain.Entities.CancellationPolicy", "CancellationPolicies")
                         .WithMany("Appointments")
                         .HasForeignKey("PolicyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.Navigation("CancellationPolicy");
+                    b.Navigation("CancellationPolicies");
+
+                    b.Navigation("Child");
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsService", b =>
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsVaccine", b =>
                 {
                     b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
-                        .WithMany("AppointmentsServices")
+                        .WithMany("AppointmentsVaccines")
                         .HasForeignKey("AppointmentId")
                         .HasConstraintName("FK__Appointme__Appoi__5BE2A6F2");
 
-                    b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
-                        .WithMany("AppointmentsServices")
-                        .HasForeignKey("ServiceId")
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
+                        .WithMany("AppointmentsVaccines")
+                        .HasForeignKey("VaccineId")
                         .HasConstraintName("FK__Appointme__Servi__5CD6CB2B");
 
                     b.Navigation("Appointment");
 
-                    b.Navigation("Service");
+                    b.Navigation("Vaccine");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
@@ -1096,13 +1162,19 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.ServiceAvailability", b =>
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
-                        .WithMany("ServiceAvailabilities")
-                        .HasForeignKey("ServiceId");
+                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("AppointmentId");
 
-                    b.Navigation("Service");
+                    b.HasOne("VaccinaCare.Domain.Entities.PaymentMethod", "PaymentMethod")
+                        .WithMany("Payments")
+                        .HasForeignKey("PaymentMethodId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PaymentMethod");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -1115,14 +1187,14 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccinationService", b =>
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccination", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
-                        .WithMany("UsersVaccinationServices")
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Service")
+                        .WithMany("UsersVaccinations")
                         .HasForeignKey("ServiceId");
 
                     b.HasOne("VaccinaCare.Domain.Entities.User", "User")
-                        .WithMany("UsersVaccinationServices")
+                        .WithMany("UsersVaccinations")
                         .HasForeignKey("UserId");
 
                     b.Navigation("Service");
@@ -1132,12 +1204,21 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinationRecord", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Child", "Children")
+                    b.HasOne("VaccinaCare.Domain.Entities.Child", "Child")
                         .WithMany("VaccinationRecords")
                         .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.Navigation("Children");
+                    b.Navigation("Child");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
+                        .WithMany("VaccineAvailabilities")
+                        .HasForeignKey("VaccineId");
+
+                    b.Navigation("Vaccine");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackageDetail", b =>
@@ -1146,9 +1227,9 @@ namespace VaccinaCare.Domain.Migrations
                         .WithMany("VaccinePackageDetails")
                         .HasForeignKey("PackageId");
 
-                    b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Service")
                         .WithMany("VaccinePackageDetails")
-                        .HasForeignKey("ServiceId");
+                        .HasForeignKey("VaccineId");
 
                     b.Navigation("Package");
 
@@ -1161,22 +1242,24 @@ namespace VaccinaCare.Domain.Migrations
                         .WithMany("VaccineSuggestions")
                         .HasForeignKey("ChildId");
 
-                    b.HasOne("VaccinaCare.Domain.Entities.Service", "Service")
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
                         .WithMany("VaccineSuggestions")
-                        .HasForeignKey("ServiceId");
+                        .HasForeignKey("VaccineId");
 
                     b.Navigation("Child");
 
-                    b.Navigation("Service");
+                    b.Navigation("Vaccine");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Appointment", b =>
                 {
-                    b.Navigation("AppointmentsServices");
+                    b.Navigation("AppointmentsVaccines");
 
                     b.Navigation("Feedbacks");
 
                     b.Navigation("Notifications");
+
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.CancellationPolicy", b =>
@@ -1186,6 +1269,8 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
                 {
+                    b.Navigation("Appointments");
+
                     b.Navigation("PackageProgresses");
 
                     b.Navigation("VaccinationRecords");
@@ -1198,22 +1283,14 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Invoices");
                 });
 
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
+                {
+                    b.Navigation("Payments");
+                });
+
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>
                 {
                     b.Navigation("Users");
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.Service", b =>
-                {
-                    b.Navigation("AppointmentsServices");
-
-                    b.Navigation("ServiceAvailabilities");
-
-                    b.Navigation("UsersVaccinationServices");
-
-                    b.Navigation("VaccinePackageDetails");
-
-                    b.Navigation("VaccineSuggestions");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -1224,7 +1301,20 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.Navigation("PackageProgresses");
 
-                    b.Navigation("UsersVaccinationServices");
+                    b.Navigation("UsersVaccinations");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.Vaccine", b =>
+                {
+                    b.Navigation("AppointmentsVaccines");
+
+                    b.Navigation("UsersVaccinations");
+
+                    b.Navigation("VaccineAvailabilities");
+
+                    b.Navigation("VaccinePackageDetails");
+
+                    b.Navigation("VaccineSuggestions");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackage", b =>

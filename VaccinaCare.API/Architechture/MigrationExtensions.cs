@@ -41,7 +41,7 @@ namespace VaccinaCare.API.Architechture
 
                     // Bắt đầu tạo scope
                     using IServiceScope scope = app.ApplicationServices.CreateScope();
-                    _logger.LogDebug("Service scope created successfully.");
+                    _logger.LogDebug("Vaccine scope created successfully.");
 
                     // Lấy DbContext từ scope
                     using VaccinaCareDbContext dbContext =

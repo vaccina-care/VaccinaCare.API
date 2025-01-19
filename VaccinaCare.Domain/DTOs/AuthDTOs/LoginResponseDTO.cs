@@ -1,4 +1,4 @@
-﻿namespace DataTransferObjects.Auth
+﻿namespace VaccinaCare.Domain.DTOs.AuthDTOs
 {
     public class LoginResponseDTO
     {

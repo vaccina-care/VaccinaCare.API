@@ -9,6 +9,6 @@ public partial class VaccinationRecord : BaseEntity
 
     public string? ReactionDetails { get; set; }
 
-    public virtual Child? Children { get; set; }
+    public virtual Child? Child { get; set; }
 
 }

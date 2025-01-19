@@ -7,6 +7,6 @@ public partial class CancellationPolicy : BaseEntity
     public int? CancellationDeadline { get; set; }
     public decimal? PenaltyFee { get; set; }
 
-    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>(); // Danh sách các Appointment áp dụng chính sách này
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }
 

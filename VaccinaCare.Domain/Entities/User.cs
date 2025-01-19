@@ -20,6 +20,6 @@ public partial class User : BaseEntity
 
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
 
-    public virtual ICollection<UsersVaccinationService> UsersVaccinationServices { get; set; } = new List<UsersVaccinationService>();
+    public virtual ICollection<UsersVaccination> UsersVaccinations { get; set; } = new List<UsersVaccination>();
 }
 

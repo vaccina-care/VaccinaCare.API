@@ -14,7 +14,10 @@ public partial class Child : BaseEntity
 
     public virtual User? Parent { get; set; } // Tham chiếu tới phụ huynh
 
+
+
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
+    public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
     public virtual ICollection<VaccineSuggestion> VaccineSuggestions { get; set; } = new List<VaccineSuggestion>();
 

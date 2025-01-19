@@ -1,9 +1,9 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class ServiceAvailability : BaseEntity
+public partial class VaccineAvailability : BaseEntity
 {
 
-    public int? ServiceId { get; set; }
+    public int? AvailabilityId { get; set; }
 
     public DateOnly? Date { get; set; }
 
@@ -13,5 +13,5 @@ public partial class ServiceAvailability : BaseEntity
 
     public int? Booked { get; set; }
 
-    public virtual Service? Service { get; set; }
+    public virtual Vaccine? Vaccine { get; set; }
 }
