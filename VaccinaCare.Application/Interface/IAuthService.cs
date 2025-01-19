@@ -1,8 +1,10 @@
 ﻿using VaccinaCare.Domain.DTOs.AuthDTOs;
+using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Interface;
 
 public interface IAuthService
 {
-    Task<bool> RegisterAsync(RegisterRequestDTO registerRequest);
+    Task<User> RegisterAsync(RegisterRequestDTO registerRequest);
+    
 }

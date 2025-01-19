@@ -2,6 +2,7 @@
 using VaccinaCare.Application.Implement;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Service;
 using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain;
 using VaccinaCare.Domain.Entities;
@@ -29,7 +30,9 @@ namespace VaccinaCare.API.Architechture
 
             
             builder.Services.AddScoped<ILoggerService, LoggerService>();
+            
             builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             builder.Services.AddControllers();
 

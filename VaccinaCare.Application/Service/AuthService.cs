@@ -17,56 +17,55 @@ public class AuthService : IAuthService
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
-    public async Task<bool> RegisterAsync(RegisterRequestDTO registerRequest)
+    public async Task<User?> RegisterAsync(RegisterRequestDTO registerRequest)
     {
         try
         {
-            // Validate input
+            // Validate required fields
             if (string.IsNullOrWhiteSpace(registerRequest.Email) || string.IsNullOrWhiteSpace(registerRequest.Password))
             {
                 _logger.Error("Email and Password are required for registration.");
-                return false;
+                return null;
             }
 
-            // Check if email is already registered
+            // Check if the email is already registered
             var existingUser = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == registerRequest.Email);
             if (existingUser != null)
             {
                 _logger.Error($"Email {registerRequest.Email} is already registered.");
-                return false;
+                return null;
             }
 
-            // Create a new PasswordHasher instance
-            var passwordHasher = new PasswordHasher();
-
             // Hash the password
+            var passwordHasher = new PasswordHasher();
             var hashedPassword = passwordHasher.HashPassword(registerRequest.Password);
 
-            // Create a new User entity
+            // Create the new user using the DTO values (with defaults applied)
             var newUser = new User
             {
                 Email = registerRequest.Email.Trim(),
-                FullName = registerRequest.UserName?.Trim(),
+                FullName = registerRequest.UserName.Trim(),
                 PhoneNumber = registerRequest.PhoneNumber?.Trim(),
                 PasswordHash = hashedPassword,
-                RoleId = 1, // Default role as Parent (adjust RoleId based on your logic)
+                DateOfBirth = registerRequest.DateOfBirth.Value, 
+                ImageUrl = registerRequest.ImageUrl,           
+                RoleId = 1, 
             };
 
-            // Add the new user to the database
+            // Save the new user to the database
             await _unitOfWork.UserRepository.AddAsync(newUser);
             await _unitOfWork.SaveChangesAsync();
 
-            // Log success
             _logger.Success($"User {registerRequest.Email} successfully registered.");
-            return true;
+            return newUser;
         }
         catch (Exception ex)
         {
-            // Log exception
             _logger.Error($"Error during registration: {ex.Message}");
-            return false;
+            return null;
         }
     }
+
 
     
 }

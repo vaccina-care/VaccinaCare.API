@@ -130,6 +130,9 @@ namespace VaccinaCare.Domain.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     FullName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    Gender = table.Column<bool>(type: "bit", nullable: true),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     PasswordHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: true),
@@ -281,6 +284,7 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    Tesst = table.Column<int>(type: "int", nullable: false),
                     ParentId = table.Column<int>(type: "int", nullable: true),
                     ChildId = table.Column<int>(type: "int", nullable: true),
                     PolicyId = table.Column<int>(type: "int", nullable: true),

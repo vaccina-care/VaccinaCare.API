@@ -22,6 +22,12 @@ public class NotificationService : INotificationService
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(notificationDTO.Title) || string.IsNullOrWhiteSpace(notificationDTO.Content))
+            {
+                _logger.Warn($"Invalid notification data for user {userId}. Title and content are required.");
+                throw new ArgumentException("Notification title and content are required.");
+            }
+
             var notification = new Notification
             {
                 Title = notificationDTO.Title,
@@ -35,7 +41,7 @@ public class NotificationService : INotificationService
             await _unitOfWork.NotificationRepository.AddAsync(notification);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"Notification sent to user {userId}: {notification.Title}");
+            _logger.Info($"Notification successfully sent to user {userId}: {notification.Title}");
             return notification;
         }
         catch (Exception ex)
