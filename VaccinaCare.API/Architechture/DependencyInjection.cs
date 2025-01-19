@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain;
 using VaccinaCare.Repository;
 using VaccinaCare.Repository.Interfaces;
@@ -15,6 +17,7 @@ namespace VaccinaCare.API.Architechture
             builder.WebHost.UseUrls("http://0.0.0.0:5000");
 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<ILoggerService, LoggerService>();
 
             builder.Services.AddControllers();
 
