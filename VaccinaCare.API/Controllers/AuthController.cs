@@ -72,4 +72,51 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during registration."));
         }
     }
+    
+    
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginDTO)
+    {
+        _logger.Info($"Login attempt initiated for user: {loginDTO.Email}");
+
+        try
+        {
+            if (loginDTO == null || string.IsNullOrWhiteSpace(loginDTO.Email) || string.IsNullOrWhiteSpace(loginDTO.Password))
+            {
+                _logger.Warn("Invalid login request. Email and password are required.");
+                return BadRequest(ApiResult<object>.Error("400 - Invalid login data."));
+            }
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+            
+            
+            var loginResponse = await _authService.LoginAsync(loginDTO, configuration);
+            
+            if (loginResponse == null)
+            {
+                _logger.Warn($"Login failed for user: {loginDTO.Email}");
+                return Unauthorized(ApiResult<object>.Error("Invalid email or password."));
+            }
+
+            _logger.Success($"User {loginDTO.Email} logged in successfully.");
+            return Ok(ApiResult<object>.Success(new
+            {
+                accessToken = loginResponse.AccessToken,
+                refreshToken = loginResponse.RefreshToken
+            }, "Login successful."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error during login: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during login."));
+        }
+    }
+
 }
