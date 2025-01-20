@@ -8,11 +8,7 @@ public class PasswordHasher
     private const int SaltSize = 16; // 128-bit salt
     private const int HashSize = 32; // 256-bit hash
 
-    /// <summary>
-    /// Hashes a password with a randomly generated salt.
-    /// </summary>
-    /// <param name="password">The plain text password.</param>
-    /// <returns>A string containing the salt and hashed password, separated by a colon.</returns>
+   
     public string HashPassword(string password)
     {
         if (string.IsNullOrEmpty(password))
@@ -32,12 +28,6 @@ public class PasswordHasher
         }
     }
 
-    /// <summary>
-    /// Verifies a password against a stored hash.
-    /// </summary>
-    /// <param name="password">The plain text password to verify.</param>
-    /// <param name="storedHash">The stored hash (salt and hash, separated by a colon).</param>
-    /// <returns>True if the password matches, otherwise false.</returns>
     public bool VerifyPassword(string password, string storedHash)
     {
         if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(storedHash))
@@ -57,12 +47,6 @@ public class PasswordHasher
         return CryptographicOperations.FixedTimeEquals(hash, hashToVerify);
     }
 
-    /// <summary>
-    /// Hashes a password with a provided salt.
-    /// </summary>
-    /// <param name="password">The plain text password.</param>
-    /// <param name="salt">The salt.</param>
-    /// <returns>The hashed password as a byte array.</returns>
     private byte[] HashPasswordWithSalt(string password, byte[] salt)
     {
         using (var hmac = new HMACSHA256(salt))

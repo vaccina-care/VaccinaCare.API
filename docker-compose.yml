@@ -11,6 +11,9 @@
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ConnectionStrings__DefaultConnection=Server=vaccinacare-database;Database=VaccinaCareDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False"
+      - "JWT__SecretKey=VaccinaCare_SECRETKEY_SIEUCAPBAOMAT_VAYMACHUADU16KYTU"
+      - "JWT__Issuer=VaccinaCare_Issuer"
+      - "JWT__Audience=VaccinaCare_Audience"
 
   vaccinacare-database:
     image: mcr.microsoft.com/mssql/server:2019-latest

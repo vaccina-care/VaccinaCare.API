@@ -8,15 +8,7 @@ namespace VaccinaCare.Application.Ultils
 {
     public static class JwtUtils
     {
-        /// <summary>
-        /// Generates a JWT token with the specified expiration time.
-        /// </summary>
-        /// <param name="userId">The user ID.</param>
-        /// <param name="email">The user's email.</param>
-        /// <param name="role">The user's role.</param>
-        /// <param name="configuration">The application configuration.</param>
-        /// <param name="validityPeriod">The token's validity period.</param>
-        /// <returns>A JWT token as a string.</returns>
+       
         public static string GenerateJwtToken(string userId, string email, string role, IConfiguration configuration, TimeSpan validityPeriod)
         {
             var claims = new List<Claim>
