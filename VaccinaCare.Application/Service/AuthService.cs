@@ -11,7 +11,6 @@ public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILoggerService _logger;
-
     public AuthService(IUnitOfWork unitOfWork, ILoggerService logger)
     {
         _unitOfWork = unitOfWork;
@@ -44,8 +43,8 @@ public class AuthService : IAuthService
             var newUser = new User
             {
                 Email = registerRequest.Email.Trim(),
-                FullName = registerRequest.UserName.Trim(),
                 PhoneNumber = registerRequest.PhoneNumber?.Trim(),
+                Gender = registerRequest.Gender,
                 PasswordHash = hashedPassword,
                 DateOfBirth = registerRequest.DateOfBirth.Value, 
                 ImageUrl = registerRequest.ImageUrl,           
