@@ -12,7 +12,7 @@ public partial class User : BaseEntity
     public int? RoleId { get; set; }
     
     
-    public virtual Role? Role { get; set; } // Tham chiếu đến Role
+    public virtual Role? Role { get; set; } 
     public virtual ICollection<Child> Children { get; set; } = new List<Child>(); 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
