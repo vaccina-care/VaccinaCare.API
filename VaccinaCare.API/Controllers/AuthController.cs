@@ -72,8 +72,8 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during registration."));
         }
     }
-    
-    
+
+
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -95,10 +95,8 @@ public class AuthController : ControllerBase
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
-            
-            
             var loginResponse = await _authService.LoginAsync(loginDTO, configuration);
-            
+
             if (loginResponse == null)
             {
                 _logger.Warn($"Login failed for user: {loginDTO.Email}");

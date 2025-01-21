@@ -77,6 +77,8 @@ namespace VaccinaCare.API.Controllers
                 _logger.Info("Clearing all data in the database...");
 
                 // Clear all tables
+                await context.Users.ExecuteDeleteAsync();
+
                 await context.Appointments.ExecuteDeleteAsync();
                 await context.AppointmentsServices.ExecuteDeleteAsync();
                 await context.CancellationPolicies.ExecuteDeleteAsync();
@@ -89,7 +91,6 @@ namespace VaccinaCare.API.Controllers
                 await context.Roles.ExecuteDeleteAsync();
                 await context.Services.ExecuteDeleteAsync();
                 await context.ServiceAvailabilities.ExecuteDeleteAsync();
-                await context.Users.ExecuteDeleteAsync();
                 await context.UsersVaccinationServices.ExecuteDeleteAsync();
                 await context.VaccinationRecords.ExecuteDeleteAsync();
                 await context.VaccinePackages.ExecuteDeleteAsync();
