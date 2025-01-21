@@ -1,18 +1,60 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using VaccinaCare.API.Architechture;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure services
-builder.ConfigureServices();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
+
+
+builder.WebHost.UseUrls("http://0.0.0.0:5000");
+builder.Services.SetupIOCContainer();
+builder.Services.AddEndpointsApiExplorer();
 
 // Build the app
 var app = builder.Build();
 
-// Configure the pipeline
-app.ConfigurePipeline();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "VaccinaCare API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
-// Run the app
+// app.UseHttpsRedirection();
+
+app.UseRouting();
+try
+{
+    app.ApplyMigrations(app.Logger);
+}
+catch (Exception e)
+{
+    app.Logger.LogError(e, "An problem occurred during migration!");
+}
+
+app.UseStaticFiles();
+
+app.UseSwagger();
+
+app.UseSwaggerUI(c =>
+{
+    c.InjectJavascript("/custom-swagger.js");
+    c.InjectStylesheet("/custom-swagger.css");
+});
+
+app.UseCors("CorsPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+
 app.Run();
