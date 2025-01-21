@@ -1,29 +1,18 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using VaccinaCare.API.Architechture;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-    });
-// Add environment variables to configuration
-builder.Configuration
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
 
+// Configure services
 builder.ConfigureServices();
-builder.Services.AddEndpointsApiExplorer();
 
+// Build the app
 var app = builder.Build();
 
+// Configure the pipeline
 app.ConfigurePipeline();
-app.UseCors("CorsPolicy");
 
-app.UseAuthentication();
-
-app.UseAuthorization();
+// Run the app
 app.Run();
