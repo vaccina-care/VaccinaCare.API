@@ -14,6 +14,10 @@
       - "JWT__SecretKey=VaccinaCare_SECRETKEY_SIEUCAPBAOMAT_VAYMACHUADU16KYTU"
       - "JWT__Issuer=VaccinaCare_Issuer"
       - "JWT__Audience=VaccinaCare_Audience"
+      - EMAIL_USERNAME=trangiaphuc362003181@gmail.com
+      - EMAIL_PASSWORD=hygd bzzo brzp knfm
+      - EMAIL_HOST=smtp.gmail.com
+
 
   vaccinacare-database:
     image: mcr.microsoft.com/mssql/server:2019-latest

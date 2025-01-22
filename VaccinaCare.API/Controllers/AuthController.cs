@@ -14,12 +14,14 @@ public class AuthController : ControllerBase
     private readonly ILoggerService _logger;
     private readonly IAuthService _authService;
     private readonly INotificationService _notificationService;
+    private readonly IEmailService _emailService;
 
-    public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService)
+    public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService, IEmailService emailService)
     {
         _logger = logger;
         _authService = authService;
         _notificationService = notificationService;
+        _emailService = emailService;
     }
 
 
@@ -58,6 +60,7 @@ public class AuthController : ControllerBase
                 UserId = user.Id
             };
             await _notificationService.PushNotificationToUser(user.Id, notificationDTO);
+            await _emailService.SendWelcomeNewUserAsync(user.Email, user.FullName);
 
             return Ok(ApiResult<object>.Success(new
             {

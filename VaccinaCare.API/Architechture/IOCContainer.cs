@@ -54,14 +54,17 @@ namespace VaccinaCare.API.Architechture
 
         public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
         {
-            // Add application services
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+            // Add application services
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IEmailService, EmailService>();
             services.AddHttpContextAccessor();
 
             return services;
