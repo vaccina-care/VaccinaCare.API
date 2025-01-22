@@ -8,28 +8,42 @@ namespace VaccinaCare.Application.Ultils
 {
     public static class JwtUtils
     {
-       
         public static string GenerateJwtToken(string userId, string email, string role, IConfiguration configuration, TimeSpan validityPeriod)
         {
+            // Get secret key and issuer/audience from configuration
+            var secretKey = configuration["JWT:SecretKey"];
+            var issuer = configuration["JWT:Issuer"];
+            var audience = configuration["JWT:Audience"];
+
+            // Create signing credentials
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+            var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            // Define token claims
             var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, userId),
+            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(ClaimTypes.Role, role),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // Unique ID for the token
+            new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString(), ClaimValueTypes.Integer64) // Issued at
+        };
+
+            // Create the token
+            var tokenDescriptor = new SecurityTokenDescriptor
             {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.Role, role)
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.Add(validityPeriod),
+                Issuer = issuer,
+                Audience = audience,
+                SigningCredentials = signingCredentials
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
 
-            var tokenDescriptor = new JwtSecurityToken(
-                issuer: configuration["JWT:Issuer"],
-                audience: configuration["JWT:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.Add(validityPeriod),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(tokenDescriptor);
+            // Return the serialized token
+            return tokenHandler.WriteToken(token);
         }
     }
 }

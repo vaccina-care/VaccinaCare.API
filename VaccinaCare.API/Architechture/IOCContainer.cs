@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -37,8 +36,6 @@ namespace VaccinaCare.API.Architechture
             services.SetupJWT();
 
             services.SetupThirdParty();
-            Console.WriteLine("=== Done setup IOC Container ===");
-
             return services;
         }
 
@@ -50,6 +47,8 @@ namespace VaccinaCare.API.Architechture
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
+
+            //ĐỂ TRỐNG, SAU NÀY SẼ SETUP FIRE BASE, VNPAY, PAYOS SAU
             return services;
         }
 
@@ -67,6 +66,36 @@ namespace VaccinaCare.API.Architechture
 
             return services;
         }
+
+
+
+        private static IServiceCollection SetupDBContext(this IServiceCollection services)
+        {
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            services.AddDbContext<VaccinaCareDbContext>(options =>
+            {
+                options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]);
+            });
+
+            return services;
+        }
+
+        private static IServiceCollection SetupCORS(this IServiceCollection services)
+        {
+            services.AddCors(opt =>
+            {
+                opt.AddPolicy("CorsPolicy",
+                    policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
+            });
+
+            return services;
+        }
+
 
         private static IServiceCollection SetupSwagger(this IServiceCollection services)
         {
@@ -105,7 +134,6 @@ namespace VaccinaCare.API.Architechture
 
                 c.AddSecurityRequirement(securityRequirement);
 
-
                 // Cấu hình Swagger để sử dụng Newtonsoft.Json
                 c.UseAllOfForInheritance();
             });
@@ -113,34 +141,6 @@ namespace VaccinaCare.API.Architechture
 
             return services;
         }
-
-        private static IServiceCollection SetupDBContext(this IServiceCollection services)
-        {
-            IConfiguration configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", true, true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            services.AddDbContext<VaccinaCareDbContext>(options =>
-            {
-                options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]);
-            });
-
-            return services;
-        }
-
-        private static IServiceCollection SetupCORS(this IServiceCollection services)
-        {
-            services.AddCors(opt =>
-            {
-                opt.AddPolicy("CorsPolicy",
-                    policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
-            });
-
-            return services;
-        }
-
         private static IServiceCollection SetupJWT(this IServiceCollection services)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -161,75 +161,25 @@ namespace VaccinaCare.API.Architechture
                     x.SaveToken = true;
                     x.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
+                        ValidateIssuer = true, // Bật kiểm tra Issuer
+                        ValidateAudience = true, // Bật kiểm tra Audience
                         ValidateLifetime = true,
                         ValidIssuer = configuration["JWT:Issuer"],
                         ValidAudience = configuration["JWT:Audience"],
-                        IssuerSigningKey =
-                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
-                    };
-
-// Thêm cái này vào để map claim
-                    x.Events = new JwtBearerEvents
-                    {
-                        OnTokenValidated = context =>
-                        {
-                            var identity = context.Principal.Identity as ClaimsIdentity;
-                            if (identity != null)
-                            {
-                                var roleClaim =
-                                    identity.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
-                                if (roleClaim != null)
-                                {
-                                    identity.AddClaim(new Claim(ClaimTypes.Role, roleClaim.Value));
-                                }
-                            }
-
-                            return Task.CompletedTask;
-                        }
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
                     };
                 });
             services.AddAuthorization(options =>
             {
-                // Policy for Admin role
-                options.AddPolicy(
-                    "AdminOnly",
-                    policyBuilder => policyBuilder.RequireAssertion(
-                        context => context.User.HasClaim(claim =>
-                            claim.Type == "Role" && claim.Value == "Admin")
-                    )
-                );
+                options.AddPolicy("CustomerPolicy", policy =>
+                    policy.RequireRole("Customer"));
 
-                // Policy for Staff role
-                options.AddPolicy(
-                    "StaffOnly",
-                    policyBuilder => policyBuilder.RequireAssertion(
-                        context => context.User.HasClaim(claim =>
-                            claim.Type == "Role" && claim.Value == "Staff")
-                    )
-                );
+                options.AddPolicy("AdminPolicy", policy =>
+                    policy.RequireRole("Admin"));
 
-                // Policy for Customer role
-                options.AddPolicy(
-                    "CustomerOnly",
-                    policyBuilder => policyBuilder.RequireAssertion(
-                        context => context.User.HasClaim(claim =>
-                            claim.Type == "Role" && claim.Value == "Customer")
-                    )
-                );
-
-                // Policy for Admin or Staff roles
-                options.AddPolicy(
-                    "AdminOrStaff",
-                    policyBuilder => policyBuilder.RequireAssertion(
-                        context => context.User.HasClaim(claim =>
-                            claim.Type == "Role" &&
-                            (claim.Value == "Admin" || claim.Value == "Staff"))
-                    )
-                );
+                options.AddPolicy("StaffPolicy", policy =>
+                    policy.RequireRole("Staff"));
             });
-
 
             return services;
         }

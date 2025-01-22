@@ -67,8 +67,8 @@ namespace VaccinaCare.API.Controllers
         }
 
 
-        
-        
+
+
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -110,9 +110,9 @@ namespace VaccinaCare.API.Controllers
                 throw;
             }
         }
-        
-        
-        
+
+
+
         // Endpoint không cần authen
         [HttpGet("public")]
         public IActionResult PublicEndpoint()
@@ -120,44 +120,12 @@ namespace VaccinaCare.API.Controllers
             return Ok("Đây là endpoint công khai, không cần authen.");
         }
 
-        // Endpoint cần authen
-        [Authorize]
-        [HttpGet("protected")]
-        public IActionResult ProtectedEndpoint()
-        {
-            return Ok("Đây là endpoint bảo vệ. Chỉ những ai authen mới vào được.");
-        }
-
-        // Endpoint dành riêng cho Admin
-        [Authorize(Policy = "AdminOnly")]
-        [HttpGet("admin")]
-        public IActionResult AdminEndpoint()
-        {
-            return Ok("Chào Admin, mày có quyền truy cập endpoint này.");
-        }
-
-        // Endpoint dành riêng cho Staff
-        [Authorize(Policy = "StaffOnly")]
-        [HttpGet("staff")]
-        public IActionResult StaffEndpoint()
-        {
-            return Ok("Chào Staff, mày có quyền truy cập endpoint này.");
-        }
-
-        // Endpoint dành riêng cho Customer
-        [Authorize(Policy = "CustomerOnly")]
+        // Test endpoint for Customer users
         [HttpGet("customer")]
-        public IActionResult CustomerEndpoint()
+        [Authorize(Policy = "CustomerPolicy")] // Requires Customer role
+        public IActionResult GetCustomerContent()
         {
-            return Ok("Chào Customer, mày có quyền truy cập endpoint này.");
-        }
-
-        // Endpoint dành cho Admin hoặc Staff
-        [Authorize(Policy = "AdminOrStaff")]
-        [HttpGet("admin-or-staff")]
-        public IActionResult AdminOrStaffEndpoint()
-        {
-            return Ok("Chào Admin hoặc Staff, mày có quyền truy cập endpoint này.");
+            return Ok(new { Message = "Welcome, Customer! You are authorized to access this endpoint." });
         }
 
 

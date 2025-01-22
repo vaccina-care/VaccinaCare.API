@@ -89,6 +89,7 @@ public class AuthService : IAuthService
 
             _logger.Info($"Login request received for email: {loginDTO.Email}");
 
+            // Retrieve the user by email
             var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(
                 u => u.Email == loginDTO.Email && !u.IsDeleted
             );
@@ -99,8 +100,17 @@ public class AuthService : IAuthService
                 return null;
             }
 
+            // Verify password using PasswordHasher
+            var passwordHasher = new PasswordHasher();
+            if (!passwordHasher.VerifyPassword(loginDTO.Password, user.PasswordHash))
+            {
+                _logger.Warn($"Login attempt failed: Invalid password for email: {loginDTO.Email}.");
+                return null;
+            }
+
             _logger.Info($"User found for email: {loginDTO.Email}. Verifying user role and generating tokens.");
 
+            // Retrieve the user's role
             var role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == user.RoleId);
             if (role == null)
             {
@@ -112,14 +122,16 @@ public class AuthService : IAuthService
             var roleName = role.RoleName;
             _logger.Info($"Role '{roleName}' identified for user with email: {loginDTO.Email}.");
 
+            // Generate JWT Access Token
             var accessToken = JwtUtils.GenerateJwtToken(
                 user.Id.ToString(),
                 user.Email,
                 roleName,
                 configuration,
-                TimeSpan.FromMinutes(30)
+                TimeSpan.FromMinutes(30) // Adjust validity period as needed
             );
 
+            // Generate Refresh Token
             var refreshToken = Guid.NewGuid().ToString();
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
@@ -127,12 +139,14 @@ public class AuthService : IAuthService
             _logger.Info(
                 $"Tokens successfully generated for user with email: {loginDTO.Email}. Updating user record with refresh token.");
 
+            // Update the user's record with the refresh token
             await _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info(
                 $"User record successfully updated with refresh token for email: {loginDTO.Email}. Login process completed successfully.");
 
+            // Return the tokens
             return new LoginResponseDTO
             {
                 AccessToken = accessToken,
@@ -147,4 +161,7 @@ public class AuthService : IAuthService
             throw;
         }
     }
+
+
+
 }
