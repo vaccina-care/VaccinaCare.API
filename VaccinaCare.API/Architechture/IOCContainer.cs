@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -73,7 +74,8 @@ namespace VaccinaCare.API.Architechture
             {
                 c.UseInlineDefinitionsForEnums();
 
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GoodsDesignAPI", Version = "v1" });
+                c.SwaggerDoc("v1",
+                    new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GoodsDesignAPI", Version = "v1" });
                 var jwtSecurityScheme = new OpenApiSecurityScheme
                 {
                     Name = "JWT Authentication",
@@ -87,26 +89,25 @@ namespace VaccinaCare.API.Architechture
                 c.AddSecurityDefinition("Bearer", jwtSecurityScheme);
 
                 var securityRequirement = new OpenApiSecurityRequirement
+                {
                     {
+                        new OpenApiSecurityScheme
                         {
-                            new OpenApiSecurityScheme
+                            Reference = new OpenApiReference
                             {
-                                Reference = new OpenApiReference
-                                {
-                                    Type = ReferenceType.SecurityScheme,
-                                    Id = "Bearer"
-                                }
-                            },
-                            new string[] {}
-                        }
-                    };
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                };
 
                 c.AddSecurityRequirement(securityRequirement);
 
 
                 // Cấu hình Swagger để sử dụng Newtonsoft.Json
                 c.UseAllOfForInheritance();
-
             });
 
 
@@ -133,10 +134,8 @@ namespace VaccinaCare.API.Architechture
         {
             services.AddCors(opt =>
             {
-                opt.AddPolicy("CorsPolicy", policy =>
-                {
-                    policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
-                });
+                opt.AddPolicy("CorsPolicy",
+                    policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
             });
 
             return services;
@@ -167,7 +166,28 @@ namespace VaccinaCare.API.Architechture
                         ValidateLifetime = true,
                         ValidIssuer = configuration["JWT:Issuer"],
                         ValidAudience = configuration["JWT:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+                    };
+
+// Thêm cái này vào để map claim
+                    x.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = context =>
+                        {
+                            var identity = context.Principal.Identity as ClaimsIdentity;
+                            if (identity != null)
+                            {
+                                var roleClaim =
+                                    identity.FindFirst("http://schemas.microsoft.com/ws/2008/06/identity/claims/role");
+                                if (roleClaim != null)
+                                {
+                                    identity.AddClaim(new Claim(ClaimTypes.Role, roleClaim.Value));
+                                }
+                            }
+
+                            return Task.CompletedTask;
+                        }
                     };
                 });
             services.AddAuthorization(options =>
@@ -213,9 +233,5 @@ namespace VaccinaCare.API.Architechture
 
             return services;
         }
-
-
-
-
     }
 }

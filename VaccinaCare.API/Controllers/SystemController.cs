@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
@@ -108,6 +109,55 @@ namespace VaccinaCare.API.Controllers
                 _logger.Error($"Failed to clear database: {ex.Message}");
                 throw;
             }
+        }
+        
+        
+        
+        // Endpoint không cần authen
+        [HttpGet("public")]
+        public IActionResult PublicEndpoint()
+        {
+            return Ok("Đây là endpoint công khai, không cần authen.");
+        }
+
+        // Endpoint cần authen
+        [Authorize]
+        [HttpGet("protected")]
+        public IActionResult ProtectedEndpoint()
+        {
+            return Ok("Đây là endpoint bảo vệ. Chỉ những ai authen mới vào được.");
+        }
+
+        // Endpoint dành riêng cho Admin
+        [Authorize(Policy = "AdminOnly")]
+        [HttpGet("admin")]
+        public IActionResult AdminEndpoint()
+        {
+            return Ok("Chào Admin, mày có quyền truy cập endpoint này.");
+        }
+
+        // Endpoint dành riêng cho Staff
+        [Authorize(Policy = "StaffOnly")]
+        [HttpGet("staff")]
+        public IActionResult StaffEndpoint()
+        {
+            return Ok("Chào Staff, mày có quyền truy cập endpoint này.");
+        }
+
+        // Endpoint dành riêng cho Customer
+        [Authorize(Policy = "CustomerOnly")]
+        [HttpGet("customer")]
+        public IActionResult CustomerEndpoint()
+        {
+            return Ok("Chào Customer, mày có quyền truy cập endpoint này.");
+        }
+
+        // Endpoint dành cho Admin hoặc Staff
+        [Authorize(Policy = "AdminOrStaff")]
+        [HttpGet("admin-or-staff")]
+        public IActionResult AdminOrStaffEndpoint()
+        {
+            return Ok("Chào Admin hoặc Staff, mày có quyền truy cập endpoint này.");
         }
 
 

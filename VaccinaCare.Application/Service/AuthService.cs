@@ -56,7 +56,7 @@ public class AuthService : IAuthService
                 PasswordHash = hashedPassword,
                 DateOfBirth = registerRequest.DateOfBirth.Value,
                 ImageUrl = registerRequest.ImageUrl,
-                RoleId = 1, 
+                RoleId = 1,
             };
 
             _logger.Info("Saving the new user to the database.");
@@ -77,12 +77,13 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDTO loginDTO, IConfiguration configuration)
     {
-        _logger.Info("Login attempt initiated.");
+        _logger.Info("Login process initiated.");
+
         try
         {
             if (string.IsNullOrWhiteSpace(loginDTO.Email) || string.IsNullOrWhiteSpace(loginDTO.Password))
             {
-                _logger.Warn("Login failed due to missing email or password. Both fields are required.");
+                _logger.Warn("Login attempt failed: Missing email or password. Both fields are required.");
                 return null;
             }
 
@@ -91,40 +92,46 @@ public class AuthService : IAuthService
             var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(
                 u => u.Email == loginDTO.Email && !u.IsDeleted
             );
+
             if (user == null)
             {
-                _logger.Warn(
-                    $"Login failed. No active user found for email: {loginDTO.Email}. User may not exist or is marked as deleted.");
+                _logger.Warn($"Login attempt failed: No active user found with email: {loginDTO.Email}.");
                 return null;
             }
 
-            _logger.Info($"User found for email: {loginDTO.Email}. Proceeding with password verification.");
+            _logger.Info($"User found for email: {loginDTO.Email}. Verifying user role and generating tokens.");
 
-            var passwordHasher = new PasswordHasher();
-            if (!passwordHasher.VerifyPassword(loginDTO.Password, user.PasswordHash))
+            var role = await _unitOfWork.RoleRepository.FirstOrDefaultAsync(r => r.Id == user.RoleId);
+            if (role == null)
             {
-                _logger.Warn($"Login failed. Invalid password provided for email: {loginDTO.Email}.");
+                _logger.Warn(
+                    $"Role not found for user with email: {loginDTO.Email} and RoleId: {user.RoleId}. Login attempt aborted.");
                 return null;
             }
 
-            _logger.Info($"Password verification successful for email: {loginDTO.Email}.");
+            var roleName = role.RoleName;
+            _logger.Info($"Role '{roleName}' identified for user with email: {loginDTO.Email}.");
 
-            _logger.Info($"Generating JWT and refresh tokens for user with email: {loginDTO.Email}.");
             var accessToken = JwtUtils.GenerateJwtToken(
                 user.Id.ToString(),
                 user.Email,
-                user.Role?.RoleName ?? "Unknown",
+                roleName,
                 configuration,
                 TimeSpan.FromMinutes(30)
             );
+
             var refreshToken = Guid.NewGuid().ToString();
             user.RefreshToken = refreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            _logger.Info($"Tokens generated successfully for email: {loginDTO.Email}. Updating user record.");
+
+            _logger.Info(
+                $"Tokens successfully generated for user with email: {loginDTO.Email}. Updating user record with refresh token.");
 
             await _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveChangesAsync();
-            _logger.Info($"User record updated successfully for email: {loginDTO.Email}. Login process completed.");
+
+            _logger.Info(
+                $"User record successfully updated with refresh token for email: {loginDTO.Email}. Login process completed successfully.");
 
             return new LoginResponseDTO
             {
@@ -135,7 +142,7 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.Error(
-                $"An unexpected error occurred during login for email: {loginDTO?.Email ?? "Unknown"}. Error: {ex.Message}");
+                $"Unexpected error during login process for email: {loginDTO?.Email ?? "Unknown"}. Exception: {ex.Message}");
             _logger.Error($"StackTrace: {ex.StackTrace}");
             throw;
         }
