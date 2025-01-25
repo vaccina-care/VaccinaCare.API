@@ -6,6 +6,7 @@ namespace VaccinaCare.Repository.Interfaces
     {
         IGenericRepository<User> UserRepository { get; }
         IGenericRepository<Notification> NotificationRepository { get; }
+        IGenericRepository<Vaccine> VaccineRepository { get; }
         Task<int> SaveChangesAsync();
     }
 
