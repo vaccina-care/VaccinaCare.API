@@ -69,9 +69,6 @@ namespace VaccinaCare.API.Controllers
             }
         }
 
-
-
-
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -113,24 +110,6 @@ namespace VaccinaCare.API.Controllers
                 throw;
             }
         }
-
-
-
-        // Endpoint không cần authen
-        [HttpGet("public")]
-        public IActionResult PublicEndpoint()
-        {
-            return Ok("Đây là endpoint công khai, không cần authen.");
-        }
-
-        // Test endpoint for Customer users
-        [HttpGet("customer")]
-        [Authorize(Policy = "CustomerPolicy")] // Requires Customer role
-        public IActionResult GetCustomerContent()
-        {
-            return Ok(new { Message = "Welcome, Customer! You are authorized to access this endpoint." });
-        }
-
 
     }
 }
