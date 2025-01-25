@@ -51,10 +51,9 @@ app.UseSwagger();
 
 app.UseSwaggerUI(c =>
 {
-    c.InjectJavascript("/custom-swagger.js");
-    c.InjectStylesheet("/custom-swagger.css");
+    c.InjectJavascript("./custom-swagger.js");
+    c.InjectStylesheet("./custom-swagger.css");
 });
-
 app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();

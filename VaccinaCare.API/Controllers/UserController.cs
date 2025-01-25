@@ -2,45 +2,51 @@
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Ultils;
-using VaccinaCare.Domain.DTOs.UserDTOs;
 
-namespace VaccinaCare.API.Controllers
+namespace VaccinaCare.API.Controllers;
+
+[ApiController]
+[Route("api/users")]
+public class UserController : ControllerBase
 {
-    [ApiController]
-    [Route("api/users")]
-    public class UserController : ControllerBase
+    private readonly IAuthService _authService;
+    private readonly IUserService _userService;
+
+    public UserController(IAuthService authService, IUserService userService)
     {
-        private readonly IAuthService _authService;
+        _authService = authService;
+        _userService = userService;
+    }
 
-        public UserController(IAuthService authService)
+    [HttpGet("")]
+    [Authorize(Policy = "AdminPolicy")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GetAllUsers()
+    {
+        try
         {
-            _authService = authService;
+            // Call the service layer to get all users
+            var users = await _userService.GetAllUsersAsync();
+
+            // Return the response wrapped in ApiResult
+            return Ok(new ApiResult<object>
+            {
+                IsSuccess = true,
+                Data = users,
+                Message = "Fetched all users successfully."
+            });
         }
-
-        [HttpGet("profile")]
-        [Authorize(Policy = "CustomerPolicy")]
-        [ProducesResponseType(typeof(ApiResult<object>), 200)]
-        [ProducesResponseType(typeof(ApiResult<object>), 400)]
-        [ProducesResponseType(typeof(ApiResult<object>), 500)]
-        public async Task<ObjectResult> GetUserProfile()
+        catch (Exception ex)
         {
-            try
+            // Log and return error response
+            return StatusCode(500, new ApiResult<object>
             {
-                var currentUser = await _authService.GetCurrentUserDetailsAsync(User);
-
-                var result = ApiResult<CurrentUserDTO>.Success(currentUser, "User profile retrieved successfully.");
-                return Ok(result);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                var errorResult = ApiResult<object>.Error(ex.Message);
-                return Unauthorized(errorResult);
-            }
-            catch (Exception ex)
-            {
-                var errorResult = ApiResult<object>.Error($"An error occurred while retrieving user profile{ex}");
-                return StatusCode(500, errorResult);
-            }
+                IsSuccess = false,
+                Data = null,
+                Message = $"An error occurred: {ex.Message}"
+            });
         }
     }
 }

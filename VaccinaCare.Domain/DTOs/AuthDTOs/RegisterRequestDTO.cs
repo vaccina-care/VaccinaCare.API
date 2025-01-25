@@ -3,7 +3,6 @@
     public class RegisterRequestDTO
     {
         public string Email { get; set; } = "default@gmail.com";
-        
         public string FullName { get; set; } = "Skibidi Toilet";
         public string Password { get; set; }
         public string? PhoneNumber { get; set; } = "0909090909";

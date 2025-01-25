@@ -14,17 +14,15 @@ namespace VaccinaCare.API.Controllers
     public class SystemController : ControllerBase
     {
         private readonly VaccinaCareDbContext _context;
-        private readonly IAuthService _authService;
         private readonly ILoggerService _logger;
 
-        public SystemController(VaccinaCareDbContext context, ILoggerService logger, IAuthService authService)
+        public SystemController(VaccinaCareDbContext context, ILoggerService logger)
         {
             _context = context;
             _logger = logger;
-            _authService = authService;
         }
 
-        [HttpPost("seed-data")]
+        [HttpPost("data-seed")]
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -120,7 +118,7 @@ namespace VaccinaCare.API.Controllers
         }
 
         
-        //PRIVATE METHOD
+        //PRIVATE METHODs
         private List<Role> GetDefaultRoles()
         {
             return new List<Role>

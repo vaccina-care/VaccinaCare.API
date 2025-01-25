@@ -5,7 +5,7 @@ using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
-namespace VaccinaCare.Application.Implement;
+namespace VaccinaCare.Application.Service;
 
 public class NotificationService : INotificationService
 {
