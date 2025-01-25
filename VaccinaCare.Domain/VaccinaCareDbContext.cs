@@ -185,7 +185,7 @@ public partial class VaccinaCareDbContext : DbContext
             entity.HasOne(e => e.Role) // Một User có một Role
                 .WithMany(r => r.Users) // Một Role có nhiều User
                 .HasForeignKey(e => e.RoleId) // Khóa ngoại RoleId trong User
-                .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Role
+                .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa Role
 
             entity.HasMany(u => u.PackageProgresses) // Một User có nhiều PackageProgress
                 .WithOne(p => p.Parent) // Một PackageProgress thuộc về một User
