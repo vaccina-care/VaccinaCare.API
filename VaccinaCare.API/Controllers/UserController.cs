@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
+using VaccinaCare.Application.Interface;
+using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.UserDTOs;
 
 namespace VaccinaCare.API.Controllers
 {
@@ -8,29 +10,34 @@ namespace VaccinaCare.API.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        // Endpoint to get the profile of the authenticated user
-        [HttpGet("profile")]
-        [Authorize(Policy = "CustomerPolicy")] // Requires Customer role
-        public IActionResult GetUserProfile()
+        private readonly IAuthService _authService;
+
+        public UserController(IAuthService authService)
         {
-            // Retrieve claims from the authenticated user
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var email = User.FindFirst(ClaimTypes.Email)?.Value;
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
+            _authService = authService;
+        }
 
-            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(email))
+        [HttpGet("profile")]
+        [Authorize(Policy = "CustomerPolicy")]
+        public async Task<ObjectResult> GetUserProfile()
+        {
+            try
             {
-                return Unauthorized(new { Message = "User is not properly authenticated." });
+                var currentUser = await _authService.GetCurrentUserDetailsAsync(User);
+
+                var result = ApiResult<CurrentUserDTO>.Success(currentUser, "User profile retrieved successfully.");
+                return Ok(result);
             }
-
-            // Return the user's profile information
-            return Ok(new
+            catch (UnauthorizedAccessException ex)
             {
-                Message = "User profile retrieved successfully.",
-                UserId = userId,
-                Email = email,
-                Role = role
-            });
+                var errorResult = ApiResult<object>.Error(ex.Message);
+                return Unauthorized(errorResult);
+            }
+            catch (Exception ex)
+            {
+                var errorResult = ApiResult<object>.Error($"An error occurred while retrieving user profile{ex}");
+                return StatusCode(500, errorResult);
+            }
         }
     }
 }

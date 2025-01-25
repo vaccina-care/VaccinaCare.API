@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
+using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
@@ -18,7 +20,11 @@ public class AuthService : IAuthService
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="registerRequest"></param>
+    /// <returns></returns>
     public async Task<User?> RegisterAsync(RegisterRequestDTO registerRequest)
     {
         try
@@ -73,9 +79,13 @@ public class AuthService : IAuthService
             return null;
         }
     }
-
-
-    public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDTO loginDTO, IConfiguration configuration)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="loginDTO"></param>
+    /// <param name="configuration"></param>
+    /// <returns></returns>
+    public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDTO, IConfiguration configuration)
     {
         _logger.Info("Login process initiated.");
 
@@ -161,6 +171,38 @@ public class AuthService : IAuthService
             throw;
         }
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="UnauthorizedAccessException"></exception>
+    public async Task<CurrentUserDTO> GetCurrentUserDetailsAsync(ClaimsPrincipal user)
+    {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "User claims cannot be null.");
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+            throw new UnauthorizedAccessException("User is not properly authenticated.");
+
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(int.Parse(userId)); 
+        if (userEntity == null)
+            throw new UnauthorizedAccessException("User not found.");
+
+        return new CurrentUserDTO
+        {
+            FullName = userEntity.FullName,
+            Email = userEntity.Email,
+            Gender = userEntity.Gender,
+            DateOfBirth = userEntity.DateOfBirth,
+            ImageUrl = userEntity.ImageUrl,
+            PhoneNumber = userEntity.PhoneNumber,
+            RoleName = userEntity.Role?.RoleName 
+        };
+    }
+
 
 
 

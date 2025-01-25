@@ -81,7 +81,7 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Login([FromBody] LoginRequestDTO loginDTO)
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto loginDTO)
     {
         _logger.Info($"Login attempt initiated for user: {loginDTO.Email}");
 
