@@ -57,6 +57,7 @@ public class AuthService : IAuthService
             var newUser = new User
             {
                 Email = registerRequest.Email.Trim(),
+                FullName = registerRequest.FullName.Trim(),
                 PhoneNumber = registerRequest.PhoneNumber?.Trim(),
                 Gender = registerRequest.Gender,
                 PasswordHash = hashedPassword,

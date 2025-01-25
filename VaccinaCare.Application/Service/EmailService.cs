@@ -17,24 +17,35 @@ namespace VaccinaCare.Application.Service
             _logger = logger;
         }
 
-        public async Task SendWelcomeNewUserAsync(string userEmail, string userName)
+        public async Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest)
         {
             // Create a welcome email
             var welcomeEmail = new EmailDTO
             {
-                To = userEmail,
-                Subject = "Welcome to Our System!",
+                To = emailRequest.UserEmail,
+                Subject = "Welcome to VaccinaCare!",
                 Body = $@"
-                <h1>Welcome, {userName}!</h1>
-                <p>Thank you for signing up for our system. We're excited to have you on board.</p>
-                <p>If you have any questions, feel free to reach out to our support team.</p>
-                <p>Best regards,<br>The Team</p>
-            "
+        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+            <h1 style='color: #1e1b4b; text-align: center;'>Welcome, {emailRequest.UserName}!</h1>
+            <p style='font-size: 16px;'>Thank you for signing up for VaccinaCare, your trusted partner in managing your child's vaccination schedule. We're excited to have you on board!</p>
+            <p style='font-size: 16px;'>Here are some of the features you can enjoy:</p>
+            <ul style='font-size: 16px; padding-left: 20px;'>
+                <li>Track your child's vaccination history</li>
+                <li>Receive timely reminders for upcoming vaccines</li>
+                <li>Book and manage vaccination appointments with ease</li>
+            </ul>
+            <p style='font-size: 16px;'>If you have any questions, feel free to reach out to our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+            <p style='font-size: 16px;'>Best regards,<br>
+            <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+        </div>
+        "
             };
 
             // Send the email
             await SendEmailAsync(welcomeEmail);
         }
+
+
 
         private async Task SendEmailAsync(EmailDTO request)
         {
@@ -45,7 +56,8 @@ namespace VaccinaCare.Application.Service
             var emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
             var emailHost = Environment.GetEnvironmentVariable("EMAIL_HOST");
 
-            if (string.IsNullOrEmpty(emailUserName) || string.IsNullOrEmpty(emailPassword) || string.IsNullOrEmpty(emailHost))
+            if (string.IsNullOrEmpty(emailUserName) || string.IsNullOrEmpty(emailPassword) ||
+                string.IsNullOrEmpty(emailHost))
             {
                 throw new InvalidOperationException("Email configuration is missing in environment variables.");
             }
@@ -75,7 +87,4 @@ namespace VaccinaCare.Application.Service
             }
         }
     }
-
-
-
 }

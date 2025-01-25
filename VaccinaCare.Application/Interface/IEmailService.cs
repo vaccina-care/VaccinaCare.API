@@ -1,7 +1,9 @@
-﻿namespace VaccinaCare.Application.Interface
+﻿using VaccinaCare.Domain.DTOs.EmailDTOs;
+
+namespace VaccinaCare.Application.Interface
 {
     public interface IEmailService
     {
-        Task SendWelcomeNewUserAsync(string userEmail, string userName);
+        Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest);
     }
 }

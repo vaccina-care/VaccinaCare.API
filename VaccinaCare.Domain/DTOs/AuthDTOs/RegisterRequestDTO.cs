@@ -3,7 +3,9 @@
     public class RegisterRequestDTO
     {
         public string Email { get; set; } = "default@gmail.com";
-        public string Password { get; set; } = "123456";
+        
+        public string FullName { get; set; } = "Skibidi Toilet";
+        public string Password { get; set; }
         public string? PhoneNumber { get; set; } = "0909090909";
         public bool? Gender { get; set; } = true;
         public DateTime? DateOfBirth { get; set; } = DateTime.UtcNow.AddYears(-18);

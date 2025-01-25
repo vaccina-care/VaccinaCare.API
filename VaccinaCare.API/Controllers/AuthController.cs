@@ -3,6 +3,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
+using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.NotificationDTOs;
 
 namespace VaccinaCare.API.Controllers;
@@ -16,7 +17,8 @@ public class AuthController : ControllerBase
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
 
-    public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService, IEmailService emailService)
+    public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService,
+        IEmailService emailService)
     {
         _logger = logger;
         _authService = authService;
@@ -33,15 +35,15 @@ public class AuthController : ControllerBase
     {
         _logger.Info("Registration attempt initiated.");
 
+        if (registerDTO == null || string.IsNullOrWhiteSpace(registerDTO.Email) ||
+            string.IsNullOrWhiteSpace(registerDTO.Password))
+        {
+            _logger.Warn("Invalid registration request. Email and password are required.");
+            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
+        }
+
         try
         {
-            if (registerDTO == null || string.IsNullOrWhiteSpace(registerDTO.Email) ||
-                string.IsNullOrWhiteSpace(registerDTO.Password))
-            {
-                _logger.Warn("Invalid registration request. Email and password are required.");
-                return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-            }
-
             var user = await _authService.RegisterAsync(registerDTO);
 
             if (user == null)
@@ -60,14 +62,24 @@ public class AuthController : ControllerBase
                 UserId = user.Id
             };
             await _notificationService.PushNotificationToUser(user.Id, notificationDTO);
-            await _emailService.SendWelcomeNewUserAsync(user.Email, user.FullName);
 
-            return Ok(ApiResult<object>.Success(new
+            if (!string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(user.Email))
             {
-                userId = user.Id,
-                email = user.Email,
-                fullName = user.FullName
-            }, "Registration successful."));
+                var emailRequest = new EmailRequestDTO(user.Email, user.FullName);
+                await _emailService.SendWelcomeNewUserAsync(emailRequest);
+            }
+
+            var response = new RegisterRequestDTO
+            {
+                Email = user.Email,
+                FullName = user.FullName,
+                PhoneNumber = registerDTO.PhoneNumber,
+                Gender = registerDTO.Gender,
+                DateOfBirth = registerDTO.DateOfBirth,
+                ImageUrl = registerDTO.ImageUrl
+            };
+
+            return Ok(ApiResult<RegisterRequestDTO>.Success(response, "Registration successful."));
         }
         catch (Exception ex)
         {
@@ -87,7 +99,8 @@ public class AuthController : ControllerBase
 
         try
         {
-            if (loginDTO == null || string.IsNullOrWhiteSpace(loginDTO.Email) || string.IsNullOrWhiteSpace(loginDTO.Password))
+            if (loginDTO == null || string.IsNullOrWhiteSpace(loginDTO.Email) ||
+                string.IsNullOrWhiteSpace(loginDTO.Password))
             {
                 _logger.Warn("Invalid login request. Email and password are required.");
                 return BadRequest(ApiResult<object>.Error("400 - Invalid login data."));
@@ -119,5 +132,4 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during login."));
         }
     }
-
 }
