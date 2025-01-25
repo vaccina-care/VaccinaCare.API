@@ -9,7 +9,7 @@ using VaccinaCare.Domain.Entities;
 namespace VaccinaCare.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/system")]
     public class SystemController : ControllerBase
     {
         private readonly VaccinaCareDbContext _context;
@@ -21,6 +21,9 @@ namespace VaccinaCare.API.Controllers
             _logger = logger;
         }
         [HttpPost("seed-roles")]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> SeedRoles()
         {
             try

@@ -8,7 +8,7 @@ using VaccinaCare.Domain.DTOs.NotificationDTOs;
 namespace VaccinaCare.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly ILoggerService _logger;

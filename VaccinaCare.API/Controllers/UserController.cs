@@ -7,7 +7,7 @@ using VaccinaCare.Domain.DTOs.UserDTOs;
 namespace VaccinaCare.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/users")]
     public class UserController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -19,6 +19,9 @@ namespace VaccinaCare.API.Controllers
 
         [HttpGet("profile")]
         [Authorize(Policy = "CustomerPolicy")]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<ObjectResult> GetUserProfile()
         {
             try
