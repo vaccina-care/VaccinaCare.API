@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualBasic;
+using System.ComponentModel.DataAnnotations;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
@@ -20,8 +22,10 @@ namespace VaccinaCare.API.Controllers
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create ([FromBody] VaccineDTO vaccineDTO)
+        public async Task<IActionResult> Create([FromBody] VaccineDTO vaccineDTO)
         {
+            _logger.Info("Create vaccine request received.");
+
             if (vaccineDTO == null)
             {
                 _logger.Warn("CreateVaccine: Vaccine data is null.");
@@ -55,6 +59,64 @@ namespace VaccinaCare.API.Controllers
                 _logger.Error($"Unexpected error during creation: {ex.Message}");
                 return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
             }
+        }
+        [HttpPut("{id:int}")]
+        public async Task<IActionResult> Update(int id, [FromBody] VaccineDTO vaccineDTO)
+        {
+            _logger.Info($"Updated vaccine with ID {id} request received");
+
+            if (vaccineDTO == null)
+            {
+                _logger.Warn("VaccineDTO is null.");
+                return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
+            }
+
+            try
+            {
+                var updateVaccine = await _vaccineService.UpdateVaccine(id, vaccineDTO);
+                return Ok(ApiResult<Vaccine>.Success(updateVaccine, "Vaccine updated successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                _logger.Warn(ex.Message);
+                return NotFound(ApiResult<object>.Error(ex.Message));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Unexpected error during update: {ex.Message}");
+                return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));
+            }
+        }
+
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            _logger.Info($"Delete vaccine with ID {id} request received.");
+            try
+            {
+                var deletedVaccine = await _vaccineService.DeleteVaccine(id);
+
+                if (deletedVaccine == null)
+                {
+                    _logger.Warn($"DeleteVaccine: Failed to delete vaccine with ID {id} due to validation issues.");
+                    return BadRequest(ApiResult<object>.Error("400 - Vaccine deleting failed. Please check input data."));
+                }
+
+                _logger.Success($"DeleteVaccine: Vaccine with name '{deletedVaccine.VaccineName}' deleted successfully.");
+
+                return Ok(ApiResult<Vaccine>.Success(deletedVaccine, "Vaccine deleted successfully."));
+            }
+            catch (ValidationException ex)
+            {
+                _logger.Warn($"DeleteVaccine: Validation error while deleting vaccine with ID {id}. Error: {ex.Message}");
+                return BadRequest(ApiResult<object>.Error($"400 - Validation error: {ex.Message}"));
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Unexpected error during deletion: {ex.Message}");
+                return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during deletion."));
+            }
+
         }
     }
 }

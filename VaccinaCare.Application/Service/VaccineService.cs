@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -60,14 +61,63 @@ namespace VaccinaCare.Application.Service
             }
         }
 
-        public Task<Vaccine> DeleteVaccine(int id)
+        public async Task<Vaccine> DeleteVaccine(int id)
         {
-            throw new NotImplementedException();
+            _logger.Info($"Delete vaccine with ID: {id}");
+            try
+            {
+                var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+                if (vaccine == null)
+                {
+                    _logger.Warn($"Vaccine with ID: {id} not found.");
+                    throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
+                }
+
+                await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.Success($"Vaccine with ID {id} deleted successfully.");
+                return vaccine;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"An error occurred while deleting the vaccine with ID {id}. Error: {ex.Message}");
+                throw;
+            }
         }
 
-        public Task<Vaccine> UpdateVaccine(int id, VaccineDTO vaccineDTO)
+        public async Task<Vaccine> UpdateVaccine(int id, VaccineDTO vaccineDTO)
         {
-            throw new NotImplementedException();
+            _logger.Info($"Updated vaccine with ID: {id}");
+
+            if (vaccineDTO == null)
+            throw new NullReferenceException("400 - Vaccine data cannot be null.");
+            
+            try
+            {
+                var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+                if (vaccine == null)
+                {
+                    _logger.Warn($"Vaccine with ID: {id} not found.");
+                    throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
+                }
+
+                vaccine.VaccineName = vaccineDTO.VaccineName;
+                vaccine.Description = vaccineDTO.Description;
+                vaccine.PicUrl = vaccineDTO.PicUrl;
+                vaccine.Type = vaccineDTO.Type;
+                vaccine.Price = vaccineDTO.Price;
+
+                await _unitOfWork.VaccineRepository.Update(vaccine);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.Success("Vaccine updated successfully.");
+                return vaccine;
+            }catch(Exception ex)
+            {
+                _logger.Error($"500 -  Error during vaccine update: {ex.Message}");
+                throw;
+            }
         }
     }
 }
