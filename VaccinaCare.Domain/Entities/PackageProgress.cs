@@ -3,11 +3,11 @@
 public partial class PackageProgress : BaseEntity
 {
 
-    public int? ParentId { get; set; }
+    public Guid? ParentId { get; set; }
 
-    public int? PackageId { get; set; }
+    public Guid? PackageId { get; set; }
 
-    public int? ChildId { get; set; }
+    public Guid? ChildId { get; set; }
 
     public int? DosesCompleted { get; set; }
 

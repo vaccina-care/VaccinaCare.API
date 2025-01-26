@@ -18,7 +18,7 @@ public class NotificationService : INotificationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Notification> PushNotificationToUser(int userId, NotificationDTO notificationDTO)
+    public async Task<Notification> PushNotificationToUser(Guid userId, NotificationDTO notificationDTO)
     {
         try
         {

@@ -3,9 +3,9 @@
 public partial class VaccineSuggestion : BaseEntity
 {
 
-    public int? ChildId { get; set; }
+    public Guid? ChildId { get; set; }
 
-    public int? VaccineId { get; set; }
+    public Guid? VaccineId { get; set; }
 
     public string? SuggestedVaccine { get; set; }
 

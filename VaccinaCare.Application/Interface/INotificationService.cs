@@ -6,5 +6,5 @@ namespace VaccinaCare.Application.Interface;
 public interface INotificationService
 {
     // Push notification to a specific user
-    Task<Notification> PushNotificationToUser(int userId, NotificationDTO notificationDTO);
+    Task<Notification> PushNotificationToUser(Guid userId, NotificationDTO notificationDTO);
 }

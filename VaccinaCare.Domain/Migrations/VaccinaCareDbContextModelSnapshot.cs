@@ -24,11 +24,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Appointment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("AppointmentDate")
                         .HasColumnType("datetime");
@@ -36,8 +34,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("CancellationReason")
                         .HasColumnType("text");
 
-                    b.Property<int?>("ChildId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("Confirmed")
                         .HasColumnType("bit");
@@ -67,11 +65,11 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("PolicyId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PolicyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PreferredTimeSlot")
                         .HasMaxLength(255)
@@ -116,14 +114,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsVaccine", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -156,8 +152,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("VaccineId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
                         .HasName("PK__Appointm__3B38F27673DFA862");
@@ -171,11 +167,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.CancellationPolicy", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("CancellationDeadline")
                         .HasColumnType("int");
@@ -223,11 +217,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Child", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -262,8 +254,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("MedicalHistory")
                         .HasColumnType("text");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -281,14 +273,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Feedback", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comments")
                         .HasColumnType("text");
@@ -331,11 +321,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Invoice", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -356,8 +344,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("PaymentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("TotalAmount")
                         .HasColumnType("decimal(18, 0)");
@@ -368,8 +356,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
                         .HasName("PK__Invoices__D796AAD560EDA138");
@@ -383,14 +371,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Notification", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
@@ -437,8 +423,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("Url")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -451,14 +437,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PackageProgress", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ChildId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -485,11 +469,11 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("PackageId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PackageId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ParentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -511,17 +495,15 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal?>("Amount")
                         .HasColumnType("decimal(18, 0)");
 
-                    b.Property<int?>("AppointmentId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -542,8 +524,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int>("PaymentMethodId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("PaymentMethodId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PaymentStatus")
                         .HasMaxLength(255)
@@ -567,11 +549,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("Active")
                         .HasColumnType("bit");
@@ -614,11 +594,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -640,8 +618,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("RoleName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -649,19 +627,39 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("Id")
-                        .HasName("PK__Roles__ABCDEF123");
+                    b.HasKey("Id");
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
+                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4606),
+                            IsDeleted = false,
+                            RoleName = "Customer"
+                        },
+                        new
+                        {
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
+                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4622),
+                            IsDeleted = false,
+                            RoleName = "Staff"
+                        },
+                        new
+                        {
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
+                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4624),
+                            IsDeleted = false,
+                            RoleName = "Admin"
+                        });
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -713,8 +711,12 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<DateTime?>("RefreshTokenExpiryTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -723,7 +725,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
-                        .HasName("PK__Users__123456789");
+                        .HasName("PK_Users");
 
                     b.HasIndex("RoleId");
 
@@ -732,11 +734,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.UsersVaccination", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -757,8 +757,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ServiceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -766,8 +766,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -780,14 +780,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinationRecord", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ChildId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -830,11 +828,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Vaccine", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -887,14 +883,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AvailabilityId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("AvailabilityId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int?>("Booked")
                         .HasColumnType("int");
@@ -933,8 +927,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("VaccineId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -945,11 +939,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackage", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -992,11 +984,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackageDetail", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1020,8 +1010,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<int?>("PackageId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("PackageId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1029,8 +1019,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("VaccineId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1043,14 +1033,12 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineSuggestion", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("ChildId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("ChildId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -1084,8 +1072,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("VaccineId")
-                        .HasColumnType("int");
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
                         .HasName("PK__VaccineS__940995287532A581");
@@ -1220,8 +1208,7 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     b.HasOne("VaccinaCare.Domain.Entities.Role", "Role")
                         .WithMany("Users")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
                 });

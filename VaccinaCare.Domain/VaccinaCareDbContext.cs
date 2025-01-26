@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain;
 
@@ -16,6 +17,7 @@ public partial class VaccinaCareDbContext : DbContext
     }
 
     #region DbSet
+
     public virtual DbSet<Appointment> Appointments { get; set; }
     public virtual DbSet<AppointmentsVaccine> AppointmentsServices { get; set; }
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
@@ -36,8 +38,6 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<VaccineSuggestion> VaccineSuggestions { get; set; }
 
     #endregion
-
-
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -123,7 +123,6 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithMany(c => c.Appointments) // Một Child có nhiều Appointment
                 .HasForeignKey(a => a.ChildId) // Khóa ngoại ChildId trong Appointment
                 .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Child
-
         });
 
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
@@ -170,37 +169,40 @@ public partial class VaccinaCareDbContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Users__123456789");
+            entity.HasKey(e => e.Id).HasName("PK_Users");
 
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.Email).HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
             entity.Property(e => e.PasswordHash).HasMaxLength(500);
 
+            entity.Property(e => e.RoleName) // Lưu RoleType trực tiếp
+                .HasConversion<string>() // Nếu muốn lưu dưới dạng string (hoặc xóa dòng này để lưu int)
+                .IsRequired();
+
             entity.HasMany(u => u.Children) // Một User có nhiều Child
                 .WithOne(c => c.Parent) // Một Child có một Parent
-                .HasForeignKey(c => c.ParentId) // Khóa ngoại ParentId trong Child
-                .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User
-
-            entity.HasOne(e => e.Role) // Một User có một Role
-                .WithMany(r => r.Users) // Một Role có nhiều User
-                .HasForeignKey(e => e.RoleId) // Khóa ngoại RoleId trong User
-                .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa Role
+                .HasForeignKey(c => c.ParentId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasMany(u => u.PackageProgresses) // Một User có nhiều PackageProgress
-                .WithOne(p => p.Parent) // Một PackageProgress thuộc về một User
-                .HasForeignKey(p => p.ParentId) // Khóa ngoại ParentId
-                .OnDelete(DeleteBehavior.Restrict); // Không tự động xóa PackageProgress khi xóa User
+                .WithOne(p => p.Parent)
+                .HasForeignKey(p => p.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
+
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Roles__ABCDEF123");
+            entity.HasKey(e => e.Id);
 
-            entity.Property(e => e.RoleName).HasMaxLength(255);
+            entity.Property(e => e.RoleName)
+                .HasConversion(
+                    v => v.ToString(),
+                    v => (RoleType)Enum.Parse(typeof(RoleType), v)
+                )
+                .IsRequired();
         });
-
-
 
 
         modelBuilder.Entity<Feedback>(entity =>
@@ -214,14 +216,14 @@ public partial class VaccinaCareDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__Invoices__D796AAD560EDA138");
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
         });
-        
+
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.Property(n => n.Type)
                 .HasConversion<string>() // Chuyển đổi enum thành string
                 .HasMaxLength(50); // Giới hạn độ dài chuỗi nếu cần
         });
-        
+
         modelBuilder.Entity<PackageProgress>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_PackageProgress");
@@ -242,7 +244,6 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
-
 
 
         modelBuilder.Entity<Vaccine>(entity =>
@@ -274,7 +275,5 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.ChildId) // Khóa ngoại ChildId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
         });
-
     }
 }
-

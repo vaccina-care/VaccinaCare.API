@@ -6,6 +6,7 @@ using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.API.Controllers
 {
@@ -30,23 +31,20 @@ namespace VaccinaCare.API.Controllers
         {
             try
             {
-                // Xóa database trước khi seed
                 await ClearDatabase(_context);
 
                 // Seed roles
-                var roles = GetDefaultRoles();
-                foreach (var role in roles)
+                var roles = new List<Role>
                 {
-                    if (!_context.Roles.Any(r => r.RoleName == role.RoleName))
-                    {
-                        _context.Roles.Add(role);
-                    }
-                }
-
-                // Save changes sau khi thêm roles
+                    new Role { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), RoleName = RoleType.Customer },
+                    new Role { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), RoleName = RoleType.Staff },
+                    new Role { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), RoleName = RoleType.Admin }
+                };
+                await _context.Roles.AddRangeAsync(roles);
                 await _context.SaveChangesAsync();
-
-                // Seed accounts
+                
+                
+                // Tạo danh sách accounts, gán trực tiếp RoleName
                 var passwordHasher = new PasswordHasher();
                 var accounts = new List<User>
                 {
@@ -58,7 +56,7 @@ namespace VaccinaCare.API.Controllers
                         DateOfBirth = new DateTime(1985, 1, 1),
                         PhoneNumber = "0393734206",
                         PasswordHash = passwordHasher.HashPassword("AdminPassword@"),
-                        RoleId = roles.First(r => r.RoleName == "Admin").Id
+                        RoleName = RoleType.Admin
                     },
                     new User
                     {
@@ -68,7 +66,7 @@ namespace VaccinaCare.API.Controllers
                         DateOfBirth = new DateTime(1987, 2, 2),
                         PhoneNumber = "0987654321",
                         PasswordHash = passwordHasher.HashPassword("AdminPassword@"),
-                        RoleId = roles.First(r => r.RoleName == "Admin").Id
+                        RoleName = RoleType.Admin
                     },
                     new User
                     {
@@ -78,7 +76,7 @@ namespace VaccinaCare.API.Controllers
                         DateOfBirth = new DateTime(1990, 3, 3),
                         PhoneNumber = "1122334455",
                         PasswordHash = passwordHasher.HashPassword("StaffPassword@"),
-                        RoleId = roles.First(r => r.RoleName == "Staff").Id
+                        RoleName = RoleType.Staff
                     },
                     new User
                     {
@@ -88,20 +86,18 @@ namespace VaccinaCare.API.Controllers
                         DateOfBirth = new DateTime(1992, 4, 4),
                         PhoneNumber = "5566778899",
                         PasswordHash = passwordHasher.HashPassword("StaffPassword@"),
-                        RoleId = roles.First(r => r.RoleName == "Staff").Id
+                        RoleName = RoleType.Staff
                     }
                 };
 
                 await _context.Users.AddRangeAsync(accounts);
                 await _context.SaveChangesAsync();
 
-                // Trả kết quả
                 return Ok(ApiResult<object>.Success(new
                 {
                     Message = "Data seeded successfully.",
-                    TotalRoles = roles.Count,
                     TotalAccounts = accounts.Count,
-                    RoleNames = roles.Select(r => r.RoleName),
+                    RoleNames = accounts.Select(a => a.RoleName.ToString()),
                     AccountEmails = accounts.Select(a => a.Email)
                 }));
             }
@@ -117,17 +113,7 @@ namespace VaccinaCare.API.Controllers
             }
         }
 
-        
-        //PRIVATE METHODs
-        private List<Role> GetDefaultRoles()
-        {
-            return new List<Role>
-            {
-                new Role { RoleName = "Customer", CreatedBy = null },
-                new Role { RoleName = "Admin", CreatedBy = null },
-                new Role { RoleName = "Staff", CreatedBy = null }
-            };
-        }
+
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -175,5 +161,6 @@ namespace VaccinaCare.API.Controllers
                 throw;
             }
         }
+
     }
 }

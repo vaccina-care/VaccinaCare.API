@@ -7,7 +7,7 @@ namespace VaccinaCare.Repository.Interfaces
     {
         public Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate = null, params Expression<Func<TEntity, object>>[] includes);
 
-        Task<TEntity?> GetByIdAsync(int id, params Expression<Func<TEntity, object>>[] includes);
+        Task<TEntity?> GetByIdAsync(Guid id, params Expression<Func<TEntity, object>>[] includes);
 
         Task<TEntity> AddAsync(TEntity entity);
 
@@ -15,7 +15,7 @@ namespace VaccinaCare.Repository.Interfaces
 
         Task<bool> Update(TEntity entity);
 
-        Task<bool> SoftRemoveRangeById(List<int> entitiesId);
+        Task<bool> SoftRemoveRangeById(List<Guid> entitiesId);
 
         Task<bool> SoftRemoveRange(List<TEntity> entities);
 

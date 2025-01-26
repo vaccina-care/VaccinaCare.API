@@ -3,7 +3,7 @@
 public partial class VaccineAvailability : BaseEntity
 {
 
-    public int? AvailabilityId { get; set; }
+    public Guid? AvailabilityId { get; set; }
 
     public DateOnly? Date { get; set; }
 

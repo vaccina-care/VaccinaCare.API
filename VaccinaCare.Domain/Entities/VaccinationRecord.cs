@@ -3,7 +3,7 @@
 public partial class VaccinationRecord : BaseEntity
 {
 
-    public int? ChildId { get; set; }
+    public Guid? ChildId { get; set; }
 
     public DateTime? VaccinationDate { get; set; }
 

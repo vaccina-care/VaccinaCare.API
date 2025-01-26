@@ -3,7 +3,7 @@
 public partial class Feedback : BaseEntity
 {
 
-    public int? AppointmentId { get; set; }
+    public Guid? AppointmentId { get; set; }
 
     public int? Rating { get; set; }
 

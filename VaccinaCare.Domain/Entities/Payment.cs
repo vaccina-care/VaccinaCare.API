@@ -3,7 +3,7 @@
 public partial class Payment : BaseEntity
 {
 
-    public int? AppointmentId { get; set; }
+    public Guid? AppointmentId { get; set; }
 
     public decimal? Amount { get; set; }
 

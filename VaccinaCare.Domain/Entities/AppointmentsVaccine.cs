@@ -3,9 +3,9 @@
 public partial class AppointmentsVaccine : BaseEntity
 {
 
-    public int? AppointmentId { get; set; }
+    public Guid? AppointmentId { get; set; }
 
-    public int? VaccineId { get; set; }
+    public Guid? VaccineId { get; set; }
 
     public int? Quantity { get; set; }
 

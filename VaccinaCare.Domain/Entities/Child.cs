@@ -2,7 +2,7 @@
 
 public partial class Child : BaseEntity
 {
-    public int? ParentId { get; set; } // ID của phụ huynh
+    public Guid? ParentId { get; set; } // ID của phụ huynh
 
     public string? FullName { get; set; }
 
