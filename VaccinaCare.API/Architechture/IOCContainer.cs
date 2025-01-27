@@ -35,6 +35,8 @@ namespace VaccinaCare.API.Architechture
             services.SetupJWT();
 
             services.SetupThirdParty();
+            Console.WriteLine("=== Done setup IOC Container ===");
+
             return services;
         }
 
@@ -46,30 +48,69 @@ namespace VaccinaCare.API.Architechture
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
-
-            //ĐỂ TRỐNG, SAU NÀY SẼ SETUP FIRE BASE, VNPAY, PAYOS SAU
             return services;
         }
 
         public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
         {
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
             // Add application services
+            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<ICurrentTime, CurrentTime>();
             services.AddScoped<IClaimsService, ClaimsService>();
             services.AddScoped<ILoggerService, LoggerService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IAuthService, AuthService>();
-            services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IEmailService, EmailService>();
             services.AddHttpContextAccessor();
 
             return services;
         }
 
+        private static IServiceCollection SetupSwagger(this IServiceCollection services)
+        {
+            services.AddSwaggerGen(c =>
+            {
+                c.UseInlineDefinitionsForEnums();
 
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GoodsDesignAPI", Version = "v1" });
+                var jwtSecurityScheme = new OpenApiSecurityScheme
+                {
+                    Name = "JWT Authentication",
+                    Description = "Enter your JWT token in this field",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                };
+
+                c.AddSecurityDefinition("Bearer", jwtSecurityScheme);
+
+                var securityRequirement = new OpenApiSecurityRequirement
+                    {
+                        {
+                            new OpenApiSecurityScheme
+                            {
+                                Reference = new OpenApiReference
+                                {
+                                    Type = ReferenceType.SecurityScheme,
+                                    Id = "Bearer"
+                                }
+                            },
+                            new string[] {}
+                        }
+                    };
+
+                c.AddSecurityRequirement(securityRequirement);
+
+
+                // Cấu hình Swagger để sử dụng Newtonsoft.Json
+                c.UseAllOfForInheritance();
+
+            });
+
+
+            return services;
+        }
 
         private static IServiceCollection SetupDBContext(this IServiceCollection services)
         {
@@ -91,58 +132,15 @@ namespace VaccinaCare.API.Architechture
         {
             services.AddCors(opt =>
             {
-                opt.AddPolicy("CorsPolicy",
-                    policy => { policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod(); });
+                opt.AddPolicy("CorsPolicy", policy =>
+                {
+                    policy.WithOrigins("*").AllowAnyHeader().AllowAnyMethod();
+                });
             });
 
             return services;
         }
 
-
-        private static IServiceCollection SetupSwagger(this IServiceCollection services)
-        {
-            services.AddSwaggerGen(c =>
-            {
-                c.UseInlineDefinitionsForEnums();
-
-                c.SwaggerDoc("v1",
-                    new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GoodsDesignAPI", Version = "v1" });
-                var jwtSecurityScheme = new OpenApiSecurityScheme
-                {
-                    Name = "JWT Authentication",
-                    Description = "Enter your JWT token in this field",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.Http,
-                    Scheme = "bearer",
-                    BearerFormat = "JWT"
-                };
-
-                c.AddSecurityDefinition("Bearer", jwtSecurityScheme);
-
-                var securityRequirement = new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] { }
-                    }
-                };
-
-                c.AddSecurityRequirement(securityRequirement);
-
-                // Cấu hình Swagger để sử dụng Newtonsoft.Json
-                c.UseAllOfForInheritance();
-            });
-
-
-            return services;
-        }
         private static IServiceCollection SetupJWT(this IServiceCollection services)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -163,8 +161,8 @@ namespace VaccinaCare.API.Architechture
                     x.SaveToken = true;
                     x.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidateIssuer = true, // Bật kiểm tra Issuer
-                        ValidateAudience = true, // Bật kiểm tra Audience
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
                         ValidateLifetime = true,
                         ValidIssuer = configuration["JWT:Issuer"],
                         ValidAudience = configuration["JWT:Audience"],
@@ -173,17 +171,50 @@ namespace VaccinaCare.API.Architechture
                 });
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("CustomerPolicy", policy =>
-                    policy.RequireRole("Customer"));
+                // Policy for Admin role
+                options.AddPolicy(
+                    "AdminOnly",
+                    policyBuilder => policyBuilder.RequireAssertion(
+                        context => context.User.HasClaim(claim =>
+                            claim.Type == "Role" && claim.Value == "Admin")
+                    )
+                );
 
-                options.AddPolicy("AdminPolicy", policy =>
-                    policy.RequireRole("Admin"));
+                // Policy for Staff role
+                options.AddPolicy(
+                    "StaffOnly",
+                    policyBuilder => policyBuilder.RequireAssertion(
+                        context => context.User.HasClaim(claim =>
+                            claim.Type == "Role" && claim.Value == "Staff")
+                    )
+                );
 
-                options.AddPolicy("StaffPolicy", policy =>
-                    policy.RequireRole("Staff"));
+                // Policy for Customer role
+                options.AddPolicy(
+                    "CustomerOnly",
+                    policyBuilder => policyBuilder.RequireAssertion(
+                        context => context.User.HasClaim(claim =>
+                            claim.Type == "Role" && claim.Value == "Customer")
+                    )
+                );
+
+                // Policy for Admin or Staff roles
+                options.AddPolicy(
+                    "AdminOrStaff",
+                    policyBuilder => policyBuilder.RequireAssertion(
+                        context => context.User.HasClaim(claim =>
+                            claim.Type == "Role" &&
+                            (claim.Value == "Admin" || claim.Value == "Staff"))
+                    )
+                );
             });
+
 
             return services;
         }
+
+
+
+
     }
 }
