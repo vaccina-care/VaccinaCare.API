@@ -4,14 +4,16 @@ namespace VaccinaCare.Repository.Utils
 {
     public static class AuthenTools
     {
-        public static string GetCurrentUserId(ClaimsIdentity identity)
+        public static string? GetCurrentUserId(ClaimsIdentity? identity)
         {
-            if (identity != null)
-            {
-                var userClaims = identity.Claims;
-                return userClaims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value;
-            }
-            return null;
+            if (identity == null)
+                return null;
+
+            var userId = identity.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // Log userId value
+            Console.WriteLine($"Extracted UserId from claims: {userId}");
+            return userId;
         }
+
     }
 }

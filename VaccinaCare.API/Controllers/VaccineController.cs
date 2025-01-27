@@ -73,7 +73,7 @@ namespace VaccinaCare.API.Controllers;
             try
             {
                 var updateVaccine = await _vaccineService.UpdateVaccine(id, vaccineDTO);
-                return Ok(ApiResult<Vaccine>.Success(updateVaccine, "Vaccine updated successfully."));
+                return Ok(ApiResult<VaccineDTO>.Success(updateVaccine, "Vaccine updated successfully."));
             }
             catch (KeyNotFoundException ex)
             {

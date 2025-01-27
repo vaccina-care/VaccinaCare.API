@@ -9,12 +9,90 @@ namespace VaccinaCare.Application.Service;
 public class VaccineService : IVaccineService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
 
-    public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger)
+
+    public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger, IClaimsService claimsService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _claimsService = claimsService;
+    }
+
+    public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
+    {
+        _logger.Info($"Starting the update process for vaccine with ID: {id}");
+
+        // Validate input DTO
+        if (vaccineDTO == null)
+        {
+            _logger.Warn("Update failed: VaccineDTO is null.");
+            throw new ArgumentNullException(nameof(vaccineDTO), "400 - Vaccine data cannot be null.");
+        }
+
+        try
+        {
+            _logger.Info($"Fetching vaccine details for ID: {id}");
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+
+            if (vaccine == null)
+            {
+                _logger.Warn($"Vaccine with ID: {id} not found in the database.");
+                throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
+            }
+
+            _logger.Info(
+                $"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+
+
+            vaccine.VaccineName = !string.IsNullOrWhiteSpace(vaccineDTO.VaccineName)
+                ? vaccineDTO.VaccineName
+                : vaccine.VaccineName;
+
+            vaccine.Description = !string.IsNullOrWhiteSpace(vaccineDTO.Description)
+                ? vaccineDTO.Description
+                : vaccine.Description;
+
+            vaccine.PicUrl = !string.IsNullOrWhiteSpace(vaccineDTO.PicUrl) ? vaccineDTO.PicUrl : vaccine.PicUrl;
+
+            vaccine.Type = !string.IsNullOrWhiteSpace(vaccineDTO.Type) ? vaccineDTO.Type : vaccine.Type;
+
+            vaccine.Price =
+                vaccineDTO.Price >= 0
+                    ? vaccineDTO.Price
+                    : vaccine.Price;
+
+
+            _logger.Info(
+                $"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+
+            await _unitOfWork.VaccineRepository.Update(vaccine);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"Vaccine with ID {id} updated successfully.");
+
+            var updatedVaccineDTO = new VaccineDTO
+            {
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price
+            };
+
+            return updatedVaccineDTO;
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.Warn($"Update failed: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"500 - Error during vaccine update for ID {id}: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<Vaccine> CreateVaccine(VaccineDTO vaccineDTO)
@@ -23,7 +101,8 @@ public class VaccineService : IVaccineService
 
         try
         {
-            _logger.Info($"Received VaccineDTO with VaccineName: {vaccineDTO.VaccineName}, Type: {vaccineDTO.Type}, Price: {vaccineDTO.Price}");
+            _logger.Info(
+                $"Received VaccineDTO with VaccineName: {vaccineDTO.VaccineName}, Type: {vaccineDTO.Type}, Price: {vaccineDTO.Price}");
 
             var validationErrors = new List<string>();
 
@@ -56,7 +135,8 @@ public class VaccineService : IVaccineService
                 Type = vaccineDTO.Type,
                 Price = vaccineDTO.Price
             };
-            _logger.Info($"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+            _logger.Info(
+                $"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
             await _unitOfWork.VaccineRepository.AddAsync(vaccine);
             await _unitOfWork.SaveChangesAsync();
@@ -87,7 +167,8 @@ public class VaccineService : IVaccineService
                 throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
             }
 
-            _logger.Info($"Vaccine found. Preparing to delete: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+            _logger.Info(
+                $"Vaccine found. Preparing to delete: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
             await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
 
@@ -105,57 +186,6 @@ public class VaccineService : IVaccineService
         catch (Exception ex)
         {
             _logger.Error($"An error occurred while deleting the vaccine with ID {id}. Error: {ex.Message}");
-            throw;
-        }
-    }
-
-
-    public async Task<Vaccine> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
-    {
-        _logger.Info($"Starting the update process for vaccine with ID: {id}");
-
-        if (vaccineDTO == null)
-        {
-            _logger.Warn("Update failed: VaccineDTO is null.");
-            throw new ArgumentNullException(nameof(vaccineDTO), "400 - Vaccine data cannot be null.");
-        }
-
-        try
-        {
-            _logger.Info($"Fetching vaccine details for ID: {id}");
-            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
-
-            if (vaccine == null)
-            {
-                _logger.Warn($"Vaccine with ID: {id} not found in the database.");
-                throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
-            }
-
-            _logger.Info($"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
-
-            vaccine.VaccineName = vaccineDTO.VaccineName;
-            vaccine.Description = vaccineDTO.Description;
-            vaccine.PicUrl = vaccineDTO.PicUrl;
-            vaccine.Type = vaccineDTO.Type;
-            vaccine.Price = vaccineDTO.Price;
-
-            _logger.Info($"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
-
-            await _unitOfWork.VaccineRepository.Update(vaccine);
-            await _unitOfWork.SaveChangesAsync();
-
-            _logger.Success($"Vaccine with ID {id} updated successfully.");
-
-            return vaccine;
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Update failed: {ex.Message}");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"500 - Error during vaccine update for ID {id}: {ex.Message}");
             throw;
         }
     }

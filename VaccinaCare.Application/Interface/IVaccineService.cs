@@ -7,5 +7,5 @@ public interface IVaccineService
 {
     Task<Vaccine> CreateVaccine(VaccineDTO vaccineDTO);
     Task<Vaccine> DeleteVaccine(Guid id);
-    Task<Vaccine> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);
+    Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);
 }
