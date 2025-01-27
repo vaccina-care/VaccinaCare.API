@@ -64,6 +64,7 @@ namespace VaccinaCare.API.Architechture
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IVaccineService, VaccineService>();
             services.AddHttpContextAccessor();
 
             return services;
