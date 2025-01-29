@@ -12,7 +12,7 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250129023853_Initial")]
+    [Migration("20250129033143_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -836,14 +836,14 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.Property<string>("PicUrl")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18, 0)");
 
                     b.Property<string>("Type")
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
