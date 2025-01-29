@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -21,6 +22,10 @@ namespace VaccinaCare.API.Controllers;
         }
 
         [HttpPost("create")]
+        [Authorize(Policy = "StaffPolicy")]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> Create([FromBody] VaccineDTO vaccineDTO)
         {
             _logger.Info("Create vaccine request received.");
@@ -60,6 +65,10 @@ namespace VaccinaCare.API.Controllers;
             }
         }
         [HttpPut("{id:guid}")]
+        [Authorize(Policy = "StaffPolicy")]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> Update(Guid id, [FromBody] VaccineDTO vaccineDTO)
         {
             _logger.Info($"Updated vaccine with ID {id} request received");
@@ -88,6 +97,10 @@ namespace VaccinaCare.API.Controllers;
         }
 
         [HttpDelete("{id:guid}")]
+        [Authorize(Policy = "StaffPolicy")]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
         public async Task<IActionResult> Delete(Guid id)
         {
             _logger.Info($"Delete vaccine with ID {id} request received.");

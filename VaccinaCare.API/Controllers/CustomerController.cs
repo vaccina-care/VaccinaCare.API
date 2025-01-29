@@ -26,13 +26,14 @@ namespace VaccinaCare.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
-        public async Task<ObjectResult> GetUserProfile()
+        public async Task<IActionResult> GetUserProfile()
         {
             try
             {
-                var currentUser = await _claimsService.GetCurrentUserDetailsAsync(User);
-
-                var result = ApiResult<CurrentUserDTO>.Success(currentUser, "User profile retrieved successfully.");
+                Guid currentUserId = _claimsService.GetCurrentUserId;
+                var currentUser = await _userService.GetUserDetails(currentUserId); 
+        
+                var result = ApiResult<object>.Success(currentUser, "User profile retrieved successfully.");
                 return Ok(result);
             }
             catch (UnauthorizedAccessException ex)
@@ -42,10 +43,11 @@ namespace VaccinaCare.API.Controllers
             }
             catch (Exception ex)
             {
-                var errorResult = ApiResult<object>.Error($"An error occurred while retrieving user profile{ex}");
+                var errorResult = ApiResult<object>.Error($"An error occurred while retrieving user profile: {ex.Message}");
                 return StatusCode(500, errorResult);
             }
         }
+
         
         
     }

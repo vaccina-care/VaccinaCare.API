@@ -28,7 +28,8 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
-    public virtual DbSet<Vaccine> Services { get; set; }
+    
+    public virtual DbSet<Vaccine> Vaccines { get; set; }
     public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }

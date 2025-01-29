@@ -630,29 +630,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Role", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4606),
-                            IsDeleted = false,
-                            RoleName = "Customer"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4622),
-                            IsDeleted = false,
-                            RoleName = "Staff"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4624),
-                            IsDeleted = false,
-                            RoleName = "Admin"
-                        });
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>

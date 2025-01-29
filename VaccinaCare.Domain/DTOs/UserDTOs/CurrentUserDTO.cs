@@ -1,7 +1,7 @@
 ﻿using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain.DTOs.UserDTOs;
-
+[Serializable]
 public class CurrentUserDTO
 {
     public string? FullName { get; set; }

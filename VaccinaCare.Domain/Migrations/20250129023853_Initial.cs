@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace VaccinaCare.Domain.Migrations
 {
     /// <inheritdoc />
@@ -572,16 +570,6 @@ namespace VaccinaCare.Domain.Migrations
                         column: x => x.UserId,
                         principalTable: "User",
                         principalColumn: "Id");
-                });
-
-            migrationBuilder.InsertData(
-                table: "Role",
-                columns: new[] { "Id", "CreatedAt", "CreatedBy", "DeletedAt", "DeletedBy", "RoleName", "UpdatedAt", "UpdatedBy" },
-                values: new object[,]
-                {
-                    { new Guid("11111111-1111-1111-1111-111111111111"), new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4606), null, null, null, "Customer", null, null },
-                    { new Guid("22222222-2222-2222-2222-222222222222"), new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4622), null, null, null, "Staff", null, null },
-                    { new Guid("33333333-3333-3333-3333-333333333333"), new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4624), null, null, null, "Admin", null, null }
                 });
 
             migrationBuilder.CreateIndex(
