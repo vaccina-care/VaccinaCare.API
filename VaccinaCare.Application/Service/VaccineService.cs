@@ -95,7 +95,7 @@ public class VaccineService : IVaccineService
         }
     }
 
-    public async Task<Vaccine> CreateVaccine(VaccineDTO vaccineDTO)
+    public async Task<VaccineDTO> CreateVaccine(VaccineDTO vaccineDTO)
     {
         _logger.Info("Starting to create a new vaccine.");
 
@@ -141,8 +141,17 @@ public class VaccineService : IVaccineService
             await _unitOfWork.VaccineRepository.AddAsync(vaccine);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Success($"Vaccine '{vaccine.VaccineName}' created successfully with ID {vaccine.Id}.");
-            return vaccine;
+            var createdVaccineDTO = new VaccineDTO
+            {
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price
+            };
+
+            _logger.Success($"Vaccine '{createdVaccineDTO.VaccineName}' created successfully with ID {vaccine.Id}.");
+            return createdVaccineDTO;
         }
         catch (Exception ex)
         {
@@ -153,7 +162,7 @@ public class VaccineService : IVaccineService
     }
 
 
-    public async Task<Vaccine> DeleteVaccine(Guid id)
+    public async Task<VaccineDTO> DeleteVaccine(Guid id)
     {
         _logger.Info($"Initiating vaccine deletion process for ID: {id}");
 
@@ -161,32 +170,38 @@ public class VaccineService : IVaccineService
         {
             _logger.Info($"Fetching vaccine details for ID: {id}");
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
-            if (vaccine == null)
+
+            if (vaccine == null || vaccine.IsDeleted)
             {
-                _logger.Warn($"Vaccine with ID: {id} not found in the database.");
-                throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
+                _logger.Warn($"Vaccine with ID: {id} not found or already deleted.");
+                throw new KeyNotFoundException($"Vaccine with ID {id} not found or already deleted.");
             }
 
             _logger.Info(
                 $"Vaccine found. Preparing to delete: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
             await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
-
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Success($"Vaccine with ID {id} ('{vaccine.VaccineName}') deleted successfully.");
 
-            return vaccine;
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Deletion failed: {ex.Message}");
-            throw;
+            // Tự map tay thành DTO rồi return
+            var deletedVaccineDTO = new VaccineDTO
+            {
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price
+            };
+
+            return deletedVaccineDTO;
         }
         catch (Exception ex)
         {
-            _logger.Error($"An error occurred while deleting the vaccine with ID {id}. Error: {ex.Message}");
+            _logger.Error($"Failed to delete vaccine with ID {id}. Error: {ex.Message}");
             throw;
         }
     }
+
 }

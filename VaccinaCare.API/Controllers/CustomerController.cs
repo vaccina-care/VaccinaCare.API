@@ -22,7 +22,7 @@ namespace VaccinaCare.API.Controllers
         }
 
         [HttpGet("users/me")]
-        [Authorize(Policy = "CustomerPolicy")]
+        [Authorize]
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VaccinaCare.Domain;
 
@@ -11,9 +12,11 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    partial class VaccinaCareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250129032836_UpdateVaccineUnicode")]
+    partial class UpdateVaccineUnicode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
