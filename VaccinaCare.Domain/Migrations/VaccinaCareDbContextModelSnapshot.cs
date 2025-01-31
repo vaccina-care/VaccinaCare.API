@@ -824,7 +824,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -832,14 +832,12 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("PicUrl")
-                        .HasMaxLength(255)
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("Price")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Type")
-                        .HasMaxLength(255)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -849,11 +847,9 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("VaccineName")
-                        .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__Services__C51BB0EAE3CBFA2E");
+                    b.HasKey("Id");
 
                     b.ToTable("Vaccine", (string)null);
                 });

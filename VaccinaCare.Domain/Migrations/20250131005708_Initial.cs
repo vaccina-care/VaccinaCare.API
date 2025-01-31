@@ -78,11 +78,11 @@ namespace VaccinaCare.Domain.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    VaccineName = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    PicUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 255, nullable: true),
-                    Type = table.Column<string>(type: "nvarchar(100)", maxLength: 255, nullable: true),
-                    Price = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
+                    VaccineName = table.Column<string>(type: "nvarchar(255)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PicUrl = table.Column<string>(type: "nvarchar(500)", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(100)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -93,7 +93,7 @@ namespace VaccinaCare.Domain.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Services__C51BB0EAE3CBFA2E", x => x.Id);
+                    table.PrimaryKey("PK_Vaccine", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(

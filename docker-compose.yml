@@ -10,7 +10,7 @@
       - vaccinacare-database
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - "ConnectionStrings__DefaultConnection=Server=vaccinacare-database;Database=VaccinaCareDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False"
+      - "ConnectionStrings__DefaultConnection=Server=vaccinacare-database;Database=VaccinaCareDb;User=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True"
       - "JWT__SecretKey=VaccinaCare_SECRETKEY_SIEUCAPBAOMAT_VAYMACHUADU16KYTU"
       - "JWT__Issuer=VaccinaCare_Issuer"
       - "JWT__Audience=VaccinaCare_Audience"

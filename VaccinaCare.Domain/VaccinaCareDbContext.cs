@@ -246,17 +246,6 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
 
-
-        modelBuilder.Entity<Vaccine>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Services__C51BB0EAE3CBFA2E");
-            entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.PicUrl).HasMaxLength(255);
-            entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.VaccineName).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
-        });
-
         modelBuilder.Entity<VaccineSuggestion>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__VaccineS__940995287532A581");
