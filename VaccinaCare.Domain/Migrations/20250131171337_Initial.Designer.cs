@@ -12,7 +12,7 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250131005708_Initial")]
+    [Migration("20250131171337_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -798,10 +798,15 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<DateTime?>("VaccinationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id")
                         .HasName("PK_VaccinationRecords");
 
                     b.HasIndex("ChildId");
+
+                    b.HasIndex("VaccineId");
 
                     b.ToTable("VaccinationRecord", (string)null);
                 });
@@ -1211,7 +1216,14 @@ namespace VaccinaCare.Domain.Migrations
                         .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
+                        .WithMany("VaccinationRecords")
+                        .HasForeignKey("VaccineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Child");
+
+                    b.Navigation("Vaccine");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
@@ -1311,6 +1323,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("AppointmentsVaccines");
 
                     b.Navigation("UsersVaccinations");
+
+                    b.Navigation("VaccinationRecords");
 
                     b.Navigation("VaccineAvailabilities");
 

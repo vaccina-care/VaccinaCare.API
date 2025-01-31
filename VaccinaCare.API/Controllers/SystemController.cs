@@ -24,7 +24,6 @@ namespace VaccinaCare.API.Controllers
         }
 
         [HttpPost("seed-all-data")]
-        [Authorize(Policy = "AdminOrStaffPolicy")]
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]

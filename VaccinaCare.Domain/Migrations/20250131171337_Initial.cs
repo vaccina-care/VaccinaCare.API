@@ -360,6 +360,7 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ChildId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    VaccineId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VaccinationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     ReactionDetails = table.Column<string>(type: "text", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
@@ -379,6 +380,12 @@ namespace VaccinaCare.Domain.Migrations
                         principalTable: "Child",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_VaccinationRecord_Vaccine_VaccineId",
+                        column: x => x.VaccineId,
+                        principalTable: "Vaccine",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -666,6 +673,11 @@ namespace VaccinaCare.Domain.Migrations
                 name: "IX_VaccinationRecord_ChildId",
                 table: "VaccinationRecord",
                 column: "ChildId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VaccinationRecord_VaccineId",
+                table: "VaccinationRecord",
+                column: "VaccineId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_VaccineAvailability_VaccineId",

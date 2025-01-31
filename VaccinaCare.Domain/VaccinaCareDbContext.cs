@@ -162,6 +162,7 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId trong Child
                 .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User (tùy chọn)
 
+            
             entity.HasMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
                 .WithOne(v => v.Child) // Một VaccinationRecord thuộc về một Child
                 .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
@@ -260,10 +261,16 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.VaccinationDate).IsRequired(false);
             entity.Property(e => e.ReactionDetails).HasColumnType("text").IsRequired(false);
 
-            entity.HasOne(e => e.Child) // Một VaccinationRecord thuộc về một Child
-                .WithMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
-                .HasForeignKey(e => e.ChildId) // Khóa ngoại ChildId
-                .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
+            entity.HasOne(e => e.Child)
+                .WithMany(c => c.VaccinationRecords)
+                .HasForeignKey(e => e.ChildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Vaccine)
+                .WithMany(v => v.VaccinationRecords)
+                .HasForeignKey(e => e.VaccineId)
+                .OnDelete(DeleteBehavior.Restrict); // or Cascade if you want dependent records to be deleted
         });
+
     }
 }
