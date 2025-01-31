@@ -87,5 +87,84 @@ namespace VaccinaCare.Application.Service
                 throw;
             }
         }
+
+        public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
+        {
+            try
+            {
+                _logger.Info($"Starting user info update for UserId: {userId}");
+
+                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+                if (user == null)
+                {
+                    _logger.Warn($"User with ID {userId} not found.");
+                    throw new KeyNotFoundException("User not found.");
+                }
+
+                bool isUpdated = false;
+
+                if (!string.IsNullOrEmpty(userUpdateDto.FullName))
+                {
+                    user.FullName = userUpdateDto.FullName;
+                    isUpdated = true;
+                }
+
+                if (userUpdateDto.Gender.HasValue)
+                {
+                    user.Gender = userUpdateDto.Gender;
+                    isUpdated = true;
+                }
+
+                if (userUpdateDto.DateOfBirth.HasValue)
+                {
+                    user.DateOfBirth = userUpdateDto.DateOfBirth;
+                    isUpdated = true;
+                }
+
+                if (!string.IsNullOrEmpty(userUpdateDto.ImageUrl))
+                {
+                    user.ImageUrl = userUpdateDto.ImageUrl;
+                    isUpdated = true;
+                }
+
+                if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber))
+                {
+                    user.PhoneNumber = userUpdateDto.PhoneNumber;
+                    isUpdated = true;
+                }
+
+                if (!isUpdated)
+                {
+                    _logger.Warn($"No changes detected for UserId: {userId}");
+                    return new UserUpdateDto
+                    {
+                        FullName = user.FullName,
+                        Gender = user.Gender,
+                        DateOfBirth = user.DateOfBirth,
+                        ImageUrl = user.ImageUrl,
+                        PhoneNumber = user.PhoneNumber
+                    };
+                }
+
+                await _unitOfWork.UserRepository.Update(user);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.Success($"User info updated successfully for UserId: {userId}");
+
+                return new UserUpdateDto
+                {
+                    FullName = user.FullName,
+                    Gender = user.Gender,
+                    DateOfBirth = user.DateOfBirth,
+                    ImageUrl = user.ImageUrl,
+                    PhoneNumber = user.PhoneNumber
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error updating user info for UserId: {userId}. Exception: {ex.Message}");
+                throw;
+            }
+        }
     }
 }

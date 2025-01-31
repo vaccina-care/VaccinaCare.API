@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
+using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Repository.Interfaces;
@@ -8,20 +9,22 @@ using VaccinaCare.Repository.Interfaces;
 namespace VaccinaCare.API.Controllers
 {
     [ApiController]
-    [Route("api")]
+    [Route("api/users")]
     public class CustomerController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly IClaimsService _claimsService;
-        
+        private readonly ILoggerService _logger;
 
-        public CustomerController(IUserService userService, IClaimsService claimsService)
+
+        public CustomerController(IUserService userService, IClaimsService claimsService, ILoggerService logger)
         {
             _userService = userService;
             _claimsService = claimsService;
+            _logger = logger;
         }
 
-        [HttpGet("users/me")]
+        [HttpGet("me")]
         [Authorize]
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -31,8 +34,8 @@ namespace VaccinaCare.API.Controllers
             try
             {
                 Guid currentUserId = _claimsService.GetCurrentUserId;
-                var currentUser = await _userService.GetUserDetails(currentUserId); 
-        
+                var currentUser = await _userService.GetUserDetails(currentUserId);
+
                 var result = ApiResult<object>.Success(currentUser, "User profile retrieved successfully.");
                 return Ok(result);
             }
@@ -43,12 +46,69 @@ namespace VaccinaCare.API.Controllers
             }
             catch (Exception ex)
             {
-                var errorResult = ApiResult<object>.Error($"An error occurred while retrieving user profile: {ex.Message}");
+                var errorResult =
+                    ApiResult<object>.Error($"An error occurred while retrieving user profile: {ex.Message}");
                 return StatusCode(500, errorResult);
             }
         }
 
-        
-        
+
+        [HttpPut("me")]
+        [Authorize]
+        [ProducesResponseType(typeof(ApiResult<object>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
+        public async Task<IActionResult> UpdateUserProfile([FromBody] UserUpdateDto userUpdateDto)
+        {
+            try
+            {
+                if (userUpdateDto == null)
+                {
+                    return BadRequest(new ApiResult<object>
+                    {
+                        IsSuccess = false,
+                        Message = "Request body cannot be empty.",
+                        Data = null
+                    });
+                }
+                Guid currentUserId = _claimsService.GetCurrentUserId;
+
+                if (currentUserId == Guid.Empty)
+                {
+                    return Unauthorized(new ApiResult<object>
+                    {
+                        IsSuccess = false,
+                        Message = "Unauthorized request.",
+                        Data = null
+                    });
+                }
+
+                var updatedUser = await _userService.UpdateUserInfo(currentUserId, userUpdateDto);
+                return Ok(new ApiResult<UserUpdateDto>
+                {
+                    IsSuccess = true,
+                    Message = "User profile updated successfully.",
+                    Data = updatedUser
+                });
+            }
+            catch (KeyNotFoundException knfEx)
+            {
+                return NotFound(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = knfEx.Message,
+                    Data = null
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "An internal server error occurred.",
+                    Data = null
+                });
+            }
+        }
     }
 }
