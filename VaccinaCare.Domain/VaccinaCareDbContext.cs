@@ -28,7 +28,8 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
-    public virtual DbSet<Vaccine> Services { get; set; }
+    
+    public virtual DbSet<Vaccine> Vaccines { get; set; }
     public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
@@ -161,6 +162,7 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId trong Child
                 .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User (tùy chọn)
 
+            
             entity.HasMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
                 .WithOne(v => v.Child) // Một VaccinationRecord thuộc về một Child
                 .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
@@ -245,17 +247,6 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
 
-
-        modelBuilder.Entity<Vaccine>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__Services__C51BB0EAE3CBFA2E");
-            entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.PicUrl).HasMaxLength(255);
-            entity.Property(e => e.Price).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.VaccineName).HasMaxLength(255);
-            entity.Property(e => e.Type).HasMaxLength(255);
-        });
-
         modelBuilder.Entity<VaccineSuggestion>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__VaccineS__940995287532A581");
@@ -270,10 +261,16 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.VaccinationDate).IsRequired(false);
             entity.Property(e => e.ReactionDetails).HasColumnType("text").IsRequired(false);
 
-            entity.HasOne(e => e.Child) // Một VaccinationRecord thuộc về một Child
-                .WithMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
-                .HasForeignKey(e => e.ChildId) // Khóa ngoại ChildId
-                .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
+            entity.HasOne(e => e.Child)
+                .WithMany(c => c.VaccinationRecords)
+                .HasForeignKey(e => e.ChildId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Vaccine)
+                .WithMany(v => v.VaccinationRecords)
+                .HasForeignKey(e => e.VaccineId)
+                .OnDelete(DeleteBehavior.Restrict); // or Cascade if you want dependent records to be deleted
         });
+
     }
 }

@@ -46,7 +46,6 @@ namespace VaccinaCare.Application.Service
         }
 
 
-
         private async Task SendEmailAsync(EmailDTO request)
         {
             var email = new MimeMessage();

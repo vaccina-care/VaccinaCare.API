@@ -12,7 +12,7 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250126084134_Initial")]
+    [Migration("20250131171337_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -633,29 +633,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Role", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4606),
-                            IsDeleted = false,
-                            RoleName = "Customer"
-                        },
-                        new
-                        {
-                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4622),
-                            IsDeleted = false,
-                            RoleName = "Staff"
-                        },
-                        new
-                        {
-                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
-                            CreatedAt = new DateTime(2025, 1, 26, 15, 41, 33, 764, DateTimeKind.Utc).AddTicks(4624),
-                            IsDeleted = false,
-                            RoleName = "Admin"
-                        });
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -821,10 +798,15 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<DateTime?>("VaccinationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id")
                         .HasName("PK_VaccinationRecords");
 
                     b.HasIndex("ChildId");
+
+                    b.HasIndex("VaccineId");
 
                     b.ToTable("VaccinationRecord", (string)null);
                 });
@@ -850,7 +832,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -858,15 +840,13 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("PicUrl")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<decimal?>("Price")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Type")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -875,11 +855,9 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("VaccineName")
-                        .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.HasKey("Id")
-                        .HasName("PK__Services__C51BB0EAE3CBFA2E");
+                    b.HasKey("Id");
 
                     b.ToTable("Vaccine", (string)null);
                 });
@@ -1238,7 +1216,14 @@ namespace VaccinaCare.Domain.Migrations
                         .HasForeignKey("ChildId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
+                        .WithMany("VaccinationRecords")
+                        .HasForeignKey("VaccineId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Child");
+
+                    b.Navigation("Vaccine");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
@@ -1338,6 +1323,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("AppointmentsVaccines");
 
                     b.Navigation("UsersVaccinations");
+
+                    b.Navigation("VaccinationRecords");
 
                     b.Navigation("VaccineAvailabilities");
 

@@ -71,7 +71,6 @@ namespace VaccinaCare.API.Architechture
         }
 
 
-
         private static IServiceCollection SetupDBContext(this IServiceCollection services)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -144,6 +143,7 @@ namespace VaccinaCare.API.Architechture
 
             return services;
         }
+
         private static IServiceCollection SetupJWT(this IServiceCollection services)
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -169,7 +169,8 @@ namespace VaccinaCare.API.Architechture
                         ValidateLifetime = true,
                         ValidIssuer = configuration["JWT:Issuer"],
                         ValidAudience = configuration["JWT:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:SecretKey"]))
                     };
                 });
             services.AddAuthorization(options =>
@@ -182,7 +183,11 @@ namespace VaccinaCare.API.Architechture
 
                 options.AddPolicy("StaffPolicy", policy =>
                     policy.RequireRole("Staff"));
+
+                options.AddPolicy("AdminOrStaffPolicy", policy =>
+                    policy.RequireRole("Admin", "Staff"));
             });
+
 
             return services;
         }
