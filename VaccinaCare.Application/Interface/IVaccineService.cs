@@ -8,4 +8,6 @@ public interface IVaccineService
     Task<Vaccine> CreateVaccine(VaccineDTO vaccineDTO);
     Task<Vaccine> DeleteVaccine(Guid id);
     Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);
+    Task<PagedResult<VaccineDTO>> GetVaccines(
+        string? search, string? type, string? sortBy, bool isDescending, int page, int pageSize);
 }

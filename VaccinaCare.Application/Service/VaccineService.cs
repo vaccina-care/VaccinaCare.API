@@ -146,7 +146,6 @@ public class VaccineService : IVaccineService
         }
         catch (Exception ex)
         {
-            // Log the exception with details
             _logger.Error($"An error occurred while creating the vaccine. Error: {ex.Message}");
             throw;
         }
@@ -188,5 +187,62 @@ public class VaccineService : IVaccineService
             _logger.Error($"An error occurred while deleting the vaccine with ID {id}. Error: {ex.Message}");
             throw;
         }
+    }
+
+    public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page, int pageSize)
+    {
+        var query = await _unitOfWork.VaccineRepository.GetAllAsync();
+        var queryList = query.ToList();
+
+        // Filtering
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            string searchLower = search.Trim().ToLower();
+            queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
+        }
+        //Sorting
+
+        if (!string.IsNullOrWhiteSpace(sortBy))
+        {
+            switch (sortBy.ToLower())
+            {
+                case "vaccinename":
+                    queryList = isDescending ? queryList.OrderByDescending(v => v.VaccineName).ToList() : queryList.OrderBy(v => v.VaccineName).ToList();
+                    break;
+                case "price":
+                    queryList = isDescending ? queryList.OrderByDescending(v => v.Price).ToList() : queryList.OrderBy(v => v.Price).ToList();
+                    break;
+                case "type":
+                    queryList = isDescending ? queryList.OrderByDescending(v => v.Type).ToList() : queryList.OrderBy(v => v.Type).ToList();
+                    break;
+                default:
+                    _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
+                    queryList = queryList.OrderBy(v => v.VaccineName).ToList();
+                    break;
+            }
+        }
+
+        // Pagination
+        var totalItems = queryList.Count();
+        var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+        // Mapping to DTOs
+        var vaccineDTOs = vaccines.Select( v => new VaccineDTO
+        {
+            VaccineName = v.VaccineName,
+            Description = v.Description,
+            PicUrl = v.PicUrl,
+            Type = v.Type,
+            Price = v.Price
+        }).ToList();
+
+        var result = new PagedResult<VaccineDTO>(vaccineDTOs, totalItems, page, pageSize);
+
+        return result;
     }
 }
