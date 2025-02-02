@@ -22,68 +22,6 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    public async Task<User?> RegisterAsync(RegisterRequestDTO registerRequest)
-    {
-        try
-        {
-            _logger.Info("Starting registration process.");
-
-            // Kiểm tra các trường bắt buộc
-            if (string.IsNullOrWhiteSpace(registerRequest.Email) || string.IsNullOrWhiteSpace(registerRequest.Password))
-            {
-                _logger.Warn("Email or Password is missing in the registration request.");
-                return null;
-            }
-
-            _logger.Info($"Validated required fields for email: {registerRequest.Email}");
-
-            // Kiểm tra email đã tồn tại chưa
-            var existingUser =
-                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == registerRequest.Email);
-            if (existingUser != null)
-            {
-                _logger.Warn($"Registration attempt failed. Email {registerRequest.Email} is already in use.");
-                return null;
-            }
-
-            _logger.Info($"Email {registerRequest.Email} is available for registration.");
-
-            // Hash mật khẩu
-            _logger.Info("Hashing the password.");
-            var passwordHasher = new PasswordHasher();
-            var hashedPassword = passwordHasher.HashPassword(registerRequest.Password);
-
-            // Tạo user mới
-            _logger.Info("Creating new user object.");
-            var newUser = new User
-            {
-                Email = registerRequest.Email.Trim(),
-                FullName = registerRequest.FullName?.Trim(),
-                PhoneNumber = registerRequest.PhoneNumber?.Trim(),
-                Gender = registerRequest.Gender,
-                PasswordHash = hashedPassword,
-                DateOfBirth = registerRequest.DateOfBirth,
-                ImageUrl = registerRequest.ImageUrl,
-                RoleName = RoleType.Customer // Lưu trực tiếp RoleType (enum)
-            };
-
-            // Lưu user vào database
-            _logger.Info("Saving the new user to the database.");
-            await _unitOfWork.UserRepository.AddAsync(newUser);
-            await _unitOfWork.SaveChangesAsync();
-
-            _logger.Success($"User {registerRequest.Email} successfully registered.");
-            return newUser;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error(
-                $"An unexpected error occurred during registration for email {registerRequest?.Email ?? "Unknown"}: {ex.Message}");
-            return null;
-        }
-    }
-
-
     public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDTO, IConfiguration configuration)
     {
         _logger.Info("Login process initiated.");
@@ -155,6 +93,106 @@ public class AuthService : IAuthService
             throw;
         }
     }
+    public async Task<User?> RegisterAsync(RegisterRequestDTO registerRequest)
+    {
+        try
+        {
+            _logger.Info("Starting registration process.");
+
+            // Kiểm tra các trường bắt buộc
+            if (string.IsNullOrWhiteSpace(registerRequest.Email) || string.IsNullOrWhiteSpace(registerRequest.Password))
+            {
+                _logger.Warn("Email or Password is missing in the registration request.");
+                return null;
+            }
+
+            _logger.Info($"Validated required fields for email: {registerRequest.Email}");
+
+            // Kiểm tra email đã tồn tại chưa
+            var existingUser =
+                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == registerRequest.Email);
+            if (existingUser != null)
+            {
+                _logger.Warn($"Registration attempt failed. Email {registerRequest.Email} is already in use.");
+                return null;
+            }
+
+            _logger.Info($"Email {registerRequest.Email} is available for registration.");
+
+            // Hash mật khẩu
+            _logger.Info("Hashing the password.");
+            var passwordHasher = new PasswordHasher();
+            var hashedPassword = passwordHasher.HashPassword(registerRequest.Password);
+
+            // Tạo user mới
+            _logger.Info("Creating new user object.");
+            var newUser = new User
+            {
+                Email = registerRequest.Email.Trim(),
+                FullName = registerRequest.FullName?.Trim(),
+                PhoneNumber = registerRequest.PhoneNumber?.Trim(),
+                Gender = registerRequest.Gender,
+                PasswordHash = hashedPassword,
+                Address = registerRequest.Address?.Trim(),
+                DateOfBirth = registerRequest.DateOfBirth,
+                ImageUrl = registerRequest.ImageUrl,
+                RoleName = RoleType.Customer // Lưu trực tiếp RoleType (enum)
+            };
+
+            // Lưu user vào database
+            _logger.Info("Saving the new user to the database.");
+            await _unitOfWork.UserRepository.AddAsync(newUser);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"User {registerRequest.Email} successfully registered.");
+            return newUser;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(
+                $"An unexpected error occurred during registration for email {registerRequest?.Email ?? "Unknown"}: {ex.Message}");
+            return null;
+        }
+    }
+    
+    public async Task<bool> LogoutAsync(Guid userId)
+    {
+        _logger.Info($"Logout process initiated for user ID: {userId}");
+
+        try
+        {
+            var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted);
+
+            if (user == null)
+            {
+                _logger.Warn($"Logout attempt failed: No active user found with ID: {userId}.");
+                return false;
+            }
+
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+
+            _logger.Info($"Clearing refresh token for user ID: {userId}.");
+
+            await _unitOfWork.UserRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Info($"Logout successful for user ID: {userId}.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error during logout for user ID: {userId}. Exception: {ex.Message}");
+            _logger.Error($"StackTrace: {ex.StackTrace}");
+            throw;
+        }
+    }
+
+
+
+    
+    
+    
 
     
     
