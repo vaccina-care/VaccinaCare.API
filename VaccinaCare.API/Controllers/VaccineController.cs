@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
@@ -36,6 +37,54 @@ public class VaccineController : ControllerBase
             _logger.Warn("CreateVaccine: Vaccine data is null.");
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
         }
+        [HttpGet]
+        public async Task<IActionResult> Get(
+            [FromQuery] string? search,
+            [FromQuery] string? type,
+            [FromQuery] string? sortBy,
+            [FromQuery] bool isDescending = false,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+    {
+        _logger.Info($"Received request to get vaccines with search: {search}, type: {type}, sortBy: {sortBy}, isDescending: {isDescending}, page: {page}, pageSize: {pageSize}");
+
+        try
+        {
+            if(page < 1 || pageSize < 1)
+            {
+                _logger.Warn("Invalid page or pageSize parameters. Both must be greater than 0.");
+                return BadRequest(ApiResult<object>.Error("400 - Invalid pagination parameters."));
+            }
+
+            var result = await _vaccineService.GetVaccines(search, type, sortBy, isDescending, page, pageSize);
+
+            if (result == null || !result.Items.Any())
+            {
+                _logger.Warn("No vaccines found with the specified filters.");
+                return NotFound(ApiResult<object>.Error("404 - No vaccines found."));
+            }
+
+            _logger.Info($"Successfully retrieved {result.Items.Count()} vaccines.");
+
+            return Ok(ApiResult<object>.Success(new
+            {
+                totalCount = result.TotalCount,
+                vaccines = result.Items.Select(v => new
+                {
+                    v.VaccineName,
+                    v.Description,
+                    v.PicUrl,
+                    v.Type,
+                    v.Price
+                })
+            }, "Vaccine retrieval successful."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while retrieving vaccines. Error: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
+        }
+    }
 
         try
         {
