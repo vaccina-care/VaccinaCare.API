@@ -1,12 +1,10 @@
-using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
+using System.ComponentModel.DataAnnotations;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -37,20 +35,43 @@ public class VaccineController : ControllerBase
             _logger.Warn("CreateVaccine: Vaccine data is null.");
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
         }
-        [HttpGet]
-        public async Task<IActionResult> Get(
-            [FromQuery] string? search,
-            [FromQuery] string? type,
-            [FromQuery] string? sortBy,
-            [FromQuery] bool isDescending = false,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+
+        try
+        {
+            _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {vaccineDTO.VaccineName}.");
+
+            var createdVaccine = await _vaccineService.CreateVaccine(vaccineDTO);
+
+            if (createdVaccine == null)
+            {
+                _logger.Warn("CreateVaccine: Vaccine creation failed due to validation issues.");
+                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
+            }
+
+            _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
+            return Ok(ApiResult<VaccineDTO>.Success(createdVaccine, "Vaccine created successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error during creation: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Get(
+        [FromQuery] string? search,
+        [FromQuery] string? type,
+        [FromQuery] string? sortBy,
+        [FromQuery] bool isDescending = false,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         _logger.Info($"Received request to get vaccines with search: {search}, type: {type}, sortBy: {sortBy}, isDescending: {isDescending}, page: {page}, pageSize: {pageSize}");
 
         try
         {
-            if(page < 1 || pageSize < 1)
+            if (page < 1 || pageSize < 1)
             {
                 _logger.Warn("Invalid page or pageSize parameters. Both must be greater than 0.");
                 return BadRequest(ApiResult<object>.Error("400 - Invalid pagination parameters."));
@@ -83,29 +104,6 @@ public class VaccineController : ControllerBase
         {
             _logger.Error($"Unexpected error while retrieving vaccines. Error: {ex.Message}");
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
-        }
-    }
-
-        try
-        {
-            _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {vaccineDTO.VaccineName}.");
-
-            var createdVaccine = await _vaccineService.CreateVaccine(vaccineDTO);
-
-            if (createdVaccine == null)
-            {
-                _logger.Warn("CreateVaccine: Vaccine creation failed due to validation issues.");
-                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
-            }
-
-            _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
-
-            return Ok(ApiResult<VaccineDTO>.Success(createdVaccine, "Vaccine created successfully."));
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error during creation: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
 
@@ -147,6 +145,7 @@ public class VaccineController : ControllerBase
     public async Task<IActionResult> Delete(Guid id)
     {
         _logger.Info($"Delete vaccine with ID {id} request received.");
+
         try
         {
             var deletedVaccine = await _vaccineService.DeleteVaccine(id);
@@ -158,7 +157,6 @@ public class VaccineController : ControllerBase
             }
 
             _logger.Success($"DeleteVaccine: Vaccine with name '{deletedVaccine.VaccineName}' deleted successfully.");
-
             return Ok(ApiResult<VaccineDTO>.Success(deletedVaccine, "Vaccine deleted successfully."));
         }
         catch (ValidationException ex)
