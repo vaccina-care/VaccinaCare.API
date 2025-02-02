@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.NotificationDTOs;
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -16,14 +18,17 @@ public class AuthController : ControllerBase
     private readonly IAuthService _authService;
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
+    private readonly IClaimsService _claimsService;
+
 
     public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService,
-        IEmailService emailService)
+        IEmailService emailService, IClaimsService claimsService)
     {
         _logger = logger;
         _authService = authService;
         _notificationService = notificationService;
         _emailService = emailService;
+        _claimsService = claimsService;
     }
 
 
@@ -132,4 +137,37 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during login."));
         }
     }
+    
+    [HttpPost("logout")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> Logout()
+    {
+        try
+        {
+            Guid currentUserId = _claimsService.GetCurrentUserId;
+
+            _logger.Info($"Logout request initiated for user ID: {currentUserId}");
+
+            var result = await _authService.LogoutAsync(currentUserId);
+            if (!result)
+            {
+                _logger.Warn($"Logout failed for user ID: {currentUserId}. User might not exist.");
+                return BadRequest(ApiResult<object>.Error("Logout failed. User might not exist."));
+            }
+
+            _logger.Success($"User {currentUserId} logged out successfully.");
+            return Ok(ApiResult<object>.Success(null, "Logout successful."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error during logout: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during logout."));
+        }
+    }
+
+    
+
 }
