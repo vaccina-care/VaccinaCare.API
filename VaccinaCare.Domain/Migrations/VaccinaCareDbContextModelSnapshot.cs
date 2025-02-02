@@ -221,6 +221,15 @@ namespace VaccinaCare.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AllergiesDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BloodType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ChronicIllnessesDescription")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -246,6 +255,18 @@ namespace VaccinaCare.Domain.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<bool>("HasAllergies")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasChronicIllnesses")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasOtherSpecialCondition")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("HasRecentMedication")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -254,8 +275,14 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("MedicalHistory")
                         .HasColumnType("text");
 
+                    b.Property<string>("OtherSpecialConditionDescription")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RecentMedicationDescription")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -638,6 +665,9 @@ namespace VaccinaCare.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -814,6 +844,12 @@ namespace VaccinaCare.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AvoidAllergy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AvoidChronic")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -831,6 +867,12 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DrugInteraction")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ForBloodType")
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -841,6 +883,9 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.Property<decimal?>("Price")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("SpecialWarn")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
                         .HasColumnType("nvarchar(100)");
