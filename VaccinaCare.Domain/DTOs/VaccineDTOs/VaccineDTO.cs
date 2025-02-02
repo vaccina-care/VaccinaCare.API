@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,5 +18,21 @@ namespace VaccinaCare.Domain.DTOs.VaccineDTOs
         public string? Type { get; set; }
 
         public decimal? Price { get; set; }
+    }
+    public class PagedResult<T>
+    {
+        public List<T> Items { get; set; }
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+        public int TotalPages => (int)System.Math.Ceiling((double)TotalCount / PageSize);
+
+        public PagedResult(List<T> items, int totalCount, int page, int pageSize)
+        {
+            Items = items;
+            TotalCount = totalCount;
+            Page = page;
+            PageSize = pageSize;
+        }
     }
 }
