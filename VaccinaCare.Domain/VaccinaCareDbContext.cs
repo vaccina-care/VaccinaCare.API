@@ -76,9 +76,8 @@ public partial class VaccinaCareDbContext : DbContext
                 hasQueryFilterMethod.Invoke(entityBuilder, new object[] { lambda });
             }
         }
-
-
         // Map tables to match entity names
+        #region ToTable
         modelBuilder.Entity<Appointment>().ToTable(nameof(Appointment));
         modelBuilder.Entity<AppointmentsVaccine>().ToTable(nameof(AppointmentsVaccine));
         modelBuilder.Entity<CancellationPolicy>().ToTable(nameof(CancellationPolicy));
@@ -97,7 +96,7 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<VaccinePackage>().ToTable(nameof(VaccinePackage));
         modelBuilder.Entity<VaccinePackageDetail>().ToTable(nameof(VaccinePackageDetail));
         modelBuilder.Entity<VaccineSuggestion>().ToTable(nameof(VaccineSuggestion));
-
+        #endregion
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__8ECDFCA28A60492C");
@@ -222,8 +221,8 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.Property(n => n.Type)
-                .HasConversion<string>() // Chuyển đổi enum thành string
-                .HasMaxLength(50); // Giới hạn độ dài chuỗi nếu cần
+                .HasConversion<string>() 
+                .HasMaxLength(50); 
         });
 
         modelBuilder.Entity<PackageProgress>(entity =>
@@ -246,6 +245,13 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
+        
+        modelBuilder.Entity<Vaccine>()
+            .Property(v => v.ForBloodType)
+            .HasConversion(
+                v => v.ToString(),  
+                v => (BloodType)Enum.Parse(typeof(BloodType), v) 
+            );
 
         modelBuilder.Entity<VaccineSuggestion>(entity =>
         {

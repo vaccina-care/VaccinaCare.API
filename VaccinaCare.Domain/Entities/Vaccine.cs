@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain.Entities;
 
@@ -18,20 +19,15 @@ public partial class Vaccine : BaseEntity
 
     public decimal? Price { get; set; }
 
-    [Column(TypeName = "nvarchar(50)")]
-    public string? ForBloodType { get; set; } // Nhóm máu phù hợp
+    public BloodType? ForBloodType { get; set; } 
 
-    [Column(TypeName = "nvarchar(max)")]
-    public string? AvoidChronic { get; set; } // Không khuyến khích cho bệnh mãn tính
+    public bool? AvoidChronic { get; set; } // Không khuyến khích cho bệnh mãn tính
 
-    [Column(TypeName = "nvarchar(max)")]
-    public string? AvoidAllergy { get; set; } // Không khuyến nghị cho dị ứng
+    public bool? AvoidAllergy { get; set; } // Không khuyến nghị cho dị ứng
 
-    [Column(TypeName = "nvarchar(max)")]
-    public string? DrugInteraction { get; set; } // Cảnh báo về tương tác thuốc
+    public bool? HasDrugInteraction { get; set; } // Có cảnh báo về tương tác thuốc không?
 
-    [Column(TypeName = "nvarchar(max)")]
-    public string? SpecialWarn { get; set; } // Cảnh báo điều kiện sức khỏe đặc biệt
+    public bool? HasSpecialWarning { get; set; } // Có cảnh báo điều kiện sức khỏe đặc biệt không?
 
     public virtual ICollection<AppointmentsVaccine> AppointmentsVaccines { get; set; } = new List<AppointmentsVaccine>();
     public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; } = new List<VaccinationRecord>();
@@ -40,3 +36,4 @@ public partial class Vaccine : BaseEntity
     public virtual ICollection<VaccinePackageDetail> VaccinePackageDetails { get; set; } = new List<VaccinePackageDetail>();
     public virtual ICollection<VaccineSuggestion> VaccineSuggestions { get; set; } = new List<VaccineSuggestion>();
 }
+
