@@ -66,6 +66,7 @@ namespace VaccinaCare.Application.Service
                     Email = user.Email,
                     Gender = user.Gender,
                     PhoneNumber = user.PhoneNumber,
+                    Address = user.Address,
                     RoleName = user.RoleName,
                     ImageUrl = user.ImageUrl,
                     DateOfBirth = user.DateOfBirth
