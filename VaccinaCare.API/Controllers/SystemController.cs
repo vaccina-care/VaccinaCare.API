@@ -137,84 +137,184 @@ namespace VaccinaCare.API.Controllers
                 new Vaccine
                 {
                     VaccineName = "Pentaxim",
-                    Description = "Bạch hầu, ho gà, uốn ván, bại liệt và viêm màng não mủ, viêm phổi do Hib",
-                    Type = "Pháp", Price = 795000
+                    Description = "Diphtheria, Pertussis, Tetanus, Poliomyelitis, and Haemophilus influenzae type B",
+                    Type = "France",
+                    Price = 795000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains pertussis component, may trigger allergic reactions
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
                 },
                 new Vaccine
                 {
                     VaccineName = "Infanrix Hexa (6in1)",
-                    Description = "Bạch hầu, ho gà, uốn ván, bại liệt, viêm màng não mủ, viêm phổi do Hib, viêm gan B",
-                    Type = "Bỉ", Price = 1015000
+                    Description =
+                        "Diphtheria, Pertussis, Tetanus, Poliomyelitis, Haemophilus influenzae type B, and Hepatitis B",
+                    Type = "Belgium",
+                    Price = 1015000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains multiple components that may trigger allergies
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
                 },
                 new Vaccine
                 {
-                    VaccineName = "Rotateq", Description = "Tiêu chảy cấp do Rota virus", Type = "Mỹ", Price = 665000
+                    VaccineName = "Rotateq",
+                    Description = "Prevention of severe diarrhea caused by Rotavirus",
+                    Type = "USA",
+                    Price = 665000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = true, // Not recommended for immunocompromised individuals
+                    AvoidAllergy = true, // Contains live virus, may cause allergic reactions
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = true // Special precaution for immunodeficient individuals
                 },
                 new Vaccine
                 {
-                    VaccineName = "Synflorix", Description = "Các bệnh do phế cầu", Type = "Bỉ", Price = 1045000
-                },
-                new Vaccine { VaccineName = "BCG (lọ 1ml)", Description = "Lao", Type = "Việt Nam", Price = 155000 },
-                new Vaccine
-                {
-                    VaccineName = "Gene Hbvax 1ml", Description = "Viêm gan B người lớn", Type = "Việt Nam",
-                    Price = 220000
-                },
-                new Vaccine
-                {
-                    VaccineName = "Bexsero", Description = "Viêm màng não do não mô cầu nhóm B", Type = "Ý",
-                    Price = 1750000
-                },
-                new Vaccine { VaccineName = "MVVac (Lọ 5ml)", Description = "Sởi", Type = "Việt Nam", Price = 396000 },
-                new Vaccine
-                {
-                    VaccineName = "MMR II (3 in 1)", Description = "Sởi – Quai bị – Rubella", Type = "Mỹ",
-                    Price = 445000
-                },
-                new Vaccine { VaccineName = "Varivax", Description = "Thủy đậu", Type = "Mỹ", Price = 1085000 },
-                new Vaccine
-                {
-                    VaccineName = "Shingrix", Description = "Zona thần kinh (giời leo)", Type = "Bỉ", Price = 3890000
+                    VaccineName = "Synflorix",
+                    Description = "Prevention of pneumococcal infections",
+                    Type = "Belgium",
+                    Price = 1045000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // May trigger reactions in individuals allergic to diphtheria toxoid
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
                 },
                 new Vaccine
                 {
-                    VaccineName = "Vaxigrip Tetra 0.5ml", Description = "Cúm", Type = "Pháp", Price = 356000
+                    VaccineName = "BCG (1ml vial)",
+                    Description = "Prevention of tuberculosis",
+                    Type = "Vietnam",
+                    Price = 155000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = true, // Not recommended for immunocompromised individuals
+                    AvoidAllergy = false,
+                    HasDrugInteraction = true, // Can interfere with tuberculosis skin tests
+                    HasSpecialWarning = true // Special precaution for individuals with HIV
+                },
+                new Vaccine
+                {
+                    VaccineName = "Gene Hbvax 1ml",
+                    Description = "Hepatitis B (for adults)",
+                    Type = "Vietnam",
+                    Price = 220000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Bexsero",
+                    Description = "Prevention of meningococcal disease caused by Neisseria meningitidis group B",
+                    Type = "Italy",
+                    Price = 1750000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains recombinant proteins, possible allergic reactions
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "MVVac (5ml vial)",
+                    Description = "Measles",
+                    Type = "Vietnam",
+                    Price = 396000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains egg protein, potential allergy risk
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "MMR II (3 in 1)",
+                    Description = "Measles, Mumps, and Rubella",
+                    Type = "USA",
+                    Price = 445000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains egg and gelatin, potential allergy risk
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Varivax",
+                    Description = "Chickenpox (Varicella)",
+                    Type = "USA",
+                    Price = 1085000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = true, // Not recommended for immunocompromised individuals
+                    AvoidAllergy = true, // Contains gelatin, egg, and neomycin
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = true // Special precaution for immunodeficient individuals
+                },
+                new Vaccine
+                {
+                    VaccineName = "Shingrix",
+                    Description = "Shingles (Herpes Zoster)",
+                    Type = "Belgium",
+                    Price = 3890000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // May cause allergic reactions in some individuals
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Vaxigrip Tetra 0.5ml",
+                    Description = "Influenza",
+                    Type = "France",
+                    Price = 356000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = true, // Contains egg protein, potential allergy risk
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
                 },
                 new Vaccine
                 {
                     VaccineName = "Gardasil 0.5ml",
-                    Description = "Ung thư cổ tử cung, ung thư hầu họng, sùi mào gà... do HPV (4 chủng)", Type = "Mỹ",
-                    Price = 1790000
-                },
-                new Vaccine { VaccineName = "Qdenga", Description = "Sốt xuất huyết", Type = "Đức", Price = 1390000 },
-                new Vaccine
-                {
-                    VaccineName = "Vắc xin uốn ván hấp phụ (TT)", Description = "Uốn ván", Type = "Việt Nam",
-                    Price = 149000
-                },
-                new Vaccine
-                {
-                    VaccineName = "Imojev", Description = "Viêm não Nhật Bản", Type = "Thái Lan", Price = 875000
-                },
-                new Vaccine { VaccineName = "Verorab 0.5ml (TB)", Description = "Dại", Type = "Pháp", Price = 495000 },
-                new Vaccine
-                {
-                    VaccineName = "Adacel", Description = "Bạch hầu – Uốn ván – Ho gà", Type = "Canada", Price = 775000
+                    Description = "HPV vaccine (Cervical cancer, throat cancer, genital warts)",
+                    Type = "USA",
+                    Price = 1790000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
                 },
                 new Vaccine
                 {
-                    VaccineName = "Tetraxim", Description = "Bạch hầu – Ho gà – Uốn ván – Bại liệt", Type = "Pháp",
-                    Price = 645000
+                    VaccineName = "Qdenga",
+                    Description = "Dengue fever prevention",
+                    Type = "Germany",
+                    Price = 1390000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = true, // Not recommended for individuals with severe immunodeficiency
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = true // Special warning for individuals who have not had dengue before
                 },
                 new Vaccine
                 {
-                    VaccineName = "Havax 0.5ml", Description = "Viêm gan A", Type = "Việt Nam", Price = 255000
-                },
-                new Vaccine
-                {
-                    VaccineName = "Typhoid VI", Description = "Thương hàn", Type = "Việt Nam", Price = 265000
-                },
-                new Vaccine { VaccineName = "Morcvax", Description = "Tả", Type = "Việt Nam", Price = 165000 }
+                    VaccineName = "Tetanus Adsorbed Vaccine (TT)",
+                    Description = "Tetanus",
+                    Type = "Vietnam",
+                    Price = 149000,
+                    ForBloodType = BloodType.Unknown,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                }
             };
 
             _logger.Info("Seeding vaccines...");
