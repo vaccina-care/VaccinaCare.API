@@ -12,7 +12,7 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250202075915_Initial")]
+    [Migration("20250203132240_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
