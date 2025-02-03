@@ -2,14 +2,11 @@ namespace VaccinaCare.UnitTest;
 
 public class Tests
 {
-    [SetUp]
-    public void Setup()
-    {
-    }
 
-    [Test]
+
+    [Fact]
     public void Test1()
     {
-        Assert.Pass();
+        
     }
 }
