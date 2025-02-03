@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaccinaCare.API", "VaccinaC
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{08F30FCF-806C-4F10-86F1-D457D75AD725}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaccinaCare.UnitTest", "VaccinaCare.UnitTest\VaccinaCare.UnitTest.csproj", "{B6865FA6-733C-445E-A8C7-38A77834D908}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{08F30FCF-806C-4F10-86F1-D457D75AD725}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08F30FCF-806C-4F10-86F1-D457D75AD725}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08F30FCF-806C-4F10-86F1-D457D75AD725}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6865FA6-733C-445E-A8C7-38A77834D908}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6865FA6-733C-445E-A8C7-38A77834D908}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6865FA6-733C-445E-A8C7-38A77834D908}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6865FA6-733C-445E-A8C7-38A77834D908}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
