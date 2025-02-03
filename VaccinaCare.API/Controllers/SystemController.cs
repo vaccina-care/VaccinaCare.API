@@ -353,11 +353,10 @@ namespace VaccinaCare.API.Controllers
                     () => context.VaccinePackages.ExecuteDeleteAsync(),
                     () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                     () => context.Vaccines.ExecuteDeleteAsync(),
-                    () => context.Users.ExecuteDeleteAsync(), // Xóa bảng cha sau cùng
-                    () => context.Roles.ExecuteDeleteAsync(), // Xóa roles sau users nếu không có cascade delete
+                    () => context.Users.ExecuteDeleteAsync(), 
+                    () => context.Roles.ExecuteDeleteAsync(), 
                 };
 
-                // Chạy các tác vụ xóa tuần tự
                 foreach (var deleteFunc in tablesToDelete)
                 {
                     await deleteFunc();

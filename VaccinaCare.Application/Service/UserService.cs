@@ -134,6 +134,13 @@ namespace VaccinaCare.Application.Service
                     isUpdated = true;
                 }
 
+                
+                if (!string.IsNullOrEmpty(userUpdateDto.Address))
+                {
+                    user.Address = userUpdateDto.Address;
+                    isUpdated = true;
+                }
+                
                 if (!isUpdated)
                 {
                     _logger.Warn($"No changes detected for UserId: {userId}");
@@ -157,6 +164,7 @@ namespace VaccinaCare.Application.Service
                     FullName = user.FullName,
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
+                    Address = user.Address,
                     ImageUrl = user.ImageUrl,
                     PhoneNumber = user.PhoneNumber
                 };
