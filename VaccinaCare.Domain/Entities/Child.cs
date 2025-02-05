@@ -5,7 +5,7 @@ public partial class Child : BaseEntity
     public Guid? ParentId { get; set; } 
     public string? FullName { get; set; }
     public DateOnly? DateOfBirth { get; set; }
-    public string? Gender { get; set; }
+    public bool Gender { get; set; }
     public string? MedicalHistory { get; set; }
 
     public string? BloodType { get; set; } // Nhóm máu
