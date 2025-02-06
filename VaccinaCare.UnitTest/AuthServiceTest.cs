@@ -12,6 +12,9 @@ using VaccinaCare.Domain.DTOs.AuthDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using System.Linq.Expressions;
+using Microsoft.Extensions.Configuration;
+using VaccinaCare.Application.Ultils;
+
 
 namespace VaccinaCare.UnitTest
 {
@@ -20,13 +23,19 @@ namespace VaccinaCare.UnitTest
         private readonly Mock<ILoggerService> _loggerMock;
         private readonly AuthService _authService;
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+        private readonly Mock<IConfiguration> _mockConfiguration;
+        private readonly Mock<PasswordHasher> _passwordHasherMock;
 
         public AuthServiceTest()
         {
             _loggerMock = new Mock<ILoggerService>();
             _unitOfWorkMock = new Mock<IUnitOfWork>();
+            _mockConfiguration = new Mock<IConfiguration>();
+            _passwordHasherMock = new Mock<PasswordHasher>();
 
-            _authService = new AuthService(_unitOfWorkMock.Object, _loggerMock.Object);
+            _authService = new AuthService(
+                _unitOfWorkMock.Object,
+                _loggerMock.Object);
         }
         [Fact]
         // Test case 1: Create Account Successfully
@@ -167,6 +176,131 @@ namespace VaccinaCare.UnitTest
             // Assert
             Assert.Null(result); 
         }
+        [Fact]
+        //Test case 6 : Login When Email Is Missing
+        public async Task LoginAsync_ShouldReturnNull_WhenEmailIsMissing()
+        {
+            //Arrage
+            var loginRequest = new LoginRequestDto { Email = "", Password = "Password123" };
 
+            //Act
+            var result = await _authService.LoginAsync(loginRequest, _mockConfiguration.Object);
+
+            //Assert
+            Assert.Null(result);
+        }
+        [Fact]
+        //Test case 7 : Login When User Does Not Exist
+        public async Task LoginAsync_ShouldReturnNull_WhenUserDoesNotExist()
+        {
+            //Arrange
+            var loginRequest = new LoginRequestDto { Email = "nonexistent@example.com", Password = "Password123" };
+            _unitOfWorkMock.Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                           .ReturnsAsync((User?)null);
+            //Act
+            var result = await _authService.LoginAsync(loginRequest, _mockConfiguration.Object);
+            //Assert
+            Assert.Null(result);
+        }
+        [Fact]
+        // Test case 8 : Login When Password Is Incorrect
+        public async Task LoginAsync_ShouldReturnNull_WhenPasswordIsIncorrect()
+        {
+            // Arrange
+            var loginRequest = new LoginRequestDto { Email = "testuser@example.com", Password = "WrongPassword" };
+
+            var user = new User { Email = "testuser@example.com", PasswordHash = "hashedCorrectPassword" };
+
+            _unitOfWorkMock.Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                           .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.LoginAsync(loginRequest, _mockConfiguration.Object);
+
+            // Assert
+            Assert.Null(result);
+        }
+        [Fact]
+        //Test case 9: Login When User Is Deleted
+        public async Task LoginAsync_ShouldReturnNull_WhenUserIsDeleted()
+        {
+            // Arrange
+            var loginRequest = new LoginRequestDto { Email = "deleteduser@example.com", Password = "Password123" };
+            var user = new User { Email = "deleteduser@example.com", IsDeleted = true };
+            _unitOfWorkMock.Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                           .ReturnsAsync(user);
+
+            // Act
+            var result = await _authService.LoginAsync(loginRequest, _mockConfiguration.Object);
+
+            // Assert
+            Assert.Null(result);
+        }
+        [Fact]
+        //Test case 10 : Logout When User Exists
+        public async Task LogoutAsync_ShouldReturnTrue_WhenUserExists()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new User
+            {
+                Id = userId,
+                IsDeleted = false,
+                RefreshToken = "old_refresh_token",
+                RefreshTokenExpiryTime = DateTime.UtcNow.AddHours(1)
+            };
+
+            _unitOfWorkMock
+                .Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                .ReturnsAsync(user);
+
+            _unitOfWorkMock.Setup(u => u.UserRepository.Update(user));
+            _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            // Act
+            var result = await _authService.LogoutAsync(userId);
+
+            // Assert
+            Assert.True(result);
+            Assert.Null(user.RefreshToken);
+            Assert.Null(user.RefreshTokenExpiryTime);
+            _unitOfWorkMock.Verify(u => u.UserRepository.Update(user), Times.Once);
+            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
+        }
+        [Fact]
+        //Test case 11 : Logout When Have Exception
+        public async Task LogoutAsync_ShouldThrowException_WhenUnexpectedErrorOccurs()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+
+            // Giả lập lỗi khi tìm user
+            _unitOfWorkMock
+                .Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _authService.LogoutAsync(userId));
+            _loggerMock.Verify(l => l.Error(It.IsAny<string>()), Times.AtLeastOnce);
+        }
+        [Fact]
+        //Test case 12 : Logout When User Does Not Exist
+        public async Task LogoutAsync_ShouldReturnFalse_WhenUserDoesNotExist()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+
+            _unitOfWorkMock
+                .Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
+                .ReturnsAsync((User?)null);
+
+            // Act
+            var result = await _authService.LogoutAsync(userId);
+
+            // Assert
+            Assert.False(result);
+            _unitOfWorkMock.Verify(u => u.UserRepository.Update(It.IsAny<User>()), Times.Never);
+            _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
+        }
     }
 }
