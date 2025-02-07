@@ -24,11 +24,10 @@ public class VaccineService : IVaccineService
     {
         _logger.Info($"Starting the update process for vaccine with ID: {id}");
 
-        // Validate input DTO
         if (vaccineDTO == null)
         {
             _logger.Warn("Update failed: VaccineDTO is null.");
-            throw new ArgumentNullException(nameof(vaccineDTO), "400 - Vaccine data cannot be null.");
+            throw new ArgumentNullException();
         }
 
         try
@@ -109,7 +108,7 @@ public class VaccineService : IVaccineService
             if (string.IsNullOrWhiteSpace(vaccineDTO.VaccineName))
                 validationErrors.Add("Vaccine name is required.");
 
-            if (vaccineDTO.Price < 0)
+            if (vaccineDTO.Price <= 0)
                 validationErrors.Add("Price cannot be negative.");
 
             if (string.IsNullOrWhiteSpace(vaccineDTO.Description))
@@ -163,7 +162,7 @@ public class VaccineService : IVaccineService
 
     public async Task<VaccineDTO> DeleteVaccine(Guid id)
     {
-        _logger.Info($"Initiating vaccine deletion process for ID: {id}");
+        _logger.Info($"Initiating vaccine deleted process for ID: {id}");
 
         try
         {
@@ -179,12 +178,17 @@ public class VaccineService : IVaccineService
             _logger.Info(
                 $"Vaccine found. Preparing to delete: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
-            await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
+            bool deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
+            if (!deleteResult)
+            {
+                _logger.Warn($"Vaccine with ID {id} could not be deleted.");
+                return null;
+            }
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Success($"Vaccine with ID {id} ('{vaccine.VaccineName}') deleted successfully.");
 
-            // Tự map tay thành DTO rồi return
+
             var deletedVaccineDTO = new VaccineDTO
             {
                 VaccineName = vaccine.VaccineName,
