@@ -11,28 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Checkout code
+      # Bước 1: Checkout code (clone toàn bộ repo)
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Clone toàn bộ repo để tránh thiếu file
 
-      # Bước 2: Thiết lập Docker
+      # Bước 2: Debug kiểm tra file trong GitHub Actions (nếu cần)
+      - name: Debug GitHub Actions Files
+        run: ls -R
+
+      # Bước 3: Thiết lập Docker
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Bước 3: Đăng nhập vào DockerHub
+      # Bước 4: Đăng nhập vào DockerHub
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Bước 4: Build & Push Docker Image
+      # Bước 5: Build & Push Docker Image
       - name: Build & Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest -f VaccinaCare.API/Dockerfile VaccinaCare.API
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest -f VaccinaCare.API/Dockerfile .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
 
-      # Bước 5: Kết nối vào VPS và deploy
+      # Bước 6: Kết nối vào VPS và deploy
       - name: SSH vào VPS & Deploy
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -40,9 +46,22 @@ jobs:
           username: ${{ secrets.VPS_USER }}    # user VPS (thường là root)
           password: ${{ secrets.VPS_PASSWORD }} # mật khẩu VPS
           script: |
+            echo "🚀 Đang deploy trên VPS..."
+
+            # Đăng nhập vào DockerHub trên VPS
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+
+            # Kéo image mới nhất
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+
+            # Chạy container mới mà không gián đoạn dịch vụ
             docker stop vaccinacare-api || true
             docker rm vaccinacare-api || true
-            docker run -d --name vaccinacare-api -p 5000:5000 ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
-            docker system prune -af  # Xoá container/image cũ để giải phóng dung lượng
+            docker run -d --name vaccinacare-api -p 5000:5000 \
+              --restart always \
+              ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+
+            # Xóa các container/image cũ để giải phóng dung lượng
+            docker system prune -af 
+
+            echo "✅ Deploy thành công! API đang chạy trên http://103.211.201.162:5000"
