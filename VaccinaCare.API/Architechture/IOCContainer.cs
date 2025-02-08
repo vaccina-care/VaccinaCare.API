@@ -107,7 +107,7 @@ namespace VaccinaCare.API.Architechture
                 c.UseInlineDefinitionsForEnums();
 
                 c.SwaggerDoc("v1",
-                    new Microsoft.OpenApi.Models.OpenApiInfo { Title = "GoodsDesignAPI", Version = "v1" });
+                    new Microsoft.OpenApi.Models.OpenApiInfo { Title = "VaccinaCareAPI", Version = "v1" });
                 var jwtSecurityScheme = new OpenApiSecurityScheme
                 {
                     Name = "JWT Authentication",
