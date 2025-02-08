@@ -18,8 +18,8 @@ public partial class Appointment : BaseEntity
     public decimal? TotalPrice { get; set; }
     public string? PreferredTimeSlot { get; set; }
 
-    public virtual CancellationPolicy? CancellationPolicies { get; set; } // Tham chiếu đến CancellationPolicy
-    public virtual Child? Child { get; set; } // Tham chiếu đến CancellationPolicy
+    public virtual CancellationPolicy? CancellationPolicies { get; set; }
+    public virtual Child? Child { get; set; } 
     public virtual ICollection<AppointmentsVaccine> AppointmentsVaccines { get; set; } = new List<AppointmentsVaccine>();
     public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();

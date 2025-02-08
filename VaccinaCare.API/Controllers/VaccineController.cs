@@ -10,7 +10,6 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "StaffPolicy")]
 public class VaccineController : ControllerBase
 {
     private readonly IVaccineService _vaccineService;
@@ -22,6 +21,7 @@ public class VaccineController : ControllerBase
         _logger = logger;
     }
 
+    [Authorize(Policy = "StaffPolicy")]
     [HttpPost("create")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -107,6 +107,8 @@ public class VaccineController : ControllerBase
         }
     }
 
+
+    [Authorize(Policy = "StaffPolicy")]
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -137,7 +139,7 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));
         }
     }
-
+    [Authorize(Policy = "StaffPolicy")]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]

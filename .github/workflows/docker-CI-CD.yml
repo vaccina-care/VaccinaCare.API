@@ -1,17 +1,17 @@
-name: Build Docker Compose
+name: CI/CD Deploy to VPS
 
 on:
   push:
-    branches: [ "main" ] # Kích hoạt khi push code lên branch "main"
-  pull_request:         # Hoặc khi tạo pull request
+    branches:
+      - main  # Mỗi lần push lên main sẽ chạy CI/CD
 
 jobs:
-  build:
-    name: Build Docker Compose
+  deploy:
+    name: Build & Deploy to VPS
     runs-on: ubuntu-latest
 
     steps:
-      # Bước 1: Clone repo
+      # Bước 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -19,14 +19,30 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Bước 3: Đăng nhập vào GitHub Container Registry (hoặc DockerHub nếu cần)
+      # Bước 3: Đăng nhập vào DockerHub
       - name: Log in to DockerHub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}  # Lấy từ GitHub Secrets
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # Bước 4: Build Docker Compose
-      - name: Build Docker Compose Services
+      # Bước 4: Build & Push Docker Image
+      - name: Build & Push Docker Image
         run: |
-          docker compose -f docker-compose.yml build
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+
+      # Bước 5: Kết nối vào VPS và deploy
+      - name: SSH vào VPS & Deploy
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}        # IP của VPS
+          username: ${{ secrets.VPS_USER }}    # user VPS (thường là root)
+          password: ${{ secrets.VPS_PASSWORD }} # mật khẩu VPS
+          script: |
+            docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+            docker stop vaccinacare-api || true
+            docker rm vaccinacare-api || true
+            docker run -d --name vaccinacare-api -p 5000:5000 ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+            docker system prune -af  # Xoá container/image cũ để giải phóng dung lượng
