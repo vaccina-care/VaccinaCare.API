@@ -52,14 +52,14 @@ jobs:
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
             # Di chuyển đến thư mục chứa docker-compose.yml
-            cd /path/to/your/project
+            cd /root/vaccinacare/
 
             # Kéo image mới từ DockerHub
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+            docker-compose pull
 
             # Cập nhật container với docker-compose
-            docker compose down
-            docker compose up -d --force-recreate
+            docker-compose down
+            docker-compose up -d --force-recreate
 
             # Xóa container/image cũ để giải phóng dung lượng
             docker system prune -af  
