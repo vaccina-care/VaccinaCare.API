@@ -3,7 +3,7 @@
     build:
       context: . # Thư mục gốc chứa Dockerfile
       dockerfile: VaccinaCare.API/Dockerfile
-    image: vaccinacareapi
+    image: phuctran362003/vaccinacareapi:latest
     ports:
       - "5000:5000"
     depends_on: 

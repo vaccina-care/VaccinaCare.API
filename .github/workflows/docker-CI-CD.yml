@@ -38,30 +38,30 @@ jobs:
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest -f VaccinaCare.API/Dockerfile .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
 
-      # Bước 6: Kết nối vào VPS và deploy
-      - name: SSH vào VPS & Deploy
+      # Bước 6: SSH vào VPS và update container với docker-compose
+      - name: SSH vào VPS & Deploy với Docker-Compose
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.VPS_HOST }}        # IP của VPS
-          username: ${{ secrets.VPS_USER }}    # user VPS (thường là root)
-          password: ${{ secrets.VPS_PASSWORD }} # mật khẩu VPS
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            echo "🚀 Đang deploy trên VPS..."
+            echo "🚀 Bắt đầu cập nhật API trên VPS..."
 
-            # Đăng nhập vào DockerHub trên VPS
+            # Đăng nhập vào DockerHub
             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
-            # Kéo image mới nhất
+            # Di chuyển đến thư mục chứa docker-compose.yml
+            cd /path/to/your/project
+
+            # Kéo image mới từ DockerHub
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
 
-            # Chạy container mới mà không gián đoạn dịch vụ
-            docker stop vaccinacare-api || true
-            docker rm vaccinacare-api || true
-            docker run -d --name vaccinacare-api -p 5000:5000 \
-              --restart always \
-              ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
+            # Cập nhật container với docker-compose
+            docker compose down
+            docker compose up -d --force-recreate
 
-            # Xóa các container/image cũ để giải phóng dung lượng
-            docker system prune -af 
+            # Xóa container/image cũ để giải phóng dung lượng
+            docker system prune -af  
 
             echo "✅ Deploy thành công! API đang chạy trên http://103.211.201.162:5000"
