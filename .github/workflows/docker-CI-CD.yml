@@ -29,7 +29,7 @@ jobs:
       # Bước 4: Build & Push Docker Image
       - name: Build & Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest -f VaccinaCare.API/Dockerfile VaccinaCare.API
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/vaccinacareapi:latest
 
       # Bước 5: Kết nối vào VPS và deploy
