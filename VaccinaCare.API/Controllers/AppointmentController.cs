@@ -4,6 +4,8 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Repository.Interfaces;
+
 namespace VaccinaCare.API.Controllers;
 using VaccinaCare.Repository.Commons;
 
@@ -14,10 +16,13 @@ using VaccinaCare.Repository.Commons;
     {
       private readonly IAppointmentService _appointmentService;
       private readonly ILoggerService _logger;
-    public AppointmentController(IAppointmentService appointmentService, ILoggerService logger)
+      private readonly IClaimsService _claimsService;
+
+    public AppointmentController(IAppointmentService appointmentService, ILoggerService logger, IClaimsService claimsService)
     {
         _appointmentService = appointmentService;
         _logger = logger;
+        _claimsService = claimsService;
     }
     [HttpPost]
     [Authorize]
@@ -61,18 +66,19 @@ using VaccinaCare.Repository.Commons;
             });
         }
     }
+    
     [HttpGet]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<Pagination<CreateAppointmentDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAppointmentByParent([FromQuery] PaginationParameter paginatio)
+    public async Task<IActionResult> GetAppointmentByParent([FromQuery] PaginationParameter pagination)
     {
         try
         {
             _logger.Info("Received request to get appointment list.");
-
-            var appointment = await _appointmentService.GetAppointmentByParent(paginatio);
+            Guid parentId = _claimsService.GetCurrentUserId;
+            var appointment = await _appointmentService.GetAppointmentByParent(parentId, pagination);
 
             _logger.Success($"Fetched {appointment.Count} appointment successfully.");
 

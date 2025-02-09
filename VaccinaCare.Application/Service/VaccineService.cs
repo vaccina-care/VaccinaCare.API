@@ -20,14 +20,14 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
     }
 
-    public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
+     public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
     {
         _logger.Info($"Starting the update process for vaccine with ID: {id}");
 
         if (vaccineDTO == null)
         {
             _logger.Warn("Update failed: VaccineDTO is null.");
-            throw new ArgumentNullException();
+            throw new ArgumentNullException(nameof(vaccineDTO));
         }
 
         try
@@ -42,29 +42,24 @@ public class VaccineService : IVaccineService
             }
 
             _logger.Info(
-                $"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+                $"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
+            );
 
-
-            vaccine.VaccineName = !string.IsNullOrWhiteSpace(vaccineDTO.VaccineName)
-                ? vaccineDTO.VaccineName
-                : vaccine.VaccineName;
-
-            vaccine.Description = !string.IsNullOrWhiteSpace(vaccineDTO.Description)
-                ? vaccineDTO.Description
-                : vaccine.Description;
-
+            // Updating only non-null fields
+            vaccine.VaccineName = !string.IsNullOrWhiteSpace(vaccineDTO.VaccineName) ? vaccineDTO.VaccineName : vaccine.VaccineName;
+            vaccine.Description = !string.IsNullOrWhiteSpace(vaccineDTO.Description) ? vaccineDTO.Description : vaccine.Description;
             vaccine.PicUrl = !string.IsNullOrWhiteSpace(vaccineDTO.PicUrl) ? vaccineDTO.PicUrl : vaccine.PicUrl;
-
             vaccine.Type = !string.IsNullOrWhiteSpace(vaccineDTO.Type) ? vaccineDTO.Type : vaccine.Type;
-
-            vaccine.Price =
-                vaccineDTO.Price >= 0
-                    ? vaccineDTO.Price
-                    : vaccine.Price;
-
+            vaccine.Price = vaccineDTO.Price >= 0 ? vaccineDTO.Price : vaccine.Price;
+            vaccine.ForBloodType = vaccineDTO.ForBloodType ?? vaccine.ForBloodType;
+            vaccine.AvoidChronic = vaccineDTO.AvoidChronic ?? vaccine.AvoidChronic;
+            vaccine.AvoidAllergy = vaccineDTO.AvoidAllergy ?? vaccine.AvoidAllergy;
+            vaccine.HasDrugInteraction = vaccineDTO.HasDrugInteraction ?? vaccine.HasDrugInteraction;
+            vaccine.HasSpecialWarning = vaccineDTO.HasSpecialWarning ?? vaccine.HasSpecialWarning;
 
             _logger.Info(
-                $"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+                $"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
+            );
 
             await _unitOfWork.VaccineRepository.Update(vaccine);
             await _unitOfWork.SaveChangesAsync();
@@ -77,7 +72,12 @@ public class VaccineService : IVaccineService
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
-                Price = vaccine.Price
+                Price = vaccine.Price,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
             };
 
             return updatedVaccineDTO;
@@ -101,7 +101,8 @@ public class VaccineService : IVaccineService
         try
         {
             _logger.Info(
-                $"Received VaccineDTO with VaccineName: {vaccineDTO.VaccineName}, Type: {vaccineDTO.Type}, Price: {vaccineDTO.Price}");
+                $"Received VaccineDTO with VaccineName: {vaccineDTO.VaccineName}, Type: {vaccineDTO.Type}, Price: {vaccineDTO.Price}, BloodType: {vaccineDTO.ForBloodType}, AvoidChronic: {vaccineDTO.AvoidChronic}, AvoidAllergy: {vaccineDTO.AvoidAllergy}, HasDrugInteraction: {vaccineDTO.HasDrugInteraction}, HasSpecialWarning: {vaccineDTO.HasSpecialWarning}"
+            );
 
             var validationErrors = new List<string>();
 
@@ -109,7 +110,7 @@ public class VaccineService : IVaccineService
                 validationErrors.Add("Vaccine name is required.");
 
             if (vaccineDTO.Price <= 0)
-                validationErrors.Add("Price cannot be negative.");
+                validationErrors.Add("Price must be greater than zero.");
 
             if (string.IsNullOrWhiteSpace(vaccineDTO.Description))
                 validationErrors.Add("Description is required.");
@@ -132,10 +133,15 @@ public class VaccineService : IVaccineService
                 Description = vaccineDTO.Description,
                 PicUrl = vaccineDTO.PicUrl,
                 Type = vaccineDTO.Type,
-                Price = vaccineDTO.Price
+                Price = vaccineDTO.Price,
+                ForBloodType = vaccineDTO.ForBloodType,
+                AvoidChronic = vaccineDTO.AvoidChronic,
+                AvoidAllergy = vaccineDTO.AvoidAllergy,
+                HasDrugInteraction = vaccineDTO.HasDrugInteraction,
+                HasSpecialWarning = vaccineDTO.HasSpecialWarning
             };
-            _logger.Info(
-                $"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+
+            _logger.Info($"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
             await _unitOfWork.VaccineRepository.AddAsync(vaccine);
             await _unitOfWork.SaveChangesAsync();
@@ -146,7 +152,12 @@ public class VaccineService : IVaccineService
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
-                Price = vaccine.Price
+                Price = vaccine.Price,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
             };
 
             _logger.Success($"Vaccine '{createdVaccineDTO.VaccineName}' created successfully with ID {vaccine.Id}.");

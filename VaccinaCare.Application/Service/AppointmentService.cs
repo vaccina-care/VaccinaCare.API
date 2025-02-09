@@ -38,13 +38,14 @@ namespace VaccinaCare.Application.Service
                     _logger.Error("Appointment creation failed: Input data is null.");
                     throw new ArgumentNullException(nameof(createAppointmentDto));
                 }
+
                 if (createAppointmentDto.AppointmentDate < DateTime.UtcNow)
                 {
                     _logger.Error("Appointment creation failed: Date is in the past.");
                     throw new ArgumentException("Appointment date must be in the future.");
                 }
 
-                var appointmentEntity = new Appointment
+                var appointment = new Appointment
                 {
                     ParentId = createAppointmentDto.ParentId,
                     ChildId = createAppointmentDto.ChildId,
@@ -58,19 +59,20 @@ namespace VaccinaCare.Application.Service
                 };
                 foreach (var vaccineId in createAppointmentDto.AppointmentsVaccines)
                 {
-                    appointmentEntity.AppointmentsVaccines.Add(new AppointmentsVaccine
+                    appointment.AppointmentsVaccines.Add(new AppointmentsVaccine
                     {
-                        AppointmentId = appointmentEntity.Id,
+                        AppointmentId = appointment.Id,
                         VaccineId = vaccineId
                     });
                 }
-                await _unitOfWork.AppointmentRepository.AddAsync(appointmentEntity);
+
+                await _unitOfWork.AppointmentRepository.AddAsync(appointment);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.Info($"Appointment {appointmentEntity.Id} created successfully.");
+                _logger.Info($"Appointment {appointment.Id} created successfully.");
                 return createAppointmentDto;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 _logger.Error($"An error occurred while creating the appointment. Error: {ex.Message}");
                 throw;
@@ -82,14 +84,15 @@ namespace VaccinaCare.Application.Service
             throw new NotImplementedException();
         }
 
-        public async Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(PaginationParameter pagination)
+        public async Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId,
+            PaginationParameter pagination)
         {
             try
             {
-                Guid parentId = _claimsService.GetCurrentUserId;
+                // Guid parentId = _claimsService.GetCurrentUserId;
 
                 _logger.Info(
-                            $"Fetching appointments for parent {parentId} with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
+                    $"Fetching appointments for parent {parentId} with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
 
                 var query = _unitOfWork.AppointmentRepository.GetQueryable()
                     .Where(a => a.ParentId == parentId);
@@ -104,27 +107,30 @@ namespace VaccinaCare.Application.Service
                 if (!appointments.Any())
                 {
                     _logger.Warn($"No appointments found for parent {parentId} on page {pagination.PageIndex}.");
-                    return new Pagination<CreateAppointmentDto>(new List<CreateAppointmentDto>(), 0, pagination.PageIndex, pagination.PageSize);
+                    return new Pagination<CreateAppointmentDto>(new List<CreateAppointmentDto>(), 0,
+                        pagination.PageIndex, pagination.PageSize);
                 }
+
                 _logger.Success(
-            $"Retrieved {appointments.Count} appointments for parent {parentId} on page {pagination.PageIndex}");
+                    $"Retrieved {appointments.Count} appointments for parent {parentId} on page {pagination.PageIndex}");
 
                 var appointmentDtos = appointments.Select(appointment => new CreateAppointmentDto
                 {
                     ParentId = appointment.ParentId ?? Guid.Empty,
                     ChildId = appointment.ChildId ?? Guid.Empty,
-                    AppointmentDate = appointment.AppointmentDate ?? DateTime.UtcNow ,
+                    AppointmentDate = appointment.AppointmentDate ?? DateTime.UtcNow,
                     VaccineType = appointment.VaccineType,
                     TotalPrice = appointment.TotalPrice ?? 0m,
                     PolicyId = appointment.PolicyId ?? Guid.Empty,
                     Notes = appointment.Notes,
                     Confirmed = appointment.Confirmed ?? false,
                     AppointmentsVaccines = appointment.AppointmentsVaccines
-                                            .Where(v => v.VaccineId.HasValue)
-                                            .Select(v => v.VaccineId.Value)
-                                            .ToList(),
+                        .Where(v => v.VaccineId.HasValue)
+                        .Select(v => v.VaccineId.Value)
+                        .ToList(),
                 }).ToList();
-                return new Pagination<CreateAppointmentDto>(appointmentDtos, totalAppointments, pagination.PageIndex, pagination.PageSize);
+                return new Pagination<CreateAppointmentDto>(appointmentDtos, totalAppointments, pagination.PageIndex,
+                    pagination.PageSize);
             }
             catch (Exception ex)
             {

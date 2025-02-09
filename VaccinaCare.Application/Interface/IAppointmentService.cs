@@ -11,7 +11,8 @@ namespace VaccinaCare.Application.Interface
     public interface IAppointmentService
     {
         Task<CreateAppointmentDto> CreateAppointment(CreateAppointmentDto createAppointmentDto);
-        Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(PaginationParameter pagination);
+
+        Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId, PaginationParameter pagination);
         Task<CreateAppointmentDto> UpdateAppointment(Guid id, CreateAppointmentDto createAppointmentDto);
         Task<CreateAppointmentDto> DeleteAppointment(Guid id);
     }
