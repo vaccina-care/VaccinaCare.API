@@ -92,7 +92,7 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromBody] VaccineDTO vaccineDTO)
+    public async Task<IActionResult> Create([FromForm] VaccineDTO vaccineDTO)
     {
         _logger.Info("Create vaccine request received.");
 
