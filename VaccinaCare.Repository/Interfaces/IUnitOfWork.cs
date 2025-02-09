@@ -10,6 +10,8 @@ namespace VaccinaCare.Repository.Interfaces
         IGenericRepository<Notification> NotificationRepository { get; }
         IGenericRepository<Vaccine> VaccineRepository { get; }
         IGenericRepository<Appointment> AppointmentRepository { get; }
+        IGenericRepository<VaccinePackage> VaccinePackageRepository { get; }
+        IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository { get; }
         Task<int> SaveChangesAsync();
     }
 
