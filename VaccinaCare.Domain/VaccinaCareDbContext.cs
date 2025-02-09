@@ -103,8 +103,6 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
             entity.Property(e => e.CancellationReason).HasColumnType("text");
             entity.Property(e => e.Notes).HasColumnType("text");
-            entity.Property(e => e.PreferredTimeSlot).HasMaxLength(255);
-            entity.Property(e => e.Room).HasMaxLength(255);
             entity.Property(e => e.VaccineType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
             entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
@@ -125,6 +123,18 @@ public partial class VaccinaCareDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Child
         });
 
+        
+        modelBuilder.Entity<Appointment>()
+            .Property(a => a.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        modelBuilder.Entity<Appointment>()
+            .Property(a => a.VaccineType)
+            .HasConversion<string>()
+            .HasMaxLength(50);
+
+        
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__3B38F27673DFA862");
