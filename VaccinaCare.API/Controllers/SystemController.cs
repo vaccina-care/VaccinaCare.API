@@ -33,10 +33,11 @@ namespace VaccinaCare.API.Controllers
             {
                 await ClearDatabase(_context);
 
-                // seed data
+                // Seed data
                 var roles = await SeedRoles();
                 var users = await SeedUsers();
                 var vaccines = await SeedVaccines();
+                var policies = await SeedPolicies();
 
                 return Ok(ApiResult<object>.Success(new
                 {
@@ -44,8 +45,10 @@ namespace VaccinaCare.API.Controllers
                     TotalRoles = roles.Count,
                     TotalUsers = users.Count,
                     TotalVaccines = vaccines.Count,
+                    TotalPolicies = policies.Count,
                     RoleNames = roles.Select(r => r.RoleName),
-                    UserEmails = users.Select(u => u.Email)
+                    UserEmails = users.Select(u => u.Email),
+                    PolicyNames = policies.Select(p => p.PolicyName)
                 }));
             }
             catch (DbUpdateException dbEx)
@@ -59,6 +62,51 @@ namespace VaccinaCare.API.Controllers
                 return StatusCode(500, "Error seeding data: General failure.");
             }
         }
+        
+        private async Task<List<CancellationPolicy>> SeedPolicies()
+        {
+            var policies = new List<CancellationPolicy>
+            {
+                new CancellationPolicy
+                {
+                    PolicyName = "Free Cancellation Before 24 Hours",
+                    Description = "Customers can cancel their appointment at least 24 hours in advance without any fees.",
+                    CancellationDeadline = 24, // Hours before the appointment
+                    PenaltyFee = 0
+                },
+                new CancellationPolicy
+                {
+                    PolicyName = "Cancellation Within 24 Hours",
+                    Description = "Cancelling within 24 hours before the appointment will incur a penalty of 10% of the total booking value.",
+                    CancellationDeadline = 12,
+                    PenaltyFee = 10 // Percentage of the penalty fee
+                },
+                new CancellationPolicy
+                {
+                    PolicyName = "Last-Minute Cancellation",
+                    Description = "Cancelling within 6 hours before the appointment will incur a penalty of 50% of the total booking value.",
+                    CancellationDeadline = 6,
+                    PenaltyFee = 50
+                },
+                new CancellationPolicy
+                {
+                    PolicyName = "No Cancellation Before Appointment",
+                    Description = "If the customer does not cancel before the appointment time, a 100% penalty fee of the total booking value will be applied.",
+                    CancellationDeadline = 0,
+                    PenaltyFee = 100
+                }
+            };
+
+            // Check if data already exists to avoid duplication
+            if (!_context.CancellationPolicies.Any())
+            {
+                await _context.CancellationPolicies.AddRangeAsync(policies);
+                await _context.SaveChangesAsync();
+            }
+
+            return policies;
+        }
+
 
         private async Task<List<Role>> SeedRoles()
         {
@@ -325,7 +373,6 @@ namespace VaccinaCare.API.Controllers
             return vaccines;
         }
 
-
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
             using var transaction = await context.Database.BeginTransactionAsync();
@@ -353,8 +400,8 @@ namespace VaccinaCare.API.Controllers
                     () => context.VaccinePackages.ExecuteDeleteAsync(),
                     () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                     () => context.Vaccines.ExecuteDeleteAsync(),
-                    () => context.Users.ExecuteDeleteAsync(), 
-                    () => context.Roles.ExecuteDeleteAsync(), 
+                    () => context.Users.ExecuteDeleteAsync(),
+                    () => context.Roles.ExecuteDeleteAsync(),
                 };
 
                 foreach (var deleteFunc in tablesToDelete)
