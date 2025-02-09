@@ -12,10 +12,10 @@ namespace VaccinaCare.Repository
         private readonly IGenericRepository<Role> _roleRepository;
         private readonly IGenericRepository<Vaccine> _vaccineRepository;
         private readonly IGenericRepository<Child> _childRepository;
-
+        private readonly IGenericRepository<Appointment> _appointmentRepository;
         public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
             IGenericRepository<User> userRepository, IGenericRepository<Role> roleRepository,
-            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository)
+            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository, IGenericRepository<Appointment> appointmentRepository)
         {
             _dbContext = dbContext;
             _notificationRepository = notificationRepository;
@@ -23,13 +23,14 @@ namespace VaccinaCare.Repository
             _roleRepository = roleRepository;
             _vaccineRepository = vaccineRepository;
             _childRepository = childRepository;
+            _appointmentRepository = appointmentRepository;
         }
         public IGenericRepository<Notification> NotificationRepository => _notificationRepository;
         public IGenericRepository<User> UserRepository => _userRepository;
         public IGenericRepository<Child> ChildRepository => _childRepository;
         public IGenericRepository<Role> RoleRepository => _roleRepository;
         public IGenericRepository<Vaccine> VaccineRepository => _vaccineRepository;
-
+        public IGenericRepository<Appointment> AppointmentRepository => _appointmentRepository;
         public Task<int> SaveChangesAsync()
         {
             try

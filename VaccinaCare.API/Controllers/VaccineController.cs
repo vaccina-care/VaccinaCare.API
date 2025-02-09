@@ -20,7 +20,17 @@ public class VaccineController : ControllerBase
         _vaccineService = vaccineService;
         _logger = logger;
     }
-    
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="search"></param>
+    /// <param name="type"></param>
+    /// <param name="sortBy"></param>
+    /// <param name="isDescending"></param>
+    /// <param name="page"></param>
+    /// <param name="pageSize"></param>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery] string? search,
@@ -30,7 +40,8 @@ public class VaccineController : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10)
     {
-        _logger.Info($"Received request to get vaccines with search: {search}, type: {type}, sortBy: {sortBy}, isDescending: {isDescending}, page: {page}, pageSize: {pageSize}");
+        _logger.Info(
+            $"Received request to get vaccines with search: {search}, type: {type}, sortBy: {sortBy}, isDescending: {isDescending}, page: {page}, pageSize: {pageSize}");
 
         try
         {
@@ -70,12 +81,18 @@ public class VaccineController : ControllerBase
         }
     }
 
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="vaccineDTO"></param>
+    /// <returns></returns>
     [Authorize(Policy = "StaffPolicy")]
     [HttpPost("create")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromBody] VaccineDTO vaccineDTO)
+    public async Task<IActionResult> Create([FromForm] VaccineDTO vaccineDTO)
     {
         _logger.Info("Create vaccine request received.");
 
@@ -106,11 +123,13 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
-
     
-
-
-    [Authorize(Policy = "StaffPolicy")]
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id"></param>
+    /// <param name="vaccineDTO"></param>
+    /// <returns></returns>
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -142,6 +161,11 @@ public class VaccineController : ControllerBase
         }
     }
     
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Authorize(Policy = "StaffPolicy")]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
