@@ -177,6 +177,13 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
         });
+        
+        modelBuilder.Entity<Child>()
+            .Property(c => c.BloodType)
+            .HasConversion(
+                v => v.ToString(),  // Convert Enum to String for Database
+                v => (BloodType)Enum.Parse(typeof(BloodType), v) // Convert String to Enum when reading
+            );
 
         modelBuilder.Entity<User>(entity =>
         {

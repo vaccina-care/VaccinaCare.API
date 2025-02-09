@@ -1,4 +1,6 @@
-﻿namespace VaccinaCare.Domain.Entities;
+﻿using VaccinaCare.Domain.Enums;
+
+namespace VaccinaCare.Domain.Entities;
 
 public partial class Child : BaseEntity
 {
@@ -8,7 +10,7 @@ public partial class Child : BaseEntity
     public bool Gender { get; set; }
     public string? MedicalHistory { get; set; }
 
-    public string? BloodType { get; set; } // Nhóm máu
+    public BloodType? BloodType { get; set; } // Nhóm máu
 
     public bool HasChronicIllnesses { get; set; } // Có bệnh mãn tính không
     public string? ChronicIllnessesDescription { get; set; } // Mô tả bệnh mãn tính

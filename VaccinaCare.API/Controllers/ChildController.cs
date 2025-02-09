@@ -4,6 +4,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
+using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
     [ApiController]
@@ -18,13 +19,14 @@ namespace VaccinaCare.API.Controllers;
             _childService = childService;
             _logger = logger;
         }
+        // [Authorize(Policy = "StaffPolicy")]
 
         [HttpPost]
         [Authorize]
         [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
-        public async Task<IActionResult> CreateChild([FromBody] CreateChildDto childDto)
+        public async Task<IActionResult> CreateChild([FromForm] CreateChildDto childDto)
         {
             try
             {
@@ -70,5 +72,43 @@ namespace VaccinaCare.API.Controllers;
                 });
             }
         }
+        
+        
+        [HttpGet]
+        [Authorize]
+        [ProducesResponseType(typeof(ApiResult<Pagination<ChildDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResult<object>), 400)]
+        [ProducesResponseType(typeof(ApiResult<object>), 500)]
+        public async Task<IActionResult> GetChildrenByParent([FromQuery] PaginationParameter pagination)
+        {
+            try
+            {
+                _logger.Info("Received request to get children list.");
+
+                var children = await _childService.GetChildrenByParentAsync(pagination);
+
+                _logger.Success($"Fetched {children.Count} children successfully.");
+
+                return Ok(new ApiResult<Pagination<ChildDto>>
+                {
+                    IsSuccess = true,
+                    Message = "Children list retrieved successfully.",
+                    Data = children
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error while fetching children: {ex.Message}");
+                return StatusCode(500, new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred while retrieving the children list. Please try again later."
+                });
+            }
+        }
+
+        
+        
+        
     
 }

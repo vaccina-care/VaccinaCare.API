@@ -1,4 +1,6 @@
-﻿namespace VaccinaCare.Domain.DTOs.ChildDTOs;
+﻿using VaccinaCare.Domain.Enums;
+
+namespace VaccinaCare.Domain.DTOs.ChildDTOs;
 
 public class ChildDto
 {
@@ -7,7 +9,7 @@ public class ChildDto
     public DateOnly? DateOfBirth { get; set; }
     public bool Gender { get; set; }
     public string? MedicalHistory { get; set; }
-    public string? BloodType { get; set; }
+    public BloodType? BloodType { get; set; }
     public bool HasChronicIllnesses { get; set; }
     public string? ChronicIllnessesDescription { get; set; }
     public bool HasAllergies { get; set; }
