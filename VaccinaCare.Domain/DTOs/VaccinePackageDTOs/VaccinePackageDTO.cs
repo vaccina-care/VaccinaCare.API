@@ -17,7 +17,6 @@ namespace VaccinaCare.Domain.DTOs.VaccinePackageDTOs
     public class VaccinePackageDetailDTO
     {
         public Guid VaccineId { get; set; }
-        public string? VaccineName {  get; set; }
         public int DoseOrder { get; set; }
     }
     public class CreateVaccinePackageDTO

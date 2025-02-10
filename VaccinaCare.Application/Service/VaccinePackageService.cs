@@ -1,4 +1,5 @@
-﻿using MimeKit.Cryptography;
+﻿using Microsoft.VisualBasic;
+using MimeKit.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -51,27 +52,11 @@ namespace VaccinaCare.Application.Service
                     .Select(id => id.Value)
                     .ToList();
 
-                List<VaccineDTO> vaccineDetails = new List<VaccineDTO>();
-
-                foreach (var id in vaccineIds)
-                {
-                    var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
-                    if (vaccine != null)
-                    {
-                        vaccineDetails.Add(new VaccineDTO
-                        {
-                            VaccineName = vaccine.VaccineName,
-                            Description = vaccine.Description,
-                            PicUrl = vaccine.PicUrl,
-                            Type = vaccine.Type,
-                            Price = vaccine.Price
-                        });
-                    }
-                }
+                var allVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => vaccineIds.Contains(v.Id));
 
                 _loggerService.Info($"Created Vaccine Package successfully: {dto.PackageName}");
 
-                return new VaccinePackageDTO
+                var result = new VaccinePackageDTO
                 {
                     PackageName = vaccinePackage.PackageName,
                     Description = vaccinePackage.Description,
@@ -79,10 +64,10 @@ namespace VaccinaCare.Application.Service
                     VaccineDetails = vaccinePackage.VaccinePackageDetails.Select(vd => new VaccinePackageDetailDTO
                     {
                         VaccineId = vd.VaccineId ?? Guid.Empty,
-                        VaccineName = _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result?.VaccineName ?? "Unknown",
                         DoseOrder = vd.DoseOrder ?? 0
                     }).ToList()
                 };
+                return result;
             }
             catch (Exception ex)
             {
@@ -99,15 +84,20 @@ namespace VaccinaCare.Application.Service
 
                 var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
 
+                var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
+
+                var allVaccines = await _unitOfWork.VaccineRepository.GetAllAsync();
+
                 var result = vaccinePackages.Select(vp => new VaccinePackageDTO
                 {
                     PackageName = vp.PackageName,
                     Description = vp.Description,
                     Price = vp.Price,
-                    VaccineDetails = vp.VaccinePackageDetails.Select(vd => new VaccinePackageDetailDTO
+                    VaccineDetails = allPackageDetails
+                    .Where(vd => vd.PackageId == vp.Id)
+                    .Select(vd => new VaccinePackageDetailDTO
                     {
                         VaccineId = vd.VaccineId ?? Guid.Empty,
-                        VaccineName = _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result?.VaccineName ?? "Unknown",
                         DoseOrder = vd.DoseOrder ?? 0
                     }).ToList()
                 }).ToList();
