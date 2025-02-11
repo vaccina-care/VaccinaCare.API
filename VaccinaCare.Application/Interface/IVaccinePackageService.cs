@@ -12,5 +12,7 @@ namespace VaccinaCare.Application.Interface
         Task<VaccinePackageDTO> CreateVaccinePackageAsync(CreateVaccinePackageDTO dto);
         Task<List<VaccinePackageDTO>> GetAllVaccinePackagesAsync();
         Task<VaccinePackageDTO> GetVaccinePackageByIdAsync(Guid packageId);
+        Task<bool> DeleteVaccinePackageByIdAsync(Guid packageId);
+        Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto);
     }
 }

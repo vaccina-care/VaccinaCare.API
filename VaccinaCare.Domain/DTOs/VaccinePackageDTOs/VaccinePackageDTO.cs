@@ -26,4 +26,11 @@ namespace VaccinaCare.Domain.DTOs.VaccinePackageDTOs
         public decimal? Price { get; set; }
         public List<VaccinePackageDetailDTO> VaccineDetails{ get; set; }
     }
+    public class UpdateVaccinePackageDTO
+    {
+        public string? PackageName { get; set; }
+        public string? Description { get; set; }
+        public decimal? Price { get; set; }
+        public List<VaccinePackageDetailDTO>? VaccineDetails { get; set; }
+    }
 }

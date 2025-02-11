@@ -71,6 +71,72 @@ public class VaccinePackageController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetVaccinePackageById(Guid id)
+    {
+        _logger.Info($"Fetching Vaccine Package with ID: {id}");
+        try
+        {
+
+            if (id == Guid.Empty)
+                return BadRequest("Invalid package ID.");
+
+            var result = await _vaccinePackageService.GetVaccinePackageByIdAsync(id);
+
+            if (result == null)
+            {
+                _logger.Warn($"Vaccine Package with ID {id} not found.");
+                return NotFound(ApiResult<object>.Error("404 -  No vaccine package available."));
+            }
+
+            _logger.Success($"Get Vaccine Package with ID : {id} retrieved succesfully.");
+            return Ok(ApiResult<VaccinePackageDTO>.Success(result, "Vaccine package retrieved successfully."));
+        } 
+        catch (Exception ex) 
+        {
+            _logger.Error($"Unexpected error while fetching vaccine packages: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
+        }
+    }
+    [HttpDelete("id")]
+    public async Task<IActionResult> DeleteVaccinePackage(Guid id)
+    {
+        _logger.Info($"Request received to delete Vaccine Package with ID: {id}");
+        try
+        {
+            var isDeleted = await _vaccinePackageService.DeleteVaccinePackageByIdAsync(id);
+            if (!isDeleted)
+            {
+                _logger.Warn($"Vaccine Package with ID {id} not found.");
+                return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
+            }
+
+            _logger.Success($"Vaccine Package with ID {id} deleted successfully.");
+            return Ok(ApiResult<object>.Success(null, "Vaccine package deleted successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error deleting Vaccine Package with ID {id}: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
+        }
+    }
+    [HttpPut("id")]
+    public async Task<IActionResult> UpdateVaccinePackage(Guid id, [FromBody] UpdateVaccinePackageDTO dto)
+    {
+        if (dto == null)
+        {
+            return BadRequest(ApiResult<object>.Error("400 - Invalid request data."));
+        }
+
+        var updatedPackage = await _vaccinePackageService.UpdateVaccinePackageByIdAsync(id, dto);
+
+        if (updatedPackage == null)
+        {
+            return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
+        }
+
+        return Ok(ApiResult<VaccinePackageDTO>.Success(updatedPackage, "Vaccine package updated successfully."));
+    }
 }
 
 
