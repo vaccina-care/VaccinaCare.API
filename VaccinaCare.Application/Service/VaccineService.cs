@@ -178,7 +178,7 @@ public class VaccineService : IVaccineService
         try
         {
             _logger.Info($"Fetching vaccine details for ID: {id}");
-            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id, v => v.VaccinePackageDetails);
 
             if (vaccine == null || vaccine.IsDeleted)
             {
@@ -188,6 +188,22 @@ public class VaccineService : IVaccineService
 
             _logger.Info(
                 $"Vaccine found. Preparing to delete: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+
+            _logger.Info($"Fetching VaccinePackageDetails that contain Vaccine ID: {id}");
+            var vaccinePackageDetails = await _unitOfWork.VaccinePackageDetailRepository
+                .GetAllAsync(vpd => vpd.VaccineId == id);
+
+            if (vaccinePackageDetails.Any())
+            {
+                _logger.Info($"Found {vaccinePackageDetails.Count} VaccinePackageDetails associated with Vaccine ID: {id}. Soft deleting...");
+
+                bool packageDetailDeleteResult = await _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(vaccinePackageDetails);
+                if (!packageDetailDeleteResult)
+                {
+                    _logger.Warn($"Failed to soft delete VaccinePackageDetails for Vaccine ID: {id}");
+                    return null;
+                }
+            }
 
             bool deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
             if (!deleteResult)

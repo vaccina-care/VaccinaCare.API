@@ -5,7 +5,6 @@ namespace VaccinaCare.API.Architechture
 {
     public static class MigrationExtensions
     {
-
         public static void ApplyMigrations(this IApplicationBuilder app, ILogger _logger)
         {
             try
