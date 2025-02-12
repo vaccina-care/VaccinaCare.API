@@ -1,7 +1,9 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -92,4 +94,67 @@ public class ChildService : IChildService
             throw new Exception("An error occurred while creating the child profile. Please try again later.");
         }
     }
+
+    public async Task<Pagination<ChildDto>> GetChildrenByParentAsync(PaginationParameter pagination)
+    {
+        try
+        {
+            // Get ParentId from ClaimsService
+            Guid parentId = _claimsService.GetCurrentUserId;
+
+            _loggerService.Info(
+                $"Fetching children for parent {parentId} with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
+
+            // Retrieve queryable list of children
+            var query = _unitOfWork.ChildRepository.GetQueryable()
+                .Where(c => c.ParentId == parentId);
+
+            // Get total count before applying pagination
+            int totalChildren = await query.CountAsync();
+
+            // Apply pagination
+            var children = await query
+                .OrderBy(c => c.FullName) // Sorting by name, modify if needed
+                .Skip((pagination.PageIndex - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync();
+
+            if (!children.Any())
+            {
+                _loggerService.Warn($"No children found for parent {parentId} on page {pagination.PageIndex}.");
+                return new Pagination<ChildDto>(new List<ChildDto>(), 0, pagination.PageIndex, pagination.PageSize);
+            }
+
+            _loggerService.Success(
+                $"Retrieved {children.Count} children for parent {parentId} on page {pagination.PageIndex}");
+
+            // Convert to ChildDto list
+            var childDtos = children.Select(child => new ChildDto
+            {
+                Id = child.Id,
+                FullName = child.FullName,
+                DateOfBirth = child.DateOfBirth,
+                Gender = child.Gender,
+                MedicalHistory = child.MedicalHistory,
+                BloodType = child.BloodType,
+                HasChronicIllnesses = child.HasChronicIllnesses,
+                ChronicIllnessesDescription = child.ChronicIllnessesDescription,
+                HasAllergies = child.HasAllergies,
+                AllergiesDescription = child.AllergiesDescription,
+                HasRecentMedication = child.HasRecentMedication,
+                RecentMedicationDescription = child.RecentMedicationDescription,
+                HasOtherSpecialCondition = child.HasOtherSpecialCondition,
+                OtherSpecialConditionDescription = child.OtherSpecialConditionDescription
+            }).ToList();
+
+            return new Pagination<ChildDto>(childDtos, totalChildren, pagination.PageIndex, pagination.PageSize);
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error while fetching children: {ex.Message}");
+            throw new Exception("An error occurred while fetching children. Please try again later.");
+        }
+    }
+    
+    
 }

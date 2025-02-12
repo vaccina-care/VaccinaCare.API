@@ -48,6 +48,7 @@ public class VaccinePackageController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
+    
     [HttpGet]
     public async Task<IActionResult> GetAllVaccinePackages()
     {
