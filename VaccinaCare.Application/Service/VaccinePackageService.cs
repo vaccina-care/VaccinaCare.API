@@ -18,6 +18,7 @@ namespace VaccinaCare.Application.Service
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILoggerService _loggerService;
         private readonly IClaimsService _claimsService;
+
         public VaccinePackageService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService)
         {
             _unitOfWork = unitOfWork;
@@ -79,7 +80,9 @@ namespace VaccinaCare.Application.Service
                     VaccineDetails = vaccinePackage.VaccinePackageDetails.Select(vd => new VaccinePackageDetailDTO
                     {
                         VaccineId = vd.VaccineId ?? Guid.Empty,
-                        VaccineName = _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result?.VaccineName ?? "Unknown",
+                        VaccineName =
+                            _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result
+                                ?.VaccineName ?? "Unknown",
                         DoseOrder = vd.DoseOrder ?? 0
                     }).ToList()
                 };
@@ -107,7 +110,9 @@ namespace VaccinaCare.Application.Service
                     VaccineDetails = vp.VaccinePackageDetails.Select(vd => new VaccinePackageDetailDTO
                     {
                         VaccineId = vd.VaccineId ?? Guid.Empty,
-                        VaccineName = _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result?.VaccineName ?? "Unknown",
+                        VaccineName =
+                            _unitOfWork.VaccineRepository.GetByIdAsync(vd.VaccineId ?? Guid.Empty).Result
+                                ?.VaccineName ?? "Unknown",
                         DoseOrder = vd.DoseOrder ?? 0
                     }).ToList()
                 }).ToList();
