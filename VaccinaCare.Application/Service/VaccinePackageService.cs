@@ -1,8 +1,11 @@
-﻿using Microsoft.VisualBasic;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
+using Microsoft.VisualBasic;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service
@@ -203,6 +206,54 @@ namespace VaccinaCare.Application.Service
                 throw;
             }
         }
+
+        public async Task<Pagination<VaccinePackageDTO>> GetVaccinePackagesPaging(PaginationParameter pagination)
+        {
+            try
+            {
+                _loggerService.Info($"Fetching vaccine package with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
+
+                var query = _unitOfWork.VaccinePackageRepository.GetQueryable()
+                    .Include(vp => vp.VaccinePackageDetails); 
+
+                int totalPackages = await query.CountAsync();
+
+                var packages = await query
+                    .OrderBy(vp => vp.PackageName)
+                    .Skip((pagination.PageIndex - 1) * pagination.PageSize)
+                    .Take(pagination.PageSize)
+                    .ToListAsync();
+
+                if (!packages.Any())
+                {
+                    _loggerService.Warn($"No vaccine packages found on page {pagination.PageIndex}.");
+                    return new Pagination<VaccinePackageDTO>(new List<VaccinePackageDTO>(), 0, pagination.PageIndex, pagination.PageSize);
+                }
+
+                _loggerService.Success($"Retrieved {packages.Count} vaccine packages on page {pagination.PageIndex}");
+
+                var packageDtos = packages.Select(package => new VaccinePackageDTO
+                {
+                    PackageName = package.PackageName,
+                    Description = package.Description,
+                    Price = package.Price,
+                    VaccineDetails = package.VaccinePackageDetails
+                        .Select(vd => new VaccinePackageDetailDTO
+                        {
+                            VaccineId = vd.VaccineId ?? Guid.Empty,
+                            DoseOrder = vd.DoseOrder ?? 0
+                        }).ToList()
+                }).ToList();
+
+                return new Pagination<VaccinePackageDTO>(packageDtos, totalPackages, pagination.PageIndex, pagination.PageSize);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.Error($"Error while fetching vaccine package: {ex.Message}");
+                throw new Exception("An error occurred while fetching vaccine package. Please try again later");
+            }
+        }
+
 
         public async Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto)
         {

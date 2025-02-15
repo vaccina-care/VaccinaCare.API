@@ -290,4 +290,34 @@ public class VaccineService : IVaccineService
 
         return result;
     }
+
+    public async Task<VaccineDTO> GetVaccineById(Guid id)
+    {
+        _logger.Info($"Fetching vaccine with ID: {id}");
+        try
+        {
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+            if (vaccine == null)
+            {
+                _logger.Warn($"Vaccine with ID {id} not found.");
+                return null;
+            }
+
+            _logger.Info($"Vaccine with ID {id} found: {vaccine.VaccineName}");
+
+            return new VaccineDTO
+            {
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Failed to fetch vaccine with ID {id}. Error: {ex.Message}");
+            throw;
+        }
+    }
 }
