@@ -81,7 +81,44 @@ public class VaccineController : ControllerBase
         }
     }
 
-    
+    /// <summary>
+    /// Get vaccine details by ID
+    /// </summary>
+    /// <param name="id">Vaccine ID</param>
+    /// <returns>Vaccine details</returns>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetVaccineById([FromRoute] Guid id)
+    {
+        _logger.Info($"Received request to get vaccine with ID: {id}");
+
+        try
+        {
+            var vaccine = await _vaccineService.GetVaccineById(id);
+            if (vaccine == null)
+            {
+                _logger.Warn($"Vaccine with ID {id} not found.");
+                return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
+            }
+
+            _logger.Info($"Successfully retrieved vaccine with ID: {id}");
+
+            return Ok(ApiResult<object>.Success(new
+            {
+                vaccine.VaccineName,
+                vaccine.Description,
+                vaccine.PicUrl,
+                vaccine.Type,
+                vaccine.Price
+            }, "Vaccine retrieval successful."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while retrieving vaccine with ID {id}. Error: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
+        }
+    }
+
+
     /// <summary>
     /// 
     /// </summary>
