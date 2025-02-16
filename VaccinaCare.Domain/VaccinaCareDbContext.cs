@@ -304,6 +304,13 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.SuggestedVaccine).HasColumnType("text");
             entity.Property(e => e.Status).HasMaxLength(255);
         });
+        
+        modelBuilder.Entity<VaccineSuggestion>()
+            .HasOne(vs => vs.Child)
+            .WithMany(c => c.VaccineSuggestions)
+            .HasForeignKey(vs => vs.ChildId)
+            .OnDelete(DeleteBehavior.Cascade); // Enables cascading delete
+
 
         modelBuilder.Entity<VaccinationRecord>(entity =>
         {
