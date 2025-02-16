@@ -384,7 +384,7 @@ namespace VaccinaCare.API.Controllers
                 // Danh sách các bảng cần xóa (theo thứ tự quan hệ FK)
                 var tablesToDelete = new List<Func<Task>>
                 {
-                    () => context.Notifications.ExecuteDeleteAsync(), // Xóa bảng con trước
+                    () => context.Notifications.ExecuteDeleteAsync(),
                     () => context.AppointmentsServices.ExecuteDeleteAsync(),
                     () => context.Appointments.ExecuteDeleteAsync(),
                     () => context.CancellationPolicies.ExecuteDeleteAsync(),
@@ -396,13 +396,17 @@ namespace VaccinaCare.API.Controllers
                     () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
                     () => context.VaccinationRecords.ExecuteDeleteAsync(),
                     () => context.VaccineSuggestions.ExecuteDeleteAsync(),
-                    () => context.VaccinePackageDetails.ExecuteDeleteAsync(),
-                    () => context.VaccinePackages.ExecuteDeleteAsync(),
+
+                    // Delete VaccinePackageDetail first, then VaccinePackage
+                    () => context.VaccinePackageDetails.ExecuteDeleteAsync(),  // Child
+                    () => context.VaccinePackages.ExecuteDeleteAsync(),        // Parent
+
                     () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                     () => context.Vaccines.ExecuteDeleteAsync(),
                     () => context.Users.ExecuteDeleteAsync(),
                     () => context.Roles.ExecuteDeleteAsync(),
                 };
+
 
                 foreach (var deleteFunc in tablesToDelete)
                 {
