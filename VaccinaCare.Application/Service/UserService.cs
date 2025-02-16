@@ -9,12 +9,14 @@ namespace VaccinaCare.Application.Service
     public class UserService : IUserService
     {
         private readonly ILoggerService _logger;
+        private readonly IBlobService _blobService;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(ILoggerService logger, IUnitOfWork unitOfWork)
+        public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService)
         {
             _logger = logger;
             _unitOfWork = unitOfWork;
+            _blobService = blobService;
         }
 
         public async Task<IEnumerable<User>> GetAllUsersAsync()
@@ -122,9 +124,16 @@ namespace VaccinaCare.Application.Service
                     isUpdated = true;
                 }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.ImageUrl))
+                if (userUpdateDto.ImageFile != null && userUpdateDto.ImageFile.Length > 0)
                 {
-                    user.ImageUrl = userUpdateDto.ImageUrl;
+                    // Upload Image to MinIO and Get the URL
+                    using var stream = userUpdateDto.ImageFile.OpenReadStream();
+                    string fileName = $"profile_pictures/{userId}_{userUpdateDto.ImageFile.FileName}";
+
+                    await _blobService.UploadFileAsync(fileName, stream);
+                    string imageUrl = await _blobService.GetFileUrlAsync(fileName);
+
+                    user.ImageUrl = imageUrl;
                     isUpdated = true;
                 }
 
@@ -134,13 +143,12 @@ namespace VaccinaCare.Application.Service
                     isUpdated = true;
                 }
 
-                
                 if (!string.IsNullOrEmpty(userUpdateDto.Address))
                 {
                     user.Address = userUpdateDto.Address;
                     isUpdated = true;
                 }
-                
+
                 if (!isUpdated)
                 {
                     _logger.Warn($"No changes detected for UserId: {userId}");
@@ -149,7 +157,8 @@ namespace VaccinaCare.Application.Service
                         FullName = user.FullName,
                         Gender = user.Gender,
                         DateOfBirth = user.DateOfBirth,
-                        ImageUrl = user.ImageUrl,
+                        Address = user.Address,
+                        ImageUrl = user.ImageUrl, // Now this property exists!
                         PhoneNumber = user.PhoneNumber
                     };
                 }
@@ -165,7 +174,7 @@ namespace VaccinaCare.Application.Service
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Address = user.Address,
-                    ImageUrl = user.ImageUrl,
+                    ImageUrl = user.ImageUrl, // Return updated image URL
                     PhoneNumber = user.PhoneNumber
                 };
             }
@@ -175,7 +184,5 @@ namespace VaccinaCare.Application.Service
                 throw;
             }
         }
-        
-        
     }
 }
