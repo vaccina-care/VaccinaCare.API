@@ -294,6 +294,13 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.VaccineId)
                 .OnDelete(DeleteBehavior.Restrict); // or Cascade if you want dependent records to be deleted
         });
+        
+        modelBuilder.Entity<VaccinePackageDetail>()
+            .HasOne(vpd => vpd.Package)
+            .WithMany(vp => vp.VaccinePackageDetails)
+            .HasForeignKey(vpd => vpd.PackageId)
+            .OnDelete(DeleteBehavior.Cascade);  // Enable cascading delete
+
 
     }
 }
