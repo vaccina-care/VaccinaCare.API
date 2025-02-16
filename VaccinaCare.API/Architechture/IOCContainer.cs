@@ -67,6 +67,7 @@ namespace VaccinaCare.API.Architechture
             services.AddScoped<IVaccineService, VaccineService>();
             services.AddScoped<IChildService, ChildService>();
             services.AddScoped<IAppointmentService, AppointmentService>();
+            services.AddScoped<IVaccineSuggestionService, VaccineSuggestionService>();
             services.AddScoped<IBlobService, BlobService>();
             services.AddScoped<IVaccinePackageService, VaccinePackageService>();
             services.AddHttpContextAccessor();

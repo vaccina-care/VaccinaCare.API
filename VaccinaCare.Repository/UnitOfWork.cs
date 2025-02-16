@@ -15,9 +15,10 @@ namespace VaccinaCare.Repository
         private readonly IGenericRepository<Appointment> _appointmentRepository;
         private readonly IGenericRepository<VaccinePackage> _vaccinePackageRepository;
         private readonly IGenericRepository<VaccinePackageDetail> _vaccinePackageDetailRepository;
+        private readonly IGenericRepository<VaccineSuggestion> _vaccineSuggestionRepository;
         public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
             IGenericRepository<User> userRepository, IGenericRepository<Role> roleRepository,
-            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository, IGenericRepository<Appointment> appointmentRepository, IGenericRepository<VaccinePackage> vaccinePackageRepository, IGenericRepository<VaccinePackageDetail> vaccinePackageDetailRepository)
+            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository, IGenericRepository<Appointment> appointmentRepository, IGenericRepository<VaccinePackage> vaccinePackageRepository, IGenericRepository<VaccinePackageDetail> vaccinePackageDetailRepository, IGenericRepository<VaccineSuggestion> vaccineSuggestionRepository)
         {
             _dbContext = dbContext;
             _notificationRepository = notificationRepository;
@@ -28,6 +29,7 @@ namespace VaccinaCare.Repository
             _appointmentRepository = appointmentRepository;
             _vaccinePackageRepository = vaccinePackageRepository;
             _vaccinePackageDetailRepository = vaccinePackageDetailRepository;
+            _vaccineSuggestionRepository = vaccineSuggestionRepository;
         }
         public IGenericRepository<Notification> NotificationRepository => _notificationRepository;
         public IGenericRepository<User> UserRepository => _userRepository;
@@ -37,6 +39,7 @@ namespace VaccinaCare.Repository
         public IGenericRepository<Appointment> AppointmentRepository => _appointmentRepository;
         public IGenericRepository<VaccinePackage> VaccinePackageRepository => _vaccinePackageRepository;
         public IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository => _vaccinePackageDetailRepository;
+        public IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository => _vaccineSuggestionRepository;
         public Task<int> SaveChangesAsync()
         {
             try

@@ -12,8 +12,8 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250216022306_fix-package")]
-    partial class fixpackage
+    [Migration("20250216080145_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -40,9 +40,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("ChildId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("Confirmed")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -57,9 +54,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("Duration")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -68,27 +62,27 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("text");
 
+                    b.Property<bool>("NotificationSent")
+                        .HasColumnType("bit");
+
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("PolicyId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool?>("ReminderSent")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<decimal?>("TotalPrice")
-                        .HasColumnType("decimal(18, 0)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("VaccineSuggestionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("VaccineType")
@@ -102,6 +96,8 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasIndex("ChildId");
 
                     b.HasIndex("PolicyId");
+
+                    b.HasIndex("VaccineSuggestionId");
 
                     b.ToTable("Appointment", (string)null);
                 });
@@ -954,6 +950,59 @@ namespace VaccinaCare.Domain.Migrations
                     b.ToTable("VaccineAvailability", (string)null);
                 });
 
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineIntervalRules", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanBeGivenTogether")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("MinIntervalDays")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("RelatedVaccineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("VaccineId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id")
+                        .HasName("PK_VaccineIntervalRules");
+
+                    b.HasIndex("RelatedVaccineId");
+
+                    b.HasIndex("VaccineId");
+
+                    b.ToTable("VaccineIntervalRules");
+                });
+
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccinePackage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1114,9 +1163,15 @@ namespace VaccinaCare.Domain.Migrations
                         .HasForeignKey("PolicyId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("VaccinaCare.Domain.Entities.VaccineSuggestion", "VaccineSuggestion")
+                        .WithMany()
+                        .HasForeignKey("VaccineSuggestionId");
+
                     b.Navigation("CancellationPolicies");
 
                     b.Navigation("Child");
+
+                    b.Navigation("VaccineSuggestion");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.AppointmentsVaccine", b =>
@@ -1267,6 +1322,24 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
                         .WithMany("VaccineAvailabilities")
                         .HasForeignKey("VaccineId");
+
+                    b.Navigation("Vaccine");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineIntervalRules", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "RelatedVaccine")
+                        .WithMany()
+                        .HasForeignKey("RelatedVaccineId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
+                        .WithMany()
+                        .HasForeignKey("VaccineId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("RelatedVaccine");
 
                     b.Navigation("Vaccine");
                 });
