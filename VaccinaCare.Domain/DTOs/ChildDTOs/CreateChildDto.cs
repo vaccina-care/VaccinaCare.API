@@ -1,43 +1,43 @@
 ﻿using System.ComponentModel;
-using VaccinaCare.Domain.Enums; // Import thư viện cần thiết
+using VaccinaCare.Domain.Enums;
 
 public class CreateChildDto
 {
     [DefaultValue("Nguyen Van A")]
-    public string FullName { get; set; } = "Nguyen Van A"; // Tên mặc định
+    public string FullName { get; set; } = "Nguyen Van A";
 
-    [DefaultValue("2022-01-01")] 
-    public DateOnly DateOfBirth { get; set; } = new DateOnly(2022, 1, 1); // Mặc định trẻ 2 tuổi
+    [DefaultValue("2022-01-01")]
+    public DateOnly DateOfBirth { get; set; } = new DateOnly(2022, 1, 1);
 
     [DefaultValue(true)]
-    public bool Gender { get; set; } = true; // Mặc định là Nam
+    public bool Gender { get; set; } = true;
 
     [DefaultValue("No known medical issues")]
-    public string? MedicalHistory { get; set; } = "No known medical issues"; // Không có tiền sử bệnh
+    public string? MedicalHistory { get; set; } = "No known medical issues";
 
     [DefaultValue(BloodType.Unknown)]
-    public BloodType BloodType { get; set; } = BloodType.Unknown; // Nhóm máu không xác định
+    public BloodType BloodType { get; set; } = BloodType.Unknown;
 
     [DefaultValue(false)]
-    public bool HasChronicIllnesses { get; set; } = false; // Mặc định không có bệnh mãn tính
+    public bool HasChronicIllnesses { get; set; } = false;
 
     [DefaultValue(null)]
     public string? ChronicIllnessesDescription { get; set; } = null;
 
     [DefaultValue(false)]
-    public bool HasAllergies { get; set; } = false; // Mặc định không dị ứng
+    public bool HasAllergies { get; set; } = false;
 
     [DefaultValue(null)]
     public string? AllergiesDescription { get; set; } = null;
 
     [DefaultValue(false)]
-    public bool HasRecentMedication { get; set; } = false; // Không dùng thuốc gần đây
+    public bool HasRecentMedication { get; set; } = false;
 
     [DefaultValue(null)]
     public string? RecentMedicationDescription { get; set; } = null;
 
     [DefaultValue(false)]
-    public bool HasOtherSpecialCondition { get; set; } = false; // Không có triệu chứng đặc biệt
+    public bool HasOtherSpecialCondition { get; set; } = false;
 
     [DefaultValue(null)]
     public string? OtherSpecialConditionDescription { get; set; } = null;
