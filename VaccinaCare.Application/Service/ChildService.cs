@@ -67,10 +67,6 @@ public class ChildService : IChildService
 
             _loggerService.Success($"Parent {parentId} successfully created child profile {child.Id}");
 
-            // Gọi hàm tự động gợi ý vaccine
-            await _vaccineSuggestionService.GenerateVaccineSuggestionsAsync(child.Id);
-            _loggerService.Info($"Vaccine suggestions generated for child {child.Id}");
-
             // Convert to ChildDto
             return new ChildDto
             {
