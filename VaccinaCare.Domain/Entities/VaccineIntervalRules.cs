@@ -6,15 +6,12 @@ namespace VaccinaCare.Domain.Entities;
 public class VaccineIntervalRules : BaseEntity
 {
     [Required]
-    public Guid VaccineId { get; set; } // Vaccine chính
-
-    public Guid? RelatedVaccineId { get; set; } // Vaccine có liên quan (nếu có)
-
+    public Guid VaccineId { get; set; }
+    public Guid? RelatedVaccineId { get; set; }
     [Required]
-    public int MinIntervalDays { get; set; } 
-
+    public int MinIntervalDays { get; set; }
     [Required]
-    public bool CanBeGivenTogether { get; set; } 
+    public bool CanBeGivenTogether { get; set; }
 
     [ForeignKey("VaccineId")]
     public virtual Vaccine? Vaccine { get; set; }

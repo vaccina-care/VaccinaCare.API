@@ -16,9 +16,11 @@ namespace VaccinaCare.Repository
         private readonly IGenericRepository<VaccinePackage> _vaccinePackageRepository;
         private readonly IGenericRepository<VaccinePackageDetail> _vaccinePackageDetailRepository;
         private readonly IGenericRepository<VaccineSuggestion> _vaccineSuggestionRepository;
+        private readonly IGenericRepository<VaccineIntervalRules> _vaccineIntervalRules;
+
         public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
             IGenericRepository<User> userRepository, IGenericRepository<Role> roleRepository,
-            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository, IGenericRepository<Appointment> appointmentRepository, IGenericRepository<VaccinePackage> vaccinePackageRepository, IGenericRepository<VaccinePackageDetail> vaccinePackageDetailRepository, IGenericRepository<VaccineSuggestion> vaccineSuggestionRepository)
+            IGenericRepository<Vaccine> vaccineRepository, IGenericRepository<Child> childRepository, IGenericRepository<Appointment> appointmentRepository, IGenericRepository<VaccinePackage> vaccinePackageRepository, IGenericRepository<VaccinePackageDetail> vaccinePackageDetailRepository, IGenericRepository<VaccineSuggestion> vaccineSuggestionRepository, IGenericRepository<VaccineIntervalRules> vaccineIntervalRules)
         {
             _dbContext = dbContext;
             _notificationRepository = notificationRepository;
@@ -30,6 +32,7 @@ namespace VaccinaCare.Repository
             _vaccinePackageRepository = vaccinePackageRepository;
             _vaccinePackageDetailRepository = vaccinePackageDetailRepository;
             _vaccineSuggestionRepository = vaccineSuggestionRepository;
+            _vaccineIntervalRules = vaccineIntervalRules;
         }
         public IGenericRepository<Notification> NotificationRepository => _notificationRepository;
         public IGenericRepository<User> UserRepository => _userRepository;
@@ -40,6 +43,7 @@ namespace VaccinaCare.Repository
         public IGenericRepository<VaccinePackage> VaccinePackageRepository => _vaccinePackageRepository;
         public IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository => _vaccinePackageDetailRepository;
         public IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository => _vaccineSuggestionRepository;
+        public IGenericRepository<VaccineIntervalRules> VaccineIntervalRulesRepository => _vaccineIntervalRules;
         public Task<int> SaveChangesAsync()
         {
             try
