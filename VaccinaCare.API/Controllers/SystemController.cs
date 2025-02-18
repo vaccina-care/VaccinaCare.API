@@ -191,30 +191,33 @@ namespace VaccinaCare.API.Controllers
                     Description = "Phòng lao",
                     Type = "Vietnam",
                     Price = 150000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FBCG.jpg&version_id=null",
                     RequiredDoses = 1,
                     AvoidChronic = true,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
-                new Vaccine
-                {
-                    VaccineName = "Hepatitis B",
-                    Description = "Viêm gan B",
-                    Type = "Vietnam",
-                    Price = 200000,
-                    RequiredDoses = 3,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
+                // new Vaccine
+                // {
+                //     VaccineName = "Hepatitis B",
+                //     Description = "Viêm gan B",
+                //     Type = "Vietnam",
+                //     Price = 200000,
+                //     PicUrl = 
+                //     RequiredDoses = 3,
+                //     AvoidChronic = false,
+                //     AvoidAllergy = false,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
                 new Vaccine
                 {
                     VaccineName = "Pentaxim",
                     Description = "Bạch hầu, Ho gà, Uốn ván, Bại liệt, Hib",
                     Type = "France",
                     Price = 795000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FPentaxim.jpg&version_id=null",
                     RequiredDoses = 3,
                     AvoidChronic = false,
                     AvoidAllergy = true,
@@ -227,6 +230,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "6 trong 1 (DTP, Bại liệt, Hib, Viêm gan B)",
                     Type = "Belgium",
                     Price = 1015000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FInfanrix%20Hexa.jpg&version_id=null",
                     RequiredDoses = 3,
                     AvoidChronic = false,
                     AvoidAllergy = true,
@@ -239,48 +243,55 @@ namespace VaccinaCare.API.Controllers
                     Description = "Ngừa tiêu chảy do Rotavirus",
                     Type = "USA",
                     Price = 665000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FRotateq.jpg&version_id=null",
                     RequiredDoses = 3,
                     AvoidChronic = true,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
-                new Vaccine
-                {
-                    VaccineName = "IPV",
-                    Description = "Bại liệt (tiêm)",
-                    Type = "Belgium",
-                    Price = 450000,
-                    RequiredDoses = 4,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "OPV",
-                    Description = "Bại liệt (uống)",
-                    Type = "Vietnam",
-                    Price = 100000,
-                    RequiredDoses = 4,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Measles (MVVac)",
-                    Description = "Sởi đơn",
-                    Type = "Vietnam",
-                    Price = 396000,
-                    RequiredDoses = 2,
-                    AvoidChronic = false,
-                    AvoidAllergy = true,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
+                // new Vaccine
+                // {
+                //     VaccineName = "IPV",
+                //     Description = "Bại liệt (tiêm)",
+                //     Type = "Belgium",
+                //     Price = 450000,
+                //     PicUrl = 
+                //
+                //     RequiredDoses = 4,
+                //     AvoidChronic = false,
+                //     AvoidAllergy = false,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
+                // new Vaccine
+                // {
+                //     VaccineName = "OPV",
+                //     Description = "Bại liệt (uống)",
+                //     Type = "Vietnam",
+                //     Price = 100000,
+                //     PicUrl = 
+                //
+                //     RequiredDoses = 4,
+                //     AvoidChronic = false,
+                //     AvoidAllergy = false,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
+                // new Vaccine
+                // {
+                //     VaccineName = "Measles (MVVac)",
+                //     Description = "Sởi đơn",
+                //     Type = "Vietnam",
+                //     Price = 396000,
+                //     RequiredDoses = 2,
+                //     PicUrl = 
+                //
+                //     AvoidChronic = false,
+                //     AvoidAllergy = true,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
                 new Vaccine
                 {
                     VaccineName = "MMR II",
@@ -288,6 +299,7 @@ namespace VaccinaCare.API.Controllers
                     Type = "USA",
                     Price = 445000,
                     RequiredDoses = 2,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FMMR.jpg&version_id=null",
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -299,42 +311,48 @@ namespace VaccinaCare.API.Controllers
                     Description = "Thủy đậu",
                     Type = "USA",
                     Price = 1085000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FVARIVAX.jpg",
                     RequiredDoses = 2,
                     AvoidChronic = true,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
-                new Vaccine
-                {
-                    VaccineName = "Havrix",
-                    Description = "Viêm gan A",
-                    Type = "UK",
-                    Price = 850000,
-                    RequiredDoses = 2,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Ixiaro",
-                    Description = "Viêm não Nhật Bản",
-                    Type = "Austria",
-                    Price = 1300000,
-                    RequiredDoses = 2,
-                    AvoidChronic = false,
-                    AvoidAllergy = true,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
+                // new Vaccine
+                // {
+                //     VaccineName = "Havrix",
+                //     Description = "Viêm gan A",
+                //     Type = "UK",
+                //     Price = 850000,
+                //     RequiredDoses = 2,
+                //     PicUrl = "",
+                //
+                //     AvoidChronic = false,
+                //     AvoidAllergy = false,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
+                // new Vaccine
+                // {
+                //     VaccineName = "Ixiaro",
+                //     Description = "Viêm não Nhật Bản",
+                //     Type = "Austria",
+                //     Price = 1300000,
+                //     RequiredDoses = 2,
+                //     PicUrl = 
+                //
+                //     AvoidChronic = false,
+                //     AvoidAllergy = true,
+                //     HasDrugInteraction = false,
+                //     HasSpecialWarning = false
+                // },
                 new Vaccine
                 {
                     VaccineName = "Typhim Vi",
                     Description = "Thương hàn",
                     Type = "France",
                     Price = 900000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FTyphim%20Vi.jpg&version_id=null",
                     RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = false,
@@ -347,6 +365,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "Dại",
                     Type = "France",
                     Price = 950000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FVerorab.jpg&version_id=null",
                     RequiredDoses = 4,
                     AvoidChronic = false,
                     AvoidAllergy = true,
@@ -359,6 +378,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "Viêm màng não mô cầu",
                     Type = "USA",
                     Price = 1750000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FMenactra.jpg&version_id=null",
                     RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = true,
@@ -371,6 +391,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "HPV (Ngừa ung thư cổ tử cung)",
                     Type = "USA",
                     Price = 1790000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FGardasil.png&version_id=null",
                     RequiredDoses = 2,
                     AvoidChronic = false,
                     AvoidAllergy = false,
@@ -383,6 +404,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "Cúm mùa",
                     Type = "France",
                     Price = 356000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FVaxigrip.jpg&version_id=null",
                     RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = true,
@@ -395,6 +417,7 @@ namespace VaccinaCare.API.Controllers
                     Description = "COVID-19 (5+)",
                     Type = "USA",
                     Price = 1200000,
+                    PicUrl = "http://103.211.201.162:9001/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccine-section%2FPfizer-BioNTech%20COVID-19.png&version_id=null",
                     RequiredDoses = 2,
                     AvoidChronic = false,
                     AvoidAllergy = true,
