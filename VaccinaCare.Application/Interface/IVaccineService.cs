@@ -13,4 +13,5 @@ public interface IVaccineService
 
     Task<bool> CanBeAdministeredTogether(Guid vaccine1Id, Guid vaccine2Id);
     Task<int> GetMinIntervalDays(Guid vaccine1Id, Guid vaccine2Id);
+    Task<decimal> GetVaccinePrice(Guid vaccineId);
 }

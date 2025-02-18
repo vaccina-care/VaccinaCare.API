@@ -1,15 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
@@ -19,14 +13,70 @@ namespace VaccinaCare.Application.Service
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILoggerService _logger;
+        private readonly IVaccineService _vaccineService;
         private readonly IClaimsService _claimsService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService)
+        public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService, IVaccineService vaccineService)
         {
             _unitOfWork = unitOfWork;
             _logger = loggerService;
             _claimsService = claimsService;
+            _vaccineService = vaccineService;
         }
+
+        /// <summary>
+        /// Tự động tạo danh sách lịch hẹn dựa trên các vaccine được chọn.
+        /// </summary>
+        /// <param name="childId"></param>
+        /// <param name="selectedVaccineIds"></param>
+        /// <param name="startDate"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<Appointment>> GenerateAppointmentsForVaccines(Guid childId, List<Guid> selectedVaccineIds, DateTime startDate)
+        {
+            var appointments = new List<Appointment>();
+            var vaccineSchedule = new Dictionary<Guid, DateTime>();
+
+            foreach (var vaccineId in selectedVaccineIds)
+            {
+                DateTime appointmentDate = startDate;
+
+                foreach (var scheduledVaccine in vaccineSchedule)
+                {
+                    var minDays = await _vaccineService.GetMinIntervalDays(vaccineId, scheduledVaccine.Key);
+                    if (minDays > 0)
+                    {
+                        var possibleDate = scheduledVaccine.Value.AddDays(minDays);
+                        if (possibleDate > appointmentDate)
+                        {
+                            appointmentDate = possibleDate;
+                        }
+                    }
+                }
+
+                var appointment = new Appointment
+                {
+                    ChildId = childId,
+                    AppointmentDate = appointmentDate,
+                    Status = AppointmentStatus.Pending,
+                    VaccineType = VaccineType.SingleDose,
+                    AppointmentsVaccines = new List<AppointmentsVaccine>
+            {
+                new AppointmentsVaccine
+                {
+                    VaccineId = vaccineId,
+                    DoseNumber = 1,
+                    TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
+                }
+            }
+                };
+
+                appointments.Add(appointment);
+                vaccineSchedule[vaccineId] = appointmentDate;
+            }
+
+            return appointments;
+        }
+
 
         public async Task<CreateAppointmentDto> CreateAppointment(CreateAppointmentDto createAppointmentDto)
         {

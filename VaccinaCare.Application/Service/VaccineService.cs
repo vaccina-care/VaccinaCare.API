@@ -69,6 +69,33 @@ public class VaccineService : IVaccineService
         }
     }
 
+    /// <summary>
+    /// Lấy giá của Vaccine dựa trên ID
+    /// </summary>
+    /// <param name="vaccineId"></param>
+    /// <returns></returns>
+    public async Task<decimal> GetVaccinePrice(Guid vaccineId)
+    {
+        try
+        {
+            var vaccine = await _unitOfWork.VaccineRepository
+                .FirstOrDefaultAsync(v => v.Id == vaccineId);
+
+            if (vaccine == null)
+            {
+                _logger.Warn($"Vaccine with ID {vaccineId} not found.");
+                return 0; // Nếu không tìm thấy vaccine, trả về 0 để tránh lỗi.
+            }
+
+            return vaccine.Price ?? 0; // Nếu giá trị `Price` là null, trả về 0.
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error retrieving price for vaccine {vaccineId}: {ex.Message}");
+            throw;
+        }
+    }
+
 
     public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
     {
