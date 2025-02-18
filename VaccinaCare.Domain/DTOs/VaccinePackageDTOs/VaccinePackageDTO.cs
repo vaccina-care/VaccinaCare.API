@@ -9,6 +9,7 @@ namespace VaccinaCare.Domain.DTOs.VaccinePackageDTOs
 {
     public class VaccinePackageDTO
     {
+        public Guid Id { get; set; }
         public string PackageName { get; set; }
         public string? Description { get; set; }
         public decimal? Price { get; set; }
