@@ -35,7 +35,7 @@ namespace VaccinaCare.UnitTest
         public async Task CreateVaccine_Successfully()
         {
             //Arrange
-            var vaccineDTO = new VaccineDTO
+            var vaccineDTO = new CreateVaccineDTO()
             {
                 VaccineName = "Test Vaccine",
                 Description = "Test Description",
@@ -77,7 +77,7 @@ namespace VaccinaCare.UnitTest
         public async Task CreateVaccine_MissingRequiredFields()
         {
             //Arrange
-            var vaccineDTO = new VaccineDTO
+            var vaccineDTO = new CreateVaccineDTO
             {
                 VaccineName = "", //Missing VaccineName
                 Description = "Test Description",
@@ -98,7 +98,7 @@ namespace VaccinaCare.UnitTest
         public async Task CreateVaccine_NegativePrice_ReturnsNull()
         {
             //Arrange
-            var vaccineDTO = new VaccineDTO
+            var vaccineDTO = new CreateVaccineDTO
             {
                 VaccineName = "COVID-19 Vaccine",
                 Description = "Effective for COVID-19",
