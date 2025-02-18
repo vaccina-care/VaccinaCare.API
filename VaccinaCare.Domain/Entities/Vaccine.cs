@@ -17,18 +17,11 @@ public partial class Vaccine : BaseEntity
     [Column(TypeName = "nvarchar(100)")]
     public string? Type { get; set; }
     public int RequiredDoses { get; set; }
-
-
     public decimal? Price { get; set; }
-
     public BloodType? ForBloodType { get; set; }
-
     public bool? AvoidChronic { get; set; } // Không khuyến khích cho bệnh mãn tính
-
     public bool? AvoidAllergy { get; set; } // Không khuyến nghị cho dị ứng
-
     public bool? HasDrugInteraction { get; set; } // Có cảnh báo về tương tác thuốc không?
-
     public bool? HasSpecialWarning { get; set; } // Có cảnh báo điều kiện sức khỏe đặc biệt không?
 
     public virtual ICollection<AppointmentsVaccine> AppointmentsVaccines { get; set; } = new List<AppointmentsVaccine>();

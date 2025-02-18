@@ -10,7 +10,7 @@ public class Appointment : BaseEntity
     public DateTime? AppointmentDate { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
     public VaccineType VaccineType { get; set; } = VaccineType.SingleDose;
-    public Guid? VaccineSuggestionId { get; set; } 
+    public Guid? VaccineSuggestionId { get; set; }
     public virtual VaccineSuggestion? VaccineSuggestion { get; set; }
     public string? Notes { get; set; }
     public bool NotificationSent { get; set; } = false;

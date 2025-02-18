@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+﻿using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.Application.Interface
@@ -15,5 +10,6 @@ namespace VaccinaCare.Application.Interface
         Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId, PaginationParameter pagination);
         Task<CreateAppointmentDto> UpdateAppointment(Guid id, CreateAppointmentDto createAppointmentDto);
         Task<CreateAppointmentDto> DeleteAppointment(Guid id);
+        Task<IEnumerable<AppointmentDTO>> GenerateAppointmentsForVaccines(Guid childId, List<Guid> selectedVaccineIds, DateTime startDate);
     }
 }
