@@ -66,11 +66,13 @@ public class VaccineController : ControllerBase
                 totalCount = result.TotalCount,
                 vaccines = result.Items.Select(v => new
                 {
+                    v.Id,
                     v.VaccineName,
                     v.Description,
                     v.PicUrl,
                     v.Type,
-                    v.Price
+                    v.Price,
+                    v.RequiredDoses
                 })
             }, "Vaccine retrieval successful."));
         }
@@ -104,11 +106,13 @@ public class VaccineController : ControllerBase
 
             return Ok(ApiResult<object>.Success(new
             {
+                vaccine.Id,
                 vaccine.VaccineName,
                 vaccine.Description,
                 vaccine.PicUrl,
                 vaccine.Type,
-                vaccine.Price
+                vaccine.Price,
+                vaccine.RequiredDoses
             }, "Vaccine retrieval successful."));
         }
         catch (Exception ex)
@@ -129,7 +133,7 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] VaccineDTO vaccineDTO)
+    public async Task<IActionResult> Create([FromForm] CreateVaccineDTO vaccineDTO)
     {
         _logger.Info("Create vaccine request received.");
 
@@ -152,7 +156,7 @@ public class VaccineController : ControllerBase
             }
 
             _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
-            return Ok(ApiResult<VaccineDTO>.Success(createdVaccine, "Vaccine created successfully."));
+            return Ok(ApiResult<CreateVaccineDTO>.Success(createdVaccine, "Vaccine created successfully."));
         }
         catch (Exception ex)
         {

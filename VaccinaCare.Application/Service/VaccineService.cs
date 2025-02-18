@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Reflection.PortableExecutable;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
@@ -128,6 +129,7 @@ public class VaccineService : IVaccineService
             vaccine.PicUrl = !string.IsNullOrWhiteSpace(vaccineDTO.PicUrl) ? vaccineDTO.PicUrl : vaccine.PicUrl;
             vaccine.Type = !string.IsNullOrWhiteSpace(vaccineDTO.Type) ? vaccineDTO.Type : vaccine.Type;
             vaccine.Price = vaccineDTO.Price >= 0 ? vaccineDTO.Price : vaccine.Price;
+            vaccine.RequiredDoses = vaccineDTO.RequiredDoses >=0 ? vaccineDTO.RequiredDoses : vaccine.RequiredDoses;
             vaccine.ForBloodType = vaccineDTO.ForBloodType ?? vaccine.ForBloodType;
             vaccine.AvoidChronic = vaccineDTO.AvoidChronic ?? vaccine.AvoidChronic;
             vaccine.AvoidAllergy = vaccineDTO.AvoidAllergy ?? vaccine.AvoidAllergy;
@@ -150,6 +152,7 @@ public class VaccineService : IVaccineService
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
                 Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
                 ForBloodType = vaccine.ForBloodType,
                 AvoidChronic = vaccine.AvoidChronic,
                 AvoidAllergy = vaccine.AvoidAllergy,
@@ -171,7 +174,7 @@ public class VaccineService : IVaccineService
         }
     }
 
-    public async Task<VaccineDTO> CreateVaccine(VaccineDTO vaccineDTO)
+    public async Task<CreateVaccineDTO> CreateVaccine(CreateVaccineDTO vaccineDTO)
     {
         _logger.Info("Starting to create a new vaccine.");
 
@@ -197,7 +200,8 @@ public class VaccineService : IVaccineService
 
             if (string.IsNullOrWhiteSpace(vaccineDTO.PicUrl))
                 validationErrors.Add("PicUrl is required.");
-
+            if (vaccineDTO.RequiredDoses <= 0)
+                validationErrors.Add("RequiredDoses must be greater than zero.");
             if (validationErrors.Any())
             {
                 _logger.Warn($"Validation failed for VaccineDTO: {string.Join("; ", validationErrors)}");
@@ -211,6 +215,7 @@ public class VaccineService : IVaccineService
                 PicUrl = vaccineDTO.PicUrl,
                 Type = vaccineDTO.Type,
                 Price = vaccineDTO.Price,
+                RequiredDoses = vaccineDTO.RequiredDoses,
                 ForBloodType = vaccineDTO.ForBloodType,
                 AvoidChronic = vaccineDTO.AvoidChronic,
                 AvoidAllergy = vaccineDTO.AvoidAllergy,
@@ -223,13 +228,14 @@ public class VaccineService : IVaccineService
             await _unitOfWork.VaccineRepository.AddAsync(vaccine);
             await _unitOfWork.SaveChangesAsync();
 
-            var createdVaccineDTO = new VaccineDTO
+            var createdVaccineDTO = new CreateVaccineDTO
             {
                 VaccineName = vaccine.VaccineName,
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
                 Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
                 ForBloodType = vaccine.ForBloodType,
                 AvoidChronic = vaccine.AvoidChronic,
                 AvoidAllergy = vaccine.AvoidAllergy,
@@ -298,7 +304,13 @@ public class VaccineService : IVaccineService
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
-                Price = vaccine.Price
+                Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
             };
 
             return deletedVaccineDTO;
@@ -355,11 +367,18 @@ public class VaccineService : IVaccineService
         // Mapping to DTOs
         var vaccineDTOs = vaccines.Select(v => new VaccineDTO
         {
+            Id = v.Id,
             VaccineName = v.VaccineName,
             Description = v.Description,
             PicUrl = v.PicUrl,
             Type = v.Type,
-            Price = v.Price
+            Price = v.Price,
+            RequiredDoses = v.RequiredDoses,
+            ForBloodType = v.ForBloodType,
+            AvoidChronic = v.AvoidChronic,
+            AvoidAllergy = v.AvoidAllergy,
+            HasDrugInteraction = v.HasDrugInteraction,
+            HasSpecialWarning = v.HasSpecialWarning
         }).ToList();
 
         var result = new PagedResult<VaccineDTO>(vaccineDTOs, totalItems, page, pageSize);
@@ -383,11 +402,18 @@ public class VaccineService : IVaccineService
 
             return new VaccineDTO
             {
+                Id = vaccine.Id,
                 VaccineName = vaccine.VaccineName,
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
-                Price = vaccine.Price
+                Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
             };
         }
         catch (Exception ex)
