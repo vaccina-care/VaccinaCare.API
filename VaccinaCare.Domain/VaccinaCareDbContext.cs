@@ -140,12 +140,12 @@ public partial class VaccinaCareDbContext : DbContext
                 .IsRequired();
 
             entity.HasOne(e => e.Vaccine)
-                .WithMany()  
+                .WithMany()
                 .HasForeignKey(e => e.VaccineId)
                 .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasOne(e => e.RelatedVaccine)
-                .WithMany()  
+                .WithMany()
                 .HasForeignKey(e => e.RelatedVaccineId)
                 .OnDelete(DeleteBehavior.NoAction);
         });
@@ -273,10 +273,6 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<PackageProgress>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_PackageProgress");
-
-            entity.Property(e => e.DosesCompleted).IsRequired(false);
-            entity.Property(e => e.DosesRemaining).IsRequired(false);
-
             entity.HasOne(e => e.Parent)
                 .WithMany(u => u.PackageProgresses) // Một User có nhiều PackageProgresses
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId
@@ -304,7 +300,7 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.SuggestedVaccine).HasColumnType("text");
             entity.Property(e => e.Status).HasMaxLength(255);
         });
-        
+
         modelBuilder.Entity<VaccineSuggestion>()
             .HasOne(vs => vs.Child)
             .WithMany(c => c.VaccineSuggestions)

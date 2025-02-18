@@ -1,3 +1,4 @@
+﻿using System.Data;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
@@ -20,7 +21,56 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
     }
 
-     public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
+    /// <summary>
+    /// Kiểm tra xem hai vaccine có thể tiêm cùng nhau không.
+    /// </summary>
+    /// <param name="vaccine1Id"></param>
+    /// <param name="vaccine2Id"></param>
+    /// <returns></returns>
+    public async Task<bool> CanBeAdministeredTogether(Guid vaccine1Id, Guid vaccine2Id)
+    {
+        try
+        {
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                .FirstOrDefaultAsync(r => (r.VaccineId == vaccine1Id && r.RelatedVaccineId == vaccine2Id) ||
+                                          (r.VaccineId == vaccine2Id && r.RelatedVaccineId == vaccine1Id));
+
+            return rule?.CanBeGivenTogether ?? false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error in CanBeAdministeredTogether: {ex.Message}");
+            throw;
+        }
+
+    }
+
+    /// <summary>
+    /// Lấy khoảng cách tối thiểu (tính theo ngày) giữa hai vaccine.
+    /// </summary>
+    /// <param name="vaccine1Id"></param>
+    /// <param name="vaccine2Id"></param>
+    /// <returns></returns>
+    public async Task<int> GetMinIntervalDays(Guid vaccine1Id, Guid vaccine2Id)
+    {
+        try
+        {
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+           .FirstOrDefaultAsync(r => (r.VaccineId == vaccine1Id && r.RelatedVaccineId == vaccine2Id) ||
+                                (r.VaccineId == vaccine2Id && r.RelatedVaccineId == vaccine1Id));
+
+            return rule?.MinIntervalDays ?? 0;
+        }
+        catch (Exception ex)
+        {
+
+            _logger.Error($"Error in CanBeAdministeredTogether: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
     {
         _logger.Info($"Starting the update process for vaccine with ID: {id}");
 
@@ -170,7 +220,6 @@ public class VaccineService : IVaccineService
         }
     }
 
-
     public async Task<VaccineDTO> DeleteVaccine(Guid id)
     {
         _logger.Info($"Initiating vaccine deleted process for ID: {id}");
@@ -277,7 +326,7 @@ public class VaccineService : IVaccineService
         var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
         // Mapping to DTOs
-        var vaccineDTOs = vaccines.Select( v => new VaccineDTO
+        var vaccineDTOs = vaccines.Select(v => new VaccineDTO
         {
             VaccineName = v.VaccineName,
             Description = v.Description,
