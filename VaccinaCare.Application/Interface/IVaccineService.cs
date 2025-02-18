@@ -4,7 +4,7 @@ namespace VaccinaCare.Application.Interface;
 
 public interface IVaccineService
 {
-    Task<VaccineDTO> CreateVaccine(VaccineDTO vaccineDTO);
+    Task<CreateVaccineDTO> CreateVaccine(CreateVaccineDTO vaccineDTO);
     Task<VaccineDTO> DeleteVaccine(Guid id);
     Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);
     Task<PagedResult<VaccineDTO>> GetVaccines(

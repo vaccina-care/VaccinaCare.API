@@ -75,6 +75,7 @@ namespace VaccinaCare.Application.Service
 
                 var result = new VaccinePackageDTO
                 {
+                    Id = vaccinePackage.Id,
                     PackageName = vaccinePackage.PackageName,
                     Description = vaccinePackage.Description,
                     Price = vaccinePackage.Price,
@@ -145,6 +146,7 @@ namespace VaccinaCare.Application.Service
 
                 var result = vaccinePackages.Select(vp => new VaccinePackageDTO
                 {
+                    Id = vp.Id,
                     PackageName = vp.PackageName,
                     Description = vp.Description,
                     Price = vp.Price,
@@ -185,6 +187,7 @@ namespace VaccinaCare.Application.Service
 
                 var result = new VaccinePackageDTO
                 {
+                    Id = package.Id,
                     PackageName = package.PackageName,
                     Description = package.Description,
                     Price = package.Price,
@@ -234,6 +237,7 @@ namespace VaccinaCare.Application.Service
 
                 var packageDtos = packages.Select(package => new VaccinePackageDTO
                 {
+                    Id = package.Id,
                     PackageName = package.PackageName,
                     Description = package.Description,
                     Price = package.Price,
@@ -313,6 +317,7 @@ namespace VaccinaCare.Application.Service
 
             return new VaccinePackageDTO
             {
+                Id = vaccinePackage.Id,
                 PackageName = vaccinePackage.PackageName,
                 Description = vaccinePackage.Description,
                 Price = vaccinePackage.Price,
