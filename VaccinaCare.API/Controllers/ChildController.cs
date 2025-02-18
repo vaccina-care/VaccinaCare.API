@@ -27,7 +27,7 @@ public class ChildController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> AddChildrenInfo([FromForm] CreateChildDto childDto)
+    public async Task<IActionResult> AddChildrenInfo([FromBody] CreateChildDto childDto)
     {
         try
         {

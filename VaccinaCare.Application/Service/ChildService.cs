@@ -12,13 +12,15 @@ public class ChildService : IChildService
 {
     private readonly ILoggerService _loggerService;
     private readonly IClaimsService _claimsService;
+    private readonly IVaccineSuggestionService _vaccineSuggestionService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService)
+    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService, IVaccineSuggestionService vaccineSuggestionService)
     {
         _loggerService = loggerService;
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
+        _vaccineSuggestionService = vaccineSuggestionService;
     }
 
     public async Task<ChildDto> CreateChildAsync(CreateChildDto childDto)
@@ -57,6 +59,7 @@ public class ChildService : IChildService
                 HasOtherSpecialCondition = childDto.HasOtherSpecialCondition,
                 OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription
             };
+
 
             // Save to database
             await _unitOfWork.ChildRepository.AddAsync(child);
@@ -155,6 +158,6 @@ public class ChildService : IChildService
             throw new Exception("An error occurred while fetching children. Please try again later.");
         }
     }
-    
-    
+
+
 }

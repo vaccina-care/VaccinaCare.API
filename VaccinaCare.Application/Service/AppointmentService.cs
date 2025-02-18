@@ -51,10 +51,8 @@ namespace VaccinaCare.Application.Service
                     ChildId = createAppointmentDto.ChildId,
                     AppointmentDate = createAppointmentDto.AppointmentDate,
                     VaccineType = createAppointmentDto.VaccineType,
-                    TotalPrice = createAppointmentDto.TotalPrice,
                     PolicyId = createAppointmentDto.PolicyId,
                     Notes = createAppointmentDto.Notes,
-                    Confirmed = createAppointmentDto.Confirmed,
                     AppointmentsVaccines = new List<AppointmentsVaccine>()
                 };
                 foreach (var vaccineId in createAppointmentDto.AppointmentsVaccines)
@@ -120,10 +118,8 @@ namespace VaccinaCare.Application.Service
                     ChildId = appointment.ChildId ?? Guid.Empty,
                     AppointmentDate = appointment.AppointmentDate ?? DateTime.UtcNow,
                     VaccineType = appointment.VaccineType,
-                    TotalPrice = appointment.TotalPrice ?? 0m,
                     PolicyId = appointment.PolicyId ?? Guid.Empty,
                     Notes = appointment.Notes,
-                    Confirmed = appointment.Confirmed ?? false,
                     AppointmentsVaccines = appointment.AppointmentsVaccines
                         .Where(v => v.VaccineId.HasValue)
                         .Select(v => v.VaccineId.Value)

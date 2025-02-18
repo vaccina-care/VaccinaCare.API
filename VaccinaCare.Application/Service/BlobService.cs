@@ -11,9 +11,13 @@ public class BlobService : IBlobService
 
     public BlobService()
     {
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+        var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
+        var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
+
         _minioClient = new MinioClient()
-            .WithEndpoint("103.211.201.162:9000")
-            .WithCredentials("103.211.201.162", "Ccubin2003@")
+            .WithEndpoint(endpoint)
+            .WithCredentials(accessKey, secretKey)
             .Build();
     }
 
@@ -21,7 +25,6 @@ public class BlobService : IBlobService
     {
         try
         {
-            // Kiểm tra bucket có tồn tại không, nếu không thì tạo mới
             var beArgs = new BucketExistsArgs().WithBucket(_bucketName);
             bool found = await _minioClient.BucketExistsAsync(beArgs);
             if (!found)
@@ -30,22 +33,42 @@ public class BlobService : IBlobService
                 await _minioClient.MakeBucketAsync(mbArgs);
             }
 
-            // Upload file lên MinIO
+            string contentType = GetContentType(fileName);
+
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(fileName)
                 .WithStreamData(fileStream)
                 .WithObjectSize(fileStream.Length)
-                .WithContentType("application/octet-stream");
+                .WithContentType(contentType);
 
             await _minioClient.PutObjectAsync(putObjectArgs);
-            Console.WriteLine($"File {fileName} uploaded successfully.");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error uploading file: {ex.Message}");
         }
     }
+
+    private string GetContentType(string fileName)
+    {
+        var extension = Path.GetExtension(fileName)?.ToLower();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".pdf" => "application/pdf",
+            ".mp4" => "video/mp4",
+            _ => "application/octet-stream"
+        };
+    }
+
+    public string GetPublicFileUrl(string fileName)
+    {
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+        return $"http://{endpoint}/{_bucketName}/{fileName}";
+    }
+
 
     public async Task<string> GetFileUrlAsync(string fileName)
     {
@@ -54,10 +77,9 @@ public class BlobService : IBlobService
             var args = new PresignedGetObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(fileName)
-                .WithExpiry(7 * 24 * 60 * 60); // URL có hạn sử dụng 7 ngày
+                .WithExpiry(7 * 24 * 60 * 60); // URL expires in 7 days
 
-            string url = await _minioClient.PresignedGetObjectAsync(args);
-            return url;
+            return GetPublicFileUrl(fileName);
         }
         catch (Exception ex)
         {

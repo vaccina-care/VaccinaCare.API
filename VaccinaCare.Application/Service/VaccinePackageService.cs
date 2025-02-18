@@ -253,8 +253,7 @@ namespace VaccinaCare.Application.Service
                 throw new Exception("An error occurred while fetching vaccine package. Please try again later");
             }
         }
-
-
+        
         public async Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto)
         {
             _loggerService.Info($"Updating Vaccine Package with ID: {packageId}");

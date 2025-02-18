@@ -1,5 +1,4 @@
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Interface;
 
@@ -11,4 +10,7 @@ public interface IVaccineService
     Task<PagedResult<VaccineDTO>> GetVaccines(
         string? search, string? type, string? sortBy, bool isDescending, int page, int pageSize);
     Task<VaccineDTO> GetVaccineById(Guid id);
+
+    Task<bool> CanBeAdministeredTogether(Guid vaccine1Id, Guid vaccine2Id);
+    Task<int> GetMinIntervalDays(Guid vaccine1Id, Guid vaccine2Id);
 }

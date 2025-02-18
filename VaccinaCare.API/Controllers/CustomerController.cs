@@ -58,7 +58,7 @@ namespace VaccinaCare.API.Controllers
         [ProducesResponseType(typeof(ApiResult<object>), 200)]
         [ProducesResponseType(typeof(ApiResult<object>), 400)]
         [ProducesResponseType(typeof(ApiResult<object>), 500)]
-        public async Task<IActionResult> UpdateUserProfile([FromBody] UserUpdateDto userUpdateDto)
+        public async Task<IActionResult> UpdateUserProfile([FromForm] UserUpdateDto userUpdateDto)
         {
             try
             {
@@ -71,6 +71,7 @@ namespace VaccinaCare.API.Controllers
                         Data = null
                     });
                 }
+
                 Guid currentUserId = _claimsService.GetCurrentUserId;
 
                 if (currentUserId == Guid.Empty)
@@ -84,6 +85,7 @@ namespace VaccinaCare.API.Controllers
                 }
 
                 var updatedUser = await _userService.UpdateUserInfo(currentUserId, userUpdateDto);
+
                 return Ok(new ApiResult<UserUpdateDto>
                 {
                     IsSuccess = true,
@@ -110,8 +112,5 @@ namespace VaccinaCare.API.Controllers
                 });
             }
         }
-        
-        
-        
     }
 }

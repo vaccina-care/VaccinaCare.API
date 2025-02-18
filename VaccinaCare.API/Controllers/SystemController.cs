@@ -62,7 +62,7 @@ namespace VaccinaCare.API.Controllers
                 return StatusCode(500, "Error seeding data: General failure.");
             }
         }
-        
+
         private async Task<List<CancellationPolicy>> SeedPolicies()
         {
             var policies = new List<CancellationPolicy>
@@ -70,28 +70,32 @@ namespace VaccinaCare.API.Controllers
                 new CancellationPolicy
                 {
                     PolicyName = "Free Cancellation Before 24 Hours",
-                    Description = "Customers can cancel their appointment at least 24 hours in advance without any fees.",
+                    Description =
+                        "Customers can cancel their appointment at least 24 hours in advance without any fees.",
                     CancellationDeadline = 24, // Hours before the appointment
                     PenaltyFee = 0
                 },
                 new CancellationPolicy
                 {
                     PolicyName = "Cancellation Within 24 Hours",
-                    Description = "Cancelling within 24 hours before the appointment will incur a penalty of 10% of the total booking value.",
+                    Description =
+                        "Cancelling within 24 hours before the appointment will incur a penalty of 10% of the total booking value.",
                     CancellationDeadline = 12,
                     PenaltyFee = 10 // Percentage of the penalty fee
                 },
                 new CancellationPolicy
                 {
                     PolicyName = "Last-Minute Cancellation",
-                    Description = "Cancelling within 6 hours before the appointment will incur a penalty of 50% of the total booking value.",
+                    Description =
+                        "Cancelling within 6 hours before the appointment will incur a penalty of 50% of the total booking value.",
                     CancellationDeadline = 6,
                     PenaltyFee = 50
                 },
                 new CancellationPolicy
                 {
                     PolicyName = "No Cancellation Before Appointment",
-                    Description = "If the customer does not cancel before the appointment time, a 100% penalty fee of the total booking value will be applied.",
+                    Description =
+                        "If the customer does not cancel before the appointment time, a 100% penalty fee of the total booking value will be applied.",
                     CancellationDeadline = 0,
                     PenaltyFee = 100
                 }
@@ -179,199 +183,44 @@ namespace VaccinaCare.API.Controllers
         }
 
         private async Task<List<Vaccine>> SeedVaccines()
-        {
-            var vaccines = new List<Vaccine>
-            {
-                new Vaccine
-                {
-                    VaccineName = "Pentaxim",
-                    Description = "Diphtheria, Pertussis, Tetanus, Poliomyelitis, and Haemophilus influenzae type B",
-                    Type = "France",
-                    Price = 795000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains pertussis component, may trigger allergic reactions
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Infanrix Hexa (6in1)",
-                    Description =
-                        "Diphtheria, Pertussis, Tetanus, Poliomyelitis, Haemophilus influenzae type B, and Hepatitis B",
-                    Type = "Belgium",
-                    Price = 1015000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains multiple components that may trigger allergies
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Rotateq",
-                    Description = "Prevention of severe diarrhea caused by Rotavirus",
-                    Type = "USA",
-                    Price = 665000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = true, // Not recommended for immunocompromised individuals
-                    AvoidAllergy = true, // Contains live virus, may cause allergic reactions
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = true // Special precaution for immunodeficient individuals
-                },
-                new Vaccine
-                {
-                    VaccineName = "Synflorix",
-                    Description = "Prevention of pneumococcal infections",
-                    Type = "Belgium",
-                    Price = 1045000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // May trigger reactions in individuals allergic to diphtheria toxoid
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "BCG (1ml vial)",
-                    Description = "Prevention of tuberculosis",
-                    Type = "Vietnam",
-                    Price = 155000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = true, // Not recommended for immunocompromised individuals
-                    AvoidAllergy = false,
-                    HasDrugInteraction = true, // Can interfere with tuberculosis skin tests
-                    HasSpecialWarning = true // Special precaution for individuals with HIV
-                },
-                new Vaccine
-                {
-                    VaccineName = "Gene Hbvax 1ml",
-                    Description = "Hepatitis B (for adults)",
-                    Type = "Vietnam",
-                    Price = 220000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Bexsero",
-                    Description = "Prevention of meningococcal disease caused by Neisseria meningitidis group B",
-                    Type = "Italy",
-                    Price = 1750000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains recombinant proteins, possible allergic reactions
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "MVVac (5ml vial)",
-                    Description = "Measles",
-                    Type = "Vietnam",
-                    Price = 396000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains egg protein, potential allergy risk
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "MMR II (3 in 1)",
-                    Description = "Measles, Mumps, and Rubella",
-                    Type = "USA",
-                    Price = 445000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains egg and gelatin, potential allergy risk
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Varivax",
-                    Description = "Chickenpox (Varicella)",
-                    Type = "USA",
-                    Price = 1085000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = true, // Not recommended for immunocompromised individuals
-                    AvoidAllergy = true, // Contains gelatin, egg, and neomycin
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = true // Special precaution for immunodeficient individuals
-                },
-                new Vaccine
-                {
-                    VaccineName = "Shingrix",
-                    Description = "Shingles (Herpes Zoster)",
-                    Type = "Belgium",
-                    Price = 3890000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // May cause allergic reactions in some individuals
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Vaxigrip Tetra 0.5ml",
-                    Description = "Influenza",
-                    Type = "France",
-                    Price = 356000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = true, // Contains egg protein, potential allergy risk
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Gardasil 0.5ml",
-                    Description = "HPV vaccine (Cervical cancer, throat cancer, genital warts)",
-                    Type = "USA",
-                    Price = 1790000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                },
-                new Vaccine
-                {
-                    VaccineName = "Qdenga",
-                    Description = "Dengue fever prevention",
-                    Type = "Germany",
-                    Price = 1390000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = true, // Not recommended for individuals with severe immunodeficiency
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = true // Special warning for individuals who have not had dengue before
-                },
-                new Vaccine
-                {
-                    VaccineName = "Tetanus Adsorbed Vaccine (TT)",
-                    Description = "Tetanus",
-                    Type = "Vietnam",
-                    Price = 149000,
-                    ForBloodType = BloodType.Unknown,
-                    AvoidChronic = false,
-                    AvoidAllergy = false,
-                    HasDrugInteraction = false,
-                    HasSpecialWarning = false
-                }
-            };
+{
+    var vaccines = new List<Vaccine>
+    {
+        new Vaccine { VaccineName = "BCG", Description = "Phòng lao", Type = "Vietnam", Price = 150000, AvoidChronic = true, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Hepatitis B", Description = "Viêm gan B", Type = "Vietnam", Price = 200000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Pentaxim", Description = "Bạch hầu, Ho gà, Uốn ván, Bại liệt, Hib", Type = "France", Price = 795000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Infanrix Hexa", Description = "6 trong 1 (DTP, Bại liệt, Hib, Viêm gan B)", Type = "Belgium", Price = 1015000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Rotateq", Description = "Ngừa tiêu chảy do Rotavirus", Type = "USA", Price = 665000, AvoidChronic = true, AvoidAllergy = true },
+        new Vaccine { VaccineName = "IPV", Description = "Bại liệt (tiêm)", Type = "Belgium", Price = 450000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "OPV", Description = "Bại liệt (uống)", Type = "Vietnam", Price = 100000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Synflorix", Description = "Phế cầu khuẩn", Type = "Belgium", Price = 1045000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Measles (MVVac)", Description = "Sởi đơn", Type = "Vietnam", Price = 396000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "MMR II", Description = "Sởi - Quai bị - Rubella", Type = "USA", Price = 445000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Varivax", Description = "Thủy đậu", Type = "USA", Price = 1085000, AvoidChronic = true, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Havrix", Description = "Viêm gan A", Type = "UK", Price = 850000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Ixiaro", Description = "Viêm não Nhật Bản", Type = "Austria", Price = 1300000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Typhim Vi", Description = "Thương hàn", Type = "France", Price = 900000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Verorab", Description = "Dại", Type = "France", Price = 950000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Menactra", Description = "Viêm màng não mô cầu", Type = "USA", Price = 1750000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "DTP", Description = "Bạch hầu, Uốn ván, Ho gà", Type = "Vietnam", Price = 650000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Prevnar 13", Description = "Phế cầu", Type = "USA", Price = 1400000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Gardasil", Description = "HPV (Ngừa ung thư cổ tử cung)", Type = "USA", Price = 1790000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Vaxigrip Tetra", Description = "Cúm mùa", Type = "France", Price = 356000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Pfizer-BioNTech COVID-19", Description = "COVID-19 (5+)", Type = "USA", Price = 1200000, AvoidChronic = false, AvoidAllergy = true },
+        new Vaccine { VaccineName = "Qdenga", Description = "Sốt xuất huyết", Type = "Germany", Price = 1390000, AvoidChronic = true, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Tetanus TT", Description = "Uốn ván", Type = "Vietnam", Price = 149000, AvoidChronic = false, AvoidAllergy = false },
+        new Vaccine { VaccineName = "Dukoral", Description = "Dịch tả", Type = "Sweden", Price = 980000, AvoidChronic = false, AvoidAllergy = true }
+    };
 
-            _logger.Info("Seeding vaccines...");
-            await _context.Vaccines.AddRangeAsync(vaccines);
-            await _context.SaveChangesAsync();
-            _logger.Success("Vaccines seeded successfully.");
+    _logger.Info("Seeding vaccines...");
+    await _context.Vaccines.AddRangeAsync(vaccines);
+    await _context.SaveChangesAsync();
+    _logger.Success("Vaccines seeded successfully.");
 
-            return vaccines;
-        }
+    return vaccines;
+}
+
+
 
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
@@ -398,8 +247,8 @@ namespace VaccinaCare.API.Controllers
                     () => context.VaccineSuggestions.ExecuteDeleteAsync(),
 
                     // Delete VaccinePackageDetail first, then VaccinePackage
-                    () => context.VaccinePackageDetails.ExecuteDeleteAsync(),  // Child
-                    () => context.VaccinePackages.ExecuteDeleteAsync(),        // Parent
+                    () => context.VaccinePackageDetails.ExecuteDeleteAsync(), // Child
+                    () => context.VaccinePackages.ExecuteDeleteAsync(), // Parent
 
                     () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                     () => context.Vaccines.ExecuteDeleteAsync(),

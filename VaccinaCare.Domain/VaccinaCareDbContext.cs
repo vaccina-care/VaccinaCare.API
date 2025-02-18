@@ -23,12 +23,14 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
     public virtual DbSet<Child> Children { get; set; }
     public virtual DbSet<Feedback> Feedbacks { get; set; }
+    public virtual DbSet<VaccineIntervalRules> VaccineIntervalRules { get; set; }
+
     public virtual DbSet<Invoice> Invoices { get; set; }
     public virtual DbSet<Notification> Notifications { get; set; }
     public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
-    
+
     public virtual DbSet<Vaccine> Vaccines { get; set; }
     public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
@@ -76,8 +78,11 @@ public partial class VaccinaCareDbContext : DbContext
                 hasQueryFilterMethod.Invoke(entityBuilder, new object[] { lambda });
             }
         }
+
         // Map tables to match entity names
+
         #region ToTable
+
         modelBuilder.Entity<Appointment>().ToTable(nameof(Appointment));
         modelBuilder.Entity<AppointmentsVaccine>().ToTable(nameof(AppointmentsVaccine));
         modelBuilder.Entity<CancellationPolicy>().ToTable(nameof(CancellationPolicy));
@@ -96,7 +101,9 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<VaccinePackage>().ToTable(nameof(VaccinePackage));
         modelBuilder.Entity<VaccinePackageDetail>().ToTable(nameof(VaccinePackageDetail));
         modelBuilder.Entity<VaccineSuggestion>().ToTable(nameof(VaccineSuggestion));
+
         #endregion
+
         modelBuilder.Entity<Appointment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__8ECDFCA28A60492C");
@@ -105,7 +112,6 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.Notes).HasColumnType("text");
             entity.Property(e => e.VaccineType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
-            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
 
             entity.HasOne(e => e.CancellationPolicies) // Một Appointment có một CancellationPolicy
                 .WithMany(p => p.Appointments) // Một CancellationPolicy có nhiều Appointment
@@ -123,7 +129,29 @@ public partial class VaccinaCareDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict); // Hành vi khi xóa Child
         });
 
-        
+        modelBuilder.Entity<VaccineIntervalRules>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_VaccineIntervalRules");
+
+            entity.Property(e => e.MinIntervalDays)
+                .IsRequired();
+
+            entity.Property(e => e.CanBeGivenTogether)
+                .IsRequired();
+
+            entity.HasOne(e => e.Vaccine)
+                .WithMany()
+                .HasForeignKey(e => e.VaccineId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(e => e.RelatedVaccine)
+                .WithMany()
+                .HasForeignKey(e => e.RelatedVaccineId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+
+
         modelBuilder.Entity<Appointment>()
             .Property(a => a.Status)
             .HasConversion<string>()
@@ -134,7 +162,7 @@ public partial class VaccinaCareDbContext : DbContext
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        
+
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__3B38F27673DFA862");
@@ -171,17 +199,17 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId trong Child
                 .OnDelete(DeleteBehavior.Cascade); // Hành vi khi xóa User (tùy chọn)
 
-            
+
             entity.HasMany(c => c.VaccinationRecords) // Một Child có nhiều VaccinationRecord
                 .WithOne(v => v.Child) // Một VaccinationRecord thuộc về một Child
                 .HasForeignKey(v => v.ChildId) // Khóa ngoại ChildId
                 .OnDelete(DeleteBehavior.Cascade); // Xóa VaccinationRecord khi xóa Child
         });
-        
+
         modelBuilder.Entity<Child>()
             .Property(c => c.BloodType)
             .HasConversion(
-                v => v.ToString(),  // Convert Enum to String for Database
+                v => v.ToString(), // Convert Enum to String for Database
                 v => (BloodType)Enum.Parse(typeof(BloodType), v) // Convert String to Enum when reading
             );
 
@@ -238,17 +266,13 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<Notification>(entity =>
         {
             entity.Property(n => n.Type)
-                .HasConversion<string>() 
-                .HasMaxLength(50); 
+                .HasConversion<string>()
+                .HasMaxLength(50);
         });
 
         modelBuilder.Entity<PackageProgress>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_PackageProgress");
-
-            entity.Property(e => e.DosesCompleted).IsRequired(false);
-            entity.Property(e => e.DosesRemaining).IsRequired(false);
-
             entity.HasOne(e => e.Parent)
                 .WithMany(u => u.PackageProgresses) // Một User có nhiều PackageProgresses
                 .HasForeignKey(e => e.ParentId) // Khóa ngoại ParentId
@@ -262,12 +286,12 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PaymentStatus).HasMaxLength(255);
         });
-        
+
         modelBuilder.Entity<Vaccine>()
             .Property(v => v.ForBloodType)
             .HasConversion(
-                v => v.ToString(),  
-                v => (BloodType)Enum.Parse(typeof(BloodType), v) 
+                v => v.ToString(),
+                v => (BloodType)Enum.Parse(typeof(BloodType), v)
             );
 
         modelBuilder.Entity<VaccineSuggestion>(entity =>
@@ -276,6 +300,13 @@ public partial class VaccinaCareDbContext : DbContext
             entity.Property(e => e.SuggestedVaccine).HasColumnType("text");
             entity.Property(e => e.Status).HasMaxLength(255);
         });
+
+        modelBuilder.Entity<VaccineSuggestion>()
+            .HasOne(vs => vs.Child)
+            .WithMany(c => c.VaccineSuggestions)
+            .HasForeignKey(vs => vs.ChildId)
+            .OnDelete(DeleteBehavior.Cascade); // Enables cascading delete
+
 
         modelBuilder.Entity<VaccinationRecord>(entity =>
         {
@@ -294,13 +325,11 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(e => e.VaccineId)
                 .OnDelete(DeleteBehavior.Restrict); // or Cascade if you want dependent records to be deleted
         });
-        
+
         modelBuilder.Entity<VaccinePackageDetail>()
             .HasOne(vpd => vpd.Package)
             .WithMany(vp => vp.VaccinePackageDetails)
             .HasForeignKey(vpd => vpd.PackageId)
-            .OnDelete(DeleteBehavior.Cascade);  // Enable cascading delete
-
-
+            .OnDelete(DeleteBehavior.Cascade); // Enable cascading delete
     }
 }
