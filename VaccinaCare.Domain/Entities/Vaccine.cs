@@ -16,6 +16,7 @@ public partial class Vaccine : BaseEntity
 
     [Column(TypeName = "nvarchar(100)")]
     public string? Type { get; set; }
+    
     public int RequiredDoses { get; set; }
     public decimal? Price { get; set; }
     public BloodType? ForBloodType { get; set; }

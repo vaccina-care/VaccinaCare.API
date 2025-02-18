@@ -111,7 +111,6 @@ namespace VaccinaCare.API.Controllers
             return policies;
         }
 
-
         private async Task<List<Role>> SeedRoles()
         {
             var roles = new List<Role>
@@ -183,43 +182,234 @@ namespace VaccinaCare.API.Controllers
         }
 
         private async Task<List<Vaccine>> SeedVaccines()
-{
-    var vaccines = new List<Vaccine>
-    {
-        new Vaccine { VaccineName = "BCG", Description = "Phòng lao", Type = "Vietnam", Price = 150000, AvoidChronic = true, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Hepatitis B", Description = "Viêm gan B", Type = "Vietnam", Price = 200000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Pentaxim", Description = "Bạch hầu, Ho gà, Uốn ván, Bại liệt, Hib", Type = "France", Price = 795000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Infanrix Hexa", Description = "6 trong 1 (DTP, Bại liệt, Hib, Viêm gan B)", Type = "Belgium", Price = 1015000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Rotateq", Description = "Ngừa tiêu chảy do Rotavirus", Type = "USA", Price = 665000, AvoidChronic = true, AvoidAllergy = true },
-        new Vaccine { VaccineName = "IPV", Description = "Bại liệt (tiêm)", Type = "Belgium", Price = 450000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "OPV", Description = "Bại liệt (uống)", Type = "Vietnam", Price = 100000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Synflorix", Description = "Phế cầu khuẩn", Type = "Belgium", Price = 1045000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Measles (MVVac)", Description = "Sởi đơn", Type = "Vietnam", Price = 396000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "MMR II", Description = "Sởi - Quai bị - Rubella", Type = "USA", Price = 445000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Varivax", Description = "Thủy đậu", Type = "USA", Price = 1085000, AvoidChronic = true, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Havrix", Description = "Viêm gan A", Type = "UK", Price = 850000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Ixiaro", Description = "Viêm não Nhật Bản", Type = "Austria", Price = 1300000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Typhim Vi", Description = "Thương hàn", Type = "France", Price = 900000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Verorab", Description = "Dại", Type = "France", Price = 950000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Menactra", Description = "Viêm màng não mô cầu", Type = "USA", Price = 1750000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "DTP", Description = "Bạch hầu, Uốn ván, Ho gà", Type = "Vietnam", Price = 650000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Prevnar 13", Description = "Phế cầu", Type = "USA", Price = 1400000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Gardasil", Description = "HPV (Ngừa ung thư cổ tử cung)", Type = "USA", Price = 1790000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Vaxigrip Tetra", Description = "Cúm mùa", Type = "France", Price = 356000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Pfizer-BioNTech COVID-19", Description = "COVID-19 (5+)", Type = "USA", Price = 1200000, AvoidChronic = false, AvoidAllergy = true },
-        new Vaccine { VaccineName = "Qdenga", Description = "Sốt xuất huyết", Type = "Germany", Price = 1390000, AvoidChronic = true, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Tetanus TT", Description = "Uốn ván", Type = "Vietnam", Price = 149000, AvoidChronic = false, AvoidAllergy = false },
-        new Vaccine { VaccineName = "Dukoral", Description = "Dịch tả", Type = "Sweden", Price = 980000, AvoidChronic = false, AvoidAllergy = true }
-    };
+        {
+            var vaccines = new List<Vaccine>
+            {
+                new Vaccine
+                {
+                    VaccineName = "BCG",
+                    Description = "Phòng lao",
+                    Type = "Vietnam",
+                    Price = 150000,
+                    RequiredDoses = 1,
+                    AvoidChronic = true,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Hepatitis B",
+                    Description = "Viêm gan B",
+                    Type = "Vietnam",
+                    Price = 200000,
+                    RequiredDoses = 3,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Pentaxim",
+                    Description = "Bạch hầu, Ho gà, Uốn ván, Bại liệt, Hib",
+                    Type = "France",
+                    Price = 795000,
+                    RequiredDoses = 3,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Infanrix Hexa",
+                    Description = "6 trong 1 (DTP, Bại liệt, Hib, Viêm gan B)",
+                    Type = "Belgium",
+                    Price = 1015000,
+                    RequiredDoses = 3,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Rotateq",
+                    Description = "Ngừa tiêu chảy do Rotavirus",
+                    Type = "USA",
+                    Price = 665000,
+                    RequiredDoses = 3,
+                    AvoidChronic = true,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "IPV",
+                    Description = "Bại liệt (tiêm)",
+                    Type = "Belgium",
+                    Price = 450000,
+                    RequiredDoses = 4,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "OPV",
+                    Description = "Bại liệt (uống)",
+                    Type = "Vietnam",
+                    Price = 100000,
+                    RequiredDoses = 4,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Measles (MVVac)",
+                    Description = "Sởi đơn",
+                    Type = "Vietnam",
+                    Price = 396000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "MMR II",
+                    Description = "Sởi - Quai bị - Rubella",
+                    Type = "USA",
+                    Price = 445000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Varivax",
+                    Description = "Thủy đậu",
+                    Type = "USA",
+                    Price = 1085000,
+                    RequiredDoses = 2,
+                    AvoidChronic = true,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Havrix",
+                    Description = "Viêm gan A",
+                    Type = "UK",
+                    Price = 850000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Ixiaro",
+                    Description = "Viêm não Nhật Bản",
+                    Type = "Austria",
+                    Price = 1300000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Typhim Vi",
+                    Description = "Thương hàn",
+                    Type = "France",
+                    Price = 900000,
+                    RequiredDoses = 1,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Verorab",
+                    Description = "Dại",
+                    Type = "France",
+                    Price = 950000,
+                    RequiredDoses = 4,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Menactra",
+                    Description = "Viêm màng não mô cầu",
+                    Type = "USA",
+                    Price = 1750000,
+                    RequiredDoses = 1,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Gardasil",
+                    Description = "HPV (Ngừa ung thư cổ tử cung)",
+                    Type = "USA",
+                    Price = 1790000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = false,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Vaxigrip Tetra",
+                    Description = "Cúm mùa",
+                    Type = "France",
+                    Price = 356000,
+                    RequiredDoses = 1,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = false
+                },
+                new Vaccine
+                {
+                    VaccineName = "Pfizer-BioNTech COVID-19",
+                    Description = "COVID-19 (5+)",
+                    Type = "USA",
+                    Price = 1200000,
+                    RequiredDoses = 2,
+                    AvoidChronic = false,
+                    AvoidAllergy = true,
+                    HasDrugInteraction = false,
+                    HasSpecialWarning = true
+                }
+            };
 
-    _logger.Info("Seeding vaccines...");
-    await _context.Vaccines.AddRangeAsync(vaccines);
-    await _context.SaveChangesAsync();
-    _logger.Success("Vaccines seeded successfully.");
+            _logger.Info("Seeding vaccines...");
+            await _context.Vaccines.AddRangeAsync(vaccines);
+            await _context.SaveChangesAsync();
+            _logger.Success("Vaccines seeded successfully.");
 
-    return vaccines;
-}
-
+            return vaccines;
+        }
 
 
         private async Task ClearDatabase(VaccinaCareDbContext context)
