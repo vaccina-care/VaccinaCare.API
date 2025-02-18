@@ -24,48 +24,8 @@ using VaccinaCare.Repository.Commons;
         _logger = logger;
         _claimsService = claimsService;
     }
-    [HttpPost]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResult<CreateAppointmentDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> CreateAppointment([FromBody] CreateAppointmentDto createAppointmentDto)
-    {
-        try
-        {
-            _logger.Info("Received request to create appointment.");
-
-            if (createAppointmentDto == null)
-            {
-                _logger.Warn("CreateAppointmentDTO is null.");
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Invalid data. Appointment is required."
-                });
-
-            }
-            var appointment = await _appointmentService.CreateAppointment(createAppointmentDto);
-
-            _logger.Success($"Appointment information created successfully.");
-
-            return Ok(new ApiResult<CreateAppointmentDto>
-            {
-                IsSuccess = true,
-                Message = "Appointment information created successfully.",
-                Data = appointment
-            });
-        }
-        catch (Exception ex) 
-        {
-            _logger.Error($"Error while creating appointment information: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while creating the appointment information. Please try again later."
-            });
-        }
-    }
+    
+    
     
     [HttpGet]
     [Authorize]

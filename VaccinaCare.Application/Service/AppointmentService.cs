@@ -77,61 +77,6 @@ namespace VaccinaCare.Application.Service
             return appointments;
         }
 
-
-        public async Task<CreateAppointmentDto> CreateAppointment(CreateAppointmentDto createAppointmentDto)
-        {
-            _logger.Info("Starting to create a new appointment.");
-            try
-            {
-                if (createAppointmentDto == null)
-                {
-                    _logger.Error("Appointment creation failed: Input data is null.");
-                    throw new ArgumentNullException(nameof(createAppointmentDto));
-                }
-
-                if (createAppointmentDto.AppointmentDate < DateTime.UtcNow)
-                {
-                    _logger.Error("Appointment creation failed: Date is in the past.");
-                    throw new ArgumentException("Appointment date must be in the future.");
-                }
-
-                var appointment = new Appointment
-                {
-                    ParentId = createAppointmentDto.ParentId,
-                    ChildId = createAppointmentDto.ChildId,
-                    AppointmentDate = createAppointmentDto.AppointmentDate,
-                    VaccineType = createAppointmentDto.VaccineType,
-                    PolicyId = createAppointmentDto.PolicyId,
-                    Notes = createAppointmentDto.Notes,
-                    AppointmentsVaccines = new List<AppointmentsVaccine>()
-                };
-                foreach (var vaccineId in createAppointmentDto.AppointmentsVaccines)
-                {
-                    appointment.AppointmentsVaccines.Add(new AppointmentsVaccine
-                    {
-                        AppointmentId = appointment.Id,
-                        VaccineId = vaccineId
-                    });
-                }
-
-                await _unitOfWork.AppointmentRepository.AddAsync(appointment);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.Info($"Appointment {appointment.Id} created successfully.");
-                return createAppointmentDto;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"An error occurred while creating the appointment. Error: {ex.Message}");
-                throw;
-            }
-        }
-
-        public Task<CreateAppointmentDto> DeleteAppointment(Guid id)
-        {
-            throw new NotImplementedException();
-        }
-
         public async Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId,
             PaginationParameter pagination)
         {
@@ -185,9 +130,6 @@ namespace VaccinaCare.Application.Service
             }
         }
 
-        public Task<CreateAppointmentDto> UpdateAppointment(Guid id, CreateAppointmentDto createAppointmentDto)
-        {
-            throw new NotImplementedException();
-        }
+ 
     }
 }
