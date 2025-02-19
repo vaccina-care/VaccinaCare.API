@@ -33,7 +33,7 @@ namespace VaccinaCare.API.Controllers
         {
             try
             {
-                Guid currentUserId = _claimsService.GetCurrentUserId;
+                var currentUserId = _claimsService.GetCurrentUserId;
                 var currentUser = await _userService.GetUserDetails(currentUserId);
 
                 var result = ApiResult<object>.Success(currentUser, "User profile retrieved successfully.");
