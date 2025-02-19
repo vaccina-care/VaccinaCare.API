@@ -1,106 +1,100 @@
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
 
 public class VaccineSuggestionService : IVaccineSuggestionService
 {
-    private readonly ILoggerService _loggerService;
+    private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IAppointmentService _appointmentService;
 
-    public VaccineSuggestionService(ILoggerService loggerService, IUnitOfWork unitOfWork)
+    public VaccineSuggestionService(ILoggerService logger, IUnitOfWork unitOfWork,
+        IAppointmentService appointmentService)
     {
-        _loggerService = loggerService;
+        _logger = logger;
         _unitOfWork = unitOfWork;
+        _appointmentService = appointmentService;
     }
 
-    public async Task GenerateVaccineSuggestionsAsync(Guid childId)
+
+    public async Task<bool> SaveVaccineSuggestionAsync(Guid childId, List<Guid> vaccineIds)
     {
         try
         {
-            _loggerService.Info($"Starting vaccine suggestion generation for child ID {childId}");
+            _logger.Info($"Saving vaccine suggestions for child ID: {childId}");
 
+            // Check if child exists
             var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
             if (child == null)
             {
-                _loggerService.Warn($"Child with ID {childId} not found.");
-                return;
+                _logger.Warn($"Child with ID {childId} not found.");
+                throw new Exception("Child not found.");
             }
 
-            _loggerService.Info($"Child found: {child.FullName} (ID: {childId}). Fetching vaccine list...");
+            // Retrieve the latest pending appointment for the child
+            var appointment = await _unitOfWork.AppointmentRepository
+                .FirstOrDefaultAsync(a => a.ChildId == childId && a.Status == AppointmentStatus.Pending);
 
-            var vaccines = await _unitOfWork.VaccineRepository.GetAllAsync();
-            _loggerService.Info($"Total vaccines retrieved: {vaccines.Count()}");
-
-            var suggestedVaccines = new List<VaccineSuggestion>();
-
-            foreach (var vaccine in vaccines)
+            if (appointment == null)
             {
-                _loggerService.Info(
-                    $"Checking vaccine: {vaccine.VaccineName} (ID: {vaccine.Id}) for child {child.FullName}");
+                _logger.Warn($"No pending appointment found for child ID: {childId}");
+                throw new Exception("No pending appointment found.");
+            }
 
-                if (vaccine.ForBloodType.HasValue && vaccine.ForBloodType != child.BloodType)
+            // Create vaccine suggestions if they don't already exist
+            var vaccineSuggestions = new List<VaccineSuggestion>();
+
+            foreach (var vaccineId in vaccineIds)
+            {
+                var existingSuggestion = await _unitOfWork.VaccineSuggestionRepository
+                    .FirstOrDefaultAsync(vs => vs.ChildId == childId && vs.VaccineId == vaccineId);
+
+                if (existingSuggestion == null) // Avoid duplicate suggestions
                 {
-                    _loggerService.Info($"Skipping {vaccine.VaccineName} - Blood type mismatch.");
-                    continue;
+                    var newSuggestion = new VaccineSuggestion
+                    {
+                        Id = Guid.NewGuid(),
+                        ChildId = childId,
+                        VaccineId = vaccineId,
+                        Status = "Suggested",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    vaccineSuggestions.Add(newSuggestion);
                 }
+            }
 
-                if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
-                {
-                    _loggerService.Info($"Skipping {vaccine.VaccineName} - Not suitable for chronic illness.");
-                    continue;
-                }
+            if (vaccineSuggestions.Any())
+            {
+                await _unitOfWork.VaccineSuggestionRepository.AddRangeAsync(vaccineSuggestions);
+                await _unitOfWork.SaveChangesAsync();
+            }
 
-                if (vaccine.AvoidAllergy == true && child.HasAllergies)
-                {
-                    _loggerService.Info($"Skipping {vaccine.VaccineName} - Allergy concerns.");
-                    continue;
-                }
-
-                if (vaccine.HasDrugInteraction == true && child.HasRecentMedication)
-                {
-                    _loggerService.Info($"Skipping {vaccine.VaccineName} - Potential drug interaction.");
-                    continue;
-                }
-
-                if (vaccine.HasSpecialWarning == true && child.HasOtherSpecialCondition)
-                {
-                    _loggerService.Info($"Skipping {vaccine.VaccineName} - Special condition warning.");
-                    continue;
-                }
-
-                suggestedVaccines.Add(new VaccineSuggestion
+            // Link suggestions to the appointment
+            var appointmentVaccineSuggestions = vaccineSuggestions
+                .Select(vs => new AppointmentVaccineSuggestions
                 {
                     Id = Guid.NewGuid(),
-                    ChildId = childId,
-                    VaccineId = vaccine.Id,
-                    Status = "Pending", 
-                    CreatedAt = DateTime.UtcNow
-                });
+                    AppointmentId = appointment.Id,
+                    VaccineSuggestionId = vs.Id
+                }).ToList();
 
-                _loggerService.Info($"Vaccine {vaccine.VaccineName} added to suggestions.");
-            }
-
-            if (suggestedVaccines.Any())
+            if (appointmentVaccineSuggestions.Any())
             {
-                _loggerService.Info(
-                    $"Saving {suggestedVaccines.Count} vaccine suggestions for child {child.FullName}...");
-                await _unitOfWork.VaccineSuggestionRepository.AddRangeAsync(suggestedVaccines);
+                await _unitOfWork.AppointmentVaccineSuggestionsRepository.AddRangeAsync(appointmentVaccineSuggestions);
                 await _unitOfWork.SaveChangesAsync();
-                _loggerService.Success(
-                    $"Successfully generated {suggestedVaccines.Count} vaccine suggestions for child {child.FullName}.");
             }
-            else
-            {
-                _loggerService.Warn($"No suitable vaccines found for child {child.FullName}.");
-            }
+
+            _logger.Success($"Vaccine suggestions saved successfully for child ID: {childId}");
+            return true;
         }
         catch (Exception ex)
         {
-            _loggerService.Error($"Error while generating vaccine suggestions for child {childId}: {ex.Message}");
-            throw new Exception("An error occurred while generating vaccine suggestions. Please try again later.", ex);
+            _logger.Error($"Error saving vaccine suggestions for child ID {childId}: {ex.Message}");
+            throw;
         }
     }
 }
