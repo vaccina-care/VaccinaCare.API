@@ -25,6 +25,49 @@ namespace VaccinaCare.Application.Service
             _vaccineService = vaccineService;
         }
 
+        public async Task<IEnumerable<Appointment>> GenerateAppointmentsFromVaccineSuggestions(Guid childId, DateTime startDate)
+        {
+            try
+            {
+                _logger.Info($"Generating appointments from vaccine suggestions for child ID: {childId}");
+
+                // Lấy danh sách vaccine đã tư vấn từ VaccineSuggestion
+                var vaccineSuggestions = await _unitOfWork.VaccineSuggestionRepository
+                    .GetAllAsync(vs => vs.ChildId == childId);
+
+                if (vaccineSuggestions == null || !vaccineSuggestions.Any())
+                {
+                    _logger.Warn($"No vaccine suggestions found for child ID: {childId}");
+                    throw new Exception("No vaccine suggestions found.");
+                }
+
+                var selectedVaccineIds = vaccineSuggestions.Select(vs => vs.VaccineId.Value).ToList();
+
+                // Gọi hàm GenerateAppointmentsForVaccines để tạo danh sách lịch hẹn từ danh sách vaccine đã tư vấn
+                var generatedAppointments = await GenerateAppointmentsForVaccines(childId, selectedVaccineIds, startDate);
+
+                if (!generatedAppointments.Any())
+                {
+                    _logger.Warn($"No appointments could be generated for child ID: {childId}");
+                    throw new Exception("No appointments could be generated.");
+                }
+
+                // Lưu danh sách lịch hẹn vào database
+                await _unitOfWork.AppointmentRepository.AddRangeAsync(generatedAppointments.ToList());
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.Success($"Generated {generatedAppointments.Count()} appointments for child ID: {childId}");
+
+                return generatedAppointments;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error generating appointments for child ID {childId}: {ex.Message}");
+                throw;
+            }
+        }
+
+
         /// <summary>
         /// Tạo một lịch hẹn tư vấn cho người dùng mà không cần chọn vaccine trước.
         /// </summary>
@@ -110,14 +153,14 @@ namespace VaccinaCare.Application.Service
                     Status = AppointmentStatus.Pending,
                     VaccineType = VaccineType.SingleDose,
                     AppointmentsVaccines = new List<AppointmentsVaccine>
-                    {
-                        new AppointmentsVaccine
                         {
-                            VaccineId = vaccineId,
-                            DoseNumber = 1,
-                            TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
+                            new AppointmentsVaccine
+                            {
+                                VaccineId = vaccineId,
+                                DoseNumber = 1,
+                                TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
+                            }
                         }
-                    }
                 };
 
                 appointments.Add(appointment);

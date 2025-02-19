@@ -10,5 +10,6 @@ namespace VaccinaCare.Application.Interface
         Task<Appointment?> GetAppointmentDetailsByChildIdAsync(Guid childId);
         Task<AppointmentDTO> BookConsultationAppointment(Guid childId, DateTime appointmentDate);
         Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId, PaginationParameter pagination);
+        Task<IEnumerable<Appointment>> GenerateAppointmentsFromVaccineSuggestions(Guid childId, DateTime startDate);
     }
 }

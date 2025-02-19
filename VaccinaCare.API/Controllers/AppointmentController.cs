@@ -27,9 +27,9 @@ public class AppointmentController : ControllerBase
         _claimsService = claimsService;
     }
 
-
+    //Book lịch tư vấn
     [HttpPost("consultation")]
-    [Authorize]
+    [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -70,6 +70,49 @@ public class AppointmentController : ControllerBase
             });
         }
     }
+
+    //User book Apppointment dựa trên Vaccines đã được tư vấn
+    [HttpPost("suggestion/vaccines/{childId}")]
+    [Authorize(Policy = "CustomerPolicy")]
+    [ProducesResponseType(typeof(ApiResult<IEnumerable<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GenerateAppointmentsFromVaccineSuggestions(Guid childId, DateTime startDate)
+    {
+        try
+        {
+            _logger.Info($"Received request to generate appointments from vaccine suggestions for child ID: {childId}");
+
+            var appointments = await _appointmentService.GenerateAppointmentsFromVaccineSuggestions(childId, startDate);
+
+            var appointmentDTOs = appointments.Select(a => new AppointmentDTO
+            {
+                Id = a.Id,
+                ChildId = a.ChildId,
+                AppointmentDate = a.AppointmentDate,
+                Status = a.Status,
+                VaccineType = a.VaccineType,
+                VaccineIds = a.AppointmentsVaccines.Select(av => av.VaccineId ?? Guid.Empty).ToList()
+            }).ToList();
+
+            return Ok(new ApiResult<IEnumerable<AppointmentDTO>>
+            {
+                IsSuccess = true,
+                Message = "Appointments generated successfully.",
+                Data = appointmentDTOs
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error while generating appointments: {ex.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "An error occurred while generating appointments. Please try again later."
+            });
+        }
+    }
+
 
     [HttpGet("child/{childId}")]
     [Authorize]
