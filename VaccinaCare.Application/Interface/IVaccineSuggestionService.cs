@@ -2,5 +2,5 @@ namespace VaccinaCare.Application.Interface;
 
 public interface IVaccineSuggestionService
 {
-    Task GenerateVaccineSuggestionsAsync(Guid childId);
+    Task<bool> SaveVaccineSuggestionAsync(Guid childId, List<Guid> vaccineIds);
 }

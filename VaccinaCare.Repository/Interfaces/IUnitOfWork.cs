@@ -14,6 +14,7 @@ namespace VaccinaCare.Repository.Interfaces
         IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository { get; }
         IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository { get; }
         IGenericRepository<VaccineIntervalRules> VaccineIntervalRulesRepository { get; }
+        IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository { get; }
 
         Task<int> SaveChangesAsync();
     }

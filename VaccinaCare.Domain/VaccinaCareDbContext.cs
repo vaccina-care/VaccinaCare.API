@@ -161,6 +161,20 @@ public partial class VaccinaCareDbContext : DbContext
             .Property(a => a.VaccineType)
             .HasConversion<string>()
             .HasMaxLength(50);
+        
+        modelBuilder.Entity<AppointmentVaccineSuggestions>()
+            .HasKey(av => new { av.AppointmentId, av.VaccineSuggestionId });
+
+        modelBuilder.Entity<AppointmentVaccineSuggestions>()
+            .HasOne(av => av.Appointment)
+            .WithMany(a => a.AppointmentVaccineSuggestions)
+            .HasForeignKey(av => av.AppointmentId);
+
+        modelBuilder.Entity<AppointmentVaccineSuggestions>()
+            .HasOne(av => av.VaccineSuggestion)
+            .WithMany(vs => vs.AppointmentVaccineSuggestions)
+            .HasForeignKey(av => av.VaccineSuggestionId);
+
 
 
         modelBuilder.Entity<AppointmentsVaccine>(entity =>

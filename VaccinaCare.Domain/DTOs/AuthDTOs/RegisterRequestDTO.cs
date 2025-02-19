@@ -1,16 +1,15 @@
-﻿using System;
-using System.ComponentModel; // Import thư viện để dùng [DefaultValue]
+﻿using System.ComponentModel; // Import thư viện để dùng [DefaultValue]
 
 public class RegisterRequestDTO
 {
-    [DefaultValue("default@gmail.com")]
-    public string Email { get; set; } = "default@gmail.com";
+    [DefaultValue("a@gmail.com")]
+    public string Email { get; set; } = "a@gmail.com";
 
     [DefaultValue("Anonymous User")]
     public string FullName { get; set; } = "Anonymous User";
 
-    [DefaultValue("P@ssw0rd!")]
-    public string Password { get; set; } = "P@ssw0rd!"; // Mặc định đặt mật khẩu
+    [DefaultValue("1@")]
+    public string Password { get; set; } = "1@"; // Mặc định đặt mật khẩu
 
     [DefaultValue("0909090909")]
     public string? PhoneNumber { get; set; } = "0909090909";
