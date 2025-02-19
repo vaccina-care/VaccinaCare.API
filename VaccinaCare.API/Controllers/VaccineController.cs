@@ -13,24 +13,68 @@ namespace VaccinaCare.API.Controllers;
 public class VaccineController : ControllerBase
 {
     private readonly IVaccineService _vaccineService;
+    private readonly IVaccineSuggestionService _vaccineSuggestionService;
     private readonly ILoggerService _logger;
 
-    public VaccineController(IVaccineService vaccineService, ILoggerService logger)
+    public VaccineController(IVaccineService vaccineService, ILoggerService logger,
+        IVaccineSuggestionService vaccineSuggestionService)
     {
         _vaccineService = vaccineService;
         _logger = logger;
+        _vaccineSuggestionService = vaccineSuggestionService;
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="search"></param>
-    /// <param name="type"></param>
-    /// <param name="sortBy"></param>
-    /// <param name="isDescending"></param>
-    /// <param name="page"></param>
-    /// <param name="pageSize"></param>
-    /// <returns></returns>
+
+    [HttpPost("save-vaccine-suggestions")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> SaveVaccineSuggestions([FromBody] SaveVaccineSuggestionDto request)
+    {
+        try
+        {
+            _logger.Info($"Received request to save vaccine suggestions for child ID: {request.ChildId}");
+
+            if (request == null || request.ChildId == Guid.Empty || request.VaccineIds == null ||
+                !request.VaccineIds.Any())
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Invalid request. Please provide a valid child ID and a list of vaccine IDs."
+                });
+            }
+
+            var result = await _vaccineSuggestionService.SaveVaccineSuggestionAsync(request.ChildId, request.VaccineIds);
+
+            if (!result)
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Failed to save vaccine suggestions."
+                });
+            }
+
+            return Ok(new ApiResult<object>
+            {
+                IsSuccess = true,
+                Message = "Vaccine suggestions saved successfully."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error while saving vaccine suggestions: {ex.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "An error occurred while saving the vaccine suggestions. Please try again later."
+            });
+        }
+    }
+
+
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery] string? search,
@@ -83,11 +127,7 @@ public class VaccineController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Get vaccine details by ID
-    /// </summary>
-    /// <param name="id">Vaccine ID</param>
-    /// <returns>Vaccine details</returns>
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVaccineById([FromRoute] Guid id)
     {
@@ -123,11 +163,6 @@ public class VaccineController : ControllerBase
     }
 
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="vaccineDTO"></param>
-    /// <returns></returns>
     [Authorize(Policy = "StaffPolicy")]
     [HttpPost("create")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
@@ -164,13 +199,8 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="id"></param>
-    /// <param name="vaccineDTO"></param>
-    /// <returns></returns>
+
+
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -201,12 +231,8 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));
         }
     }
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+
+
     [Authorize(Policy = "StaffPolicy")]
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

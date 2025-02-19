@@ -16,12 +16,61 @@ namespace VaccinaCare.Application.Service
         private readonly IVaccineService _vaccineService;
         private readonly IClaimsService _claimsService;
 
-        public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService, IVaccineService vaccineService)
+        public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService,
+            IVaccineService vaccineService)
         {
             _unitOfWork = unitOfWork;
             _logger = loggerService;
             _claimsService = claimsService;
             _vaccineService = vaccineService;
+        }
+
+        /// <summary>
+        /// Tạo một lịch hẹn tư vấn cho người dùng mà không cần chọn vaccine trước.
+        /// </summary>
+        /// <param name="childId"></param>
+        /// <param name="appointmentDate"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<AppointmentDTO> BookConsultationAppointment(Guid childId, DateTime appointmentDate)
+        {
+            // Check if child exists
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+            if (child == null)
+            {
+                throw new Exception("Child not found.");
+            }
+
+            var parentId = _claimsService.GetCurrentUserId;
+
+            // Create a new appointment entity
+            var appointment = new Appointment
+            {
+                Id = Guid.NewGuid(),
+                ChildId = childId,
+                ParentId = parentId,
+                AppointmentDate = appointmentDate,
+                Status = AppointmentStatus.Pending,
+                VaccineType = VaccineType.Consultation,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            // Save the appointment to the database
+            await _unitOfWork.AppointmentRepository.AddAsync(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Log the operation
+            _logger.Info($"Consultation appointment booked with ID: {appointment.Id}");
+
+            // Return the appointment DTO
+            return new AppointmentDTO
+            {
+                Id = appointment.Id,
+                ChildId = appointment.ChildId,
+                AppointmentDate = appointment.AppointmentDate,
+                Status = appointment.Status,
+                VaccineType = appointment.VaccineType
+            };
         }
 
         /// <summary>
@@ -31,7 +80,8 @@ namespace VaccinaCare.Application.Service
         /// <param name="selectedVaccineIds"></param>
         /// <param name="startDate"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<Appointment>> GenerateAppointmentsForVaccines(Guid childId, List<Guid> selectedVaccineIds, DateTime startDate)
+        public async Task<IEnumerable<Appointment>> GenerateAppointmentsForVaccines(Guid childId,
+            List<Guid> selectedVaccineIds, DateTime startDate)
         {
             var appointments = new List<Appointment>();
             var vaccineSchedule = new Dictionary<Guid, DateTime>();
@@ -60,14 +110,14 @@ namespace VaccinaCare.Application.Service
                     Status = AppointmentStatus.Pending,
                     VaccineType = VaccineType.SingleDose,
                     AppointmentsVaccines = new List<AppointmentsVaccine>
-            {
-                new AppointmentsVaccine
-                {
-                    VaccineId = vaccineId,
-                    DoseNumber = 1,
-                    TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
-                }
-            }
+                    {
+                        new AppointmentsVaccine
+                        {
+                            VaccineId = vaccineId,
+                            DoseNumber = 1,
+                            TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
+                        }
+                    }
                 };
 
                 appointments.Add(appointment);
@@ -76,6 +126,46 @@ namespace VaccinaCare.Application.Service
 
             return appointments;
         }
+
+        /// <summary>
+        /// Lấy chi tiết Appointment dựa trên ID của Children
+        /// </summary>
+        /// <param name="childId"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        public async Task<Appointment?> GetAppointmentDetailsByChildIdAsync(Guid childId)
+        {
+            try
+            {
+                _logger.Info($"Fetching appointment details for child ID: {childId}");
+
+                var childExists = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+                if (childExists == null)
+                {
+                    _logger.Warn($"Child with ID {childId} not found.");
+                    throw new Exception("Child not found.");
+                }
+
+                var appointment = await _unitOfWork.AppointmentRepository
+                    .FirstOrDefaultAsync(a => a.ChildId == childId, a => a.AppointmentsVaccines);
+
+                if (appointment == null)
+                {
+                    _logger.Warn($"No appointment found for child ID: {childId}");
+                    return null;
+                }
+
+                _logger.Success($"Successfully retrieved appointment ID: {appointment.Id} for child ID: {childId}");
+
+                return appointment;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error retrieving appointment details for child ID {childId}: {ex.Message}");
+                throw;
+            }
+        }
+
 
         public async Task<Pagination<CreateAppointmentDto>> GetAppointmentByParent(Guid parentId,
             PaginationParameter pagination)
@@ -129,6 +219,5 @@ namespace VaccinaCare.Application.Service
                 throw new Exception("An error occurred while fetching appointments. Please try again later.");
             }
         }
-
     }
 }
