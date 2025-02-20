@@ -1,25 +1,36 @@
 ﻿using Minio;
 using Minio.DataModel.Args;
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Minio.Exceptions;
 using VaccinaCare.Application.Interface;
-
-namespace VaccinaCare.Application.Service;
+using VaccinaCare.Application.Interface.Common;
 
 public class BlobService : IBlobService
 {
     private readonly IMinioClient _minioClient;
     private readonly string _bucketName = "vaccinacare-bucket";
+    private readonly ILoggerService _logger;
 
-    public BlobService()
+    public BlobService(ILoggerService logger)
     {
-        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
+        _logger = logger;
+
+        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT") ??
+                       "minio.ae-tao-fullstack-api.site:9000";
         var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
+
+        _logger.Info($"Connecting to MinIO at: {endpoint}");
 
         _minioClient = new MinioClient()
             .WithEndpoint(endpoint)
             .WithCredentials(accessKey, secretKey)
+            .WithSSL(false)
             .Build();
     }
+
 
     public async Task UploadFileAsync(string fileName, Stream fileStream)
     {
@@ -27,14 +38,16 @@ public class BlobService : IBlobService
         {
             var beArgs = new BucketExistsArgs().WithBucket(_bucketName);
             bool found = await _minioClient.BucketExistsAsync(beArgs);
+            _logger.Info($"Bucket exists: {found}");
+
             if (!found)
             {
                 var mbArgs = new MakeBucketArgs().WithBucket(_bucketName);
                 await _minioClient.MakeBucketAsync(mbArgs);
+                _logger.Info($"Bucket {_bucketName} created.");
             }
 
             string contentType = GetContentType(fileName);
-
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(fileName)
@@ -43,12 +56,20 @@ public class BlobService : IBlobService
                 .WithContentType(contentType);
 
             await _minioClient.PutObjectAsync(putObjectArgs);
+            _logger.Info($"File {fileName} uploaded successfully.");
+        }
+        catch (MinioException minioEx)
+        {
+            _logger.Error($"MinIO Error: {minioEx.Message}");
+            throw;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error uploading file: {ex.Message}");
+            _logger.Error($"Unexpected Error: {ex.Message}");
+            throw;
         }
     }
+
 
     private string GetContentType(string fileName)
     {
@@ -63,12 +84,14 @@ public class BlobService : IBlobService
         };
     }
 
-    public string GetPublicFileUrl(string fileName)
+    public async Task<string> GetPreviewUrlAsync(string fileName)
     {
-        var endpoint = Environment.GetEnvironmentVariable("MINIO_ENDPOINT");
-        return $"http://{endpoint}/{_bucketName}/{fileName}";
-    }
+        var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "https://minio.ae-tao-fullstack-api.site";
+        var bucketName = _bucketName; // Sử dụng bucket đã khai báo sẵn
 
+        // Format link MinIO UI
+        return $"{minioHost}/api/v1/buckets/{bucketName}/objects/download?preview=true&prefix={fileName}&version_id=null";
+    }
 
     public async Task<string> GetFileUrlAsync(string fileName)
     {
@@ -79,7 +102,7 @@ public class BlobService : IBlobService
                 .WithObject(fileName)
                 .WithExpiry(7 * 24 * 60 * 60); // URL expires in 7 days
 
-            return GetPublicFileUrl(fileName);
+            return await GetPreviewUrlAsync(fileName);
         }
         catch (Exception ex)
         {
