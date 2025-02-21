@@ -106,44 +106,44 @@ namespace VaccinaCare.Application.Service
 
                 bool isUpdated = false;
 
-                if (!string.IsNullOrEmpty(userUpdateDto.FullName))
+                if (!string.IsNullOrEmpty(userUpdateDto.FullName) && user.FullName != userUpdateDto.FullName)
                 {
                     user.FullName = userUpdateDto.FullName;
                     isUpdated = true;
                 }
 
-                if (userUpdateDto.Gender.HasValue)
+                if (userUpdateDto.Gender.HasValue && user.Gender != userUpdateDto.Gender)
                 {
                     user.Gender = userUpdateDto.Gender;
                     isUpdated = true;
                 }
 
-                if (userUpdateDto.DateOfBirth.HasValue)
+                if (userUpdateDto.DateOfBirth.HasValue && user.DateOfBirth != userUpdateDto.DateOfBirth)
                 {
                     user.DateOfBirth = userUpdateDto.DateOfBirth;
                     isUpdated = true;
                 }
 
+                // ✅ Xử lý upload ảnh
                 if (userUpdateDto.ImageFile != null && userUpdateDto.ImageFile.Length > 0)
                 {
-                    // Upload Image to MinIO and Get the URL
                     using var stream = userUpdateDto.ImageFile.OpenReadStream();
                     string fileName = $"profile_pictures/{userId}_{userUpdateDto.ImageFile.FileName}";
 
                     await _blobService.UploadFileAsync(fileName, stream);
-                    string imageUrl = await _blobService.GetFileUrlAsync(fileName);
+                    string previewUrl = await _blobService.GetPreviewUrlAsync(fileName);
 
-                    user.ImageUrl = imageUrl;
+                    user.ImageUrl = previewUrl; // Cập nhật link preview ảnh
                     isUpdated = true;
                 }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber))
+                if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber) && user.PhoneNumber != userUpdateDto.PhoneNumber)
                 {
                     user.PhoneNumber = userUpdateDto.PhoneNumber;
                     isUpdated = true;
                 }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.Address))
+                if (!string.IsNullOrEmpty(userUpdateDto.Address) && user.Address != userUpdateDto.Address)
                 {
                     user.Address = userUpdateDto.Address;
                     isUpdated = true;
@@ -158,7 +158,7 @@ namespace VaccinaCare.Application.Service
                         Gender = user.Gender,
                         DateOfBirth = user.DateOfBirth,
                         Address = user.Address,
-                        ImageUrl = user.ImageUrl, // Now this property exists!
+                        ImageUrl = user.ImageUrl,
                         PhoneNumber = user.PhoneNumber
                     };
                 }
@@ -174,7 +174,7 @@ namespace VaccinaCare.Application.Service
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Address = user.Address,
-                    ImageUrl = user.ImageUrl, // Return updated image URL
+                    ImageUrl = user.ImageUrl, // Trả về link preview ảnh
                     PhoneNumber = user.PhoneNumber
                 };
             }

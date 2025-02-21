@@ -17,7 +17,7 @@
       - EMAIL_USERNAME=trangiaphuc362003181@gmail.com
       - EMAIL_PASSWORD=hygd bzzo brzp knfm
       - EMAIL_HOST=smtp.gmail.com
-      - MINIO_ENDPOINT=103.211.201.162:9000
+      - MINIO_ENDPOINT=minio.ae-tao-fullstack-api.site:9000
       - MINIO_ACCESS_KEY=103.211.201.162
       - MINIO_SECRET_KEY=Ccubin2003@
 

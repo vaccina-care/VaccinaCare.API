@@ -28,13 +28,13 @@ namespace VaccinaCare.API.Controllers
                     await _blobService.UploadFileAsync(file.FileName, stream);
                 }
 
-                var fileUrl = _blobService.GetFileUrlAsync(file.FileName);
+                var filePreviewUrl = await _blobService.GetPreviewUrlAsync(file.FileName);
 
                 return Ok(new
                 {
-                    message = " Upload successfully",
+                    message = "Upload successfully",
                     fileName = file.FileName,
-                    fileUrl = fileUrl.Result
+                    previewUrl = filePreviewUrl // Trả về link preview MinIO UI
                 });
             }
             catch (Exception ex)
@@ -42,6 +42,6 @@ namespace VaccinaCare.API.Controllers
                 return StatusCode(500, $"Error: {ex.Message}");
             }
         }
-    }
 
+    }
 }
