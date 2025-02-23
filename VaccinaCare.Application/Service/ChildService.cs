@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
@@ -98,6 +99,28 @@ public class ChildService : IChildService
         }
     }
 
+    public async Task DeleteChildAsync(Guid childId)
+    {
+        try
+        {
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+            if (child == null)
+            {
+                _loggerService.Warn($"Child with ID {childId} not found.");
+                throw new KeyNotFoundException("Child not found.");
+            }
+
+            await _unitOfWork.ChildRepository.SoftRemove(child);
+            await _unitOfWork.SaveChangesAsync();
+            _loggerService.Success($"Child profile {childId} deleted successfully.");
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error deleting child profile {childId}: {ex.Message}");
+            throw;
+        }
+    }
+
     public async Task<Pagination<ChildDto>> GetChildrenByParentAsync(PaginationParameter pagination)
     {
         try
@@ -159,5 +182,73 @@ public class ChildService : IChildService
         }
     }
 
+    public async Task<ChildDto> UpdateChildAsync(Guid childId, UpdateChildDto childDto)
+    {
+        try
+        {
+            Guid parentId = _claimsService.GetCurrentUserId;
+            _loggerService.Info($"Starting child profile update for parent {parentId}");
 
+            var parent = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
+            if (parent == null)
+            {
+                _loggerService.Warn($"Parent {parentId} does not exist.");
+                throw new KeyNotFoundException("Parent not found.");
+            }
+
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+            if (child == null || child.ParentId != parentId)
+            {
+                _loggerService.Warn($"Child {childId} not found or does not belong to parent {parentId}");
+                throw new KeyNotFoundException("Child not found or access denied.");
+            }
+
+            child.FullName = childDto.FullName ?? child.FullName;
+            child.DateOfBirth = childDto.DateOfBirth ?? child.DateOfBirth;
+            child.Gender = childDto.Gender ?? child.Gender;
+            child.MedicalHistory = childDto.MedicalHistory ?? child.MedicalHistory;
+            child.BloodType = childDto.BloodType ?? child.BloodType;
+            child.HasChronicIllnesses = childDto.HasChronicIllnesses ?? child.HasChronicIllnesses;
+            child.ChronicIllnessesDescription = childDto.ChronicIllnessesDescription ?? child.ChronicIllnessesDescription;
+            child.HasAllergies = childDto.HasAllergies ?? child.HasAllergies;
+            child.AllergiesDescription = childDto.AllergiesDescription ?? child.AllergiesDescription;
+            child.HasRecentMedication = childDto.HasRecentMedication ?? child.HasRecentMedication;
+            child.RecentMedicationDescription = childDto.RecentMedicationDescription ?? child.RecentMedicationDescription;
+            child.HasOtherSpecialCondition = childDto.HasOtherSpecialCondition ?? child.HasOtherSpecialCondition;
+            child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription ?? child.OtherSpecialConditionDescription;
+
+            await _unitOfWork.ChildRepository.Update(child);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.Success($"Parent {parentId} successfully updated child profile {childId}");
+
+            return new ChildDto
+            {
+                Id = child.Id,
+                FullName = child.FullName,
+                DateOfBirth = child.DateOfBirth,
+                Gender = child.Gender,
+                MedicalHistory = child.MedicalHistory,
+                BloodType = child.BloodType,
+                HasChronicIllnesses = child.HasChronicIllnesses,
+                ChronicIllnessesDescription = child.ChronicIllnessesDescription,
+                HasAllergies = child.HasAllergies,
+                AllergiesDescription = child.AllergiesDescription,
+                HasRecentMedication = child.HasRecentMedication,
+                RecentMedicationDescription = child.RecentMedicationDescription,
+                HasOtherSpecialCondition = child.HasOtherSpecialCondition,
+                OtherSpecialConditionDescription = child.OtherSpecialConditionDescription
+            };
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _loggerService.Warn($"Warning: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error while updating child profile: {ex.Message}");
+            throw new Exception("An error occurred while updating the child profile. Please try again later.");
+        }
+    }
 }

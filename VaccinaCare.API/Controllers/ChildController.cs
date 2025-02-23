@@ -106,4 +106,51 @@ public class ChildController : ControllerBase
             });
         }
     }
+
+    [HttpPut("{childId}")]
+    [Authorize(Policy = "CustomerPolicy")]
+    [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateChild(Guid childId, [FromBody] UpdateChildDto updateChildDto)
+    {
+        if (updateChildDto == null)
+        {
+            return BadRequest(new ApiResult<object> { IsSuccess = false, Message = "Invalid child data." });
+        }
+
+        try
+        {
+            var result = await _childService.UpdateChildAsync(childId, updateChildDto);
+            return Ok(new ApiResult<ChildDto> { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
+        }
+        catch (Exception )
+        {
+            return StatusCode(500, new ApiResult<object> { IsSuccess = false, Message = "An error occurred while updating the child profile. Please try again later." });
+        }
+    }
+    [HttpDelete("{childId}")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> DeleteChild(Guid childId)
+    {
+        try
+        {
+            await _childService.DeleteChildAsync(childId);
+            return Ok(new ApiResult<object> { IsSuccess = true, Message = "Child profile deleted successfully." });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
+        }
+        catch (Exception )
+        {
+            return StatusCode(500, new ApiResult<object> { IsSuccess = false, Message = "An error occurred while deleting the child profile. Please try again later." });
+        }
+    }
 }
