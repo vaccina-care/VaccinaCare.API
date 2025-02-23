@@ -16,7 +16,8 @@ public class ChildService : IChildService
     private readonly IVaccineSuggestionService _vaccineSuggestionService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService, IVaccineSuggestionService vaccineSuggestionService)
+    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService,
+        IVaccineSuggestionService vaccineSuggestionService)
     {
         _loggerService = loggerService;
         _unitOfWork = unitOfWork;
@@ -24,6 +25,13 @@ public class ChildService : IChildService
         _vaccineSuggestionService = vaccineSuggestionService;
     }
 
+    /// <summary>
+    /// Cho phép Parent tạo thông tin của trẻ em
+    /// </summary>
+    /// <param name="childDto"></param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="Exception"></exception>
     public async Task<ChildDto> CreateChildAsync(CreateChildDto childDto)
     {
         try
@@ -99,6 +107,11 @@ public class ChildService : IChildService
         }
     }
 
+    /// <summary>
+    /// Soft delete 1 trẻ em
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <exception cref="KeyNotFoundException"></exception>
     public async Task DeleteChildAsync(Guid childId)
     {
         try
@@ -121,6 +134,121 @@ public class ChildService : IChildService
         }
     }
 
+    /// <summary>
+    /// Update thông tin của children, field nào có nhập thì update, không nhập thì để nguyên
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <param name="childDto"></param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="Exception"></exception>
+    public async Task<ChildDto> UpdateChildAsync(Guid childId, UpdateChildDto childDto)
+    {
+        try
+        {
+            Guid parentId = _claimsService.GetCurrentUserId;
+            _loggerService.Info($"Starting child profile update for parent {parentId}");
+
+            var parent = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
+            if (parent == null)
+            {
+                _loggerService.Warn($"Parent {parentId} does not exist.");
+                throw new KeyNotFoundException("Parent not found.");
+            }
+
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+            if (child == null || child.ParentId != parentId)
+            {
+                _loggerService.Warn($"Child {childId} not found or does not belong to parent {parentId}");
+                throw new KeyNotFoundException("Child not found or access denied.");
+            }
+
+            #region Cập nhật các trường chỉ nếu chúng không phải là null
+
+            if (childDto.FullName != null)
+                child.FullName = childDto.FullName;
+
+            if (childDto.DateOfBirth != null)
+                child.DateOfBirth = childDto.DateOfBirth;
+
+            if (childDto.Gender != null)
+                child.Gender = childDto.Gender;
+
+            if (childDto.MedicalHistory != null)
+                child.MedicalHistory = childDto.MedicalHistory;
+
+            if (childDto.BloodType != null)
+                child.BloodType = childDto.BloodType;
+
+            if (childDto.HasChronicIllnesses != null)
+                child.HasChronicIllnesses = childDto.HasChronicIllnesses;
+
+            if (childDto.ChronicIllnessesDescription != null)
+                child.ChronicIllnessesDescription = childDto.ChronicIllnessesDescription;
+
+            if (childDto.HasAllergies != null)
+                child.HasAllergies = childDto.HasAllergies;
+
+            if (childDto.AllergiesDescription != null)
+                child.AllergiesDescription = childDto.AllergiesDescription;
+
+            if (childDto.HasRecentMedication != null)
+                child.HasRecentMedication = childDto.HasRecentMedication;
+
+            if (childDto.RecentMedicationDescription != null)
+                child.RecentMedicationDescription = childDto.RecentMedicationDescription;
+
+            if (childDto.HasOtherSpecialCondition != null)
+                child.HasOtherSpecialCondition = childDto.HasOtherSpecialCondition;
+
+            if (childDto.OtherSpecialConditionDescription != null)
+                child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription;
+
+            #endregion
+
+
+            await _unitOfWork.ChildRepository.Update(child);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.Success($"Parent {parentId} successfully updated child profile {childId}");
+
+            return new ChildDto
+            {
+                Id = child.Id,
+                FullName = child.FullName,
+                DateOfBirth = child.DateOfBirth,
+                Gender = child.Gender,
+                MedicalHistory = child.MedicalHistory,
+                BloodType = child.BloodType,
+                HasChronicIllnesses = child.HasChronicIllnesses,
+                ChronicIllnessesDescription = child.ChronicIllnessesDescription,
+                HasAllergies = child.HasAllergies,
+                AllergiesDescription = child.AllergiesDescription,
+                HasRecentMedication = child.HasRecentMedication,
+                RecentMedicationDescription = child.RecentMedicationDescription,
+                HasOtherSpecialCondition = child.HasOtherSpecialCondition,
+                OtherSpecialConditionDescription = child.OtherSpecialConditionDescription
+            };
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _loggerService.Warn($"Warning: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error while updating child profile: {ex.Message}");
+            throw new Exception("An error occurred while updating the child profile. Please try again later.");
+        }
+    }
+
+
+    /// <summary>
+    /// GET tất cả thông tin của trẻ em thông qua Id của Parent
+    /// </summary>
+    /// <param name="pagination"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
     public async Task<Pagination<ChildDto>> GetChildrenByParentAsync(PaginationParameter pagination)
     {
         try
@@ -179,76 +307,6 @@ public class ChildService : IChildService
         {
             _loggerService.Error($"Error while fetching children: {ex.Message}");
             throw new Exception("An error occurred while fetching children. Please try again later.");
-        }
-    }
-
-    public async Task<ChildDto> UpdateChildAsync(Guid childId, UpdateChildDto childDto)
-    {
-        try
-        {
-            Guid parentId = _claimsService.GetCurrentUserId;
-            _loggerService.Info($"Starting child profile update for parent {parentId}");
-
-            var parent = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
-            if (parent == null)
-            {
-                _loggerService.Warn($"Parent {parentId} does not exist.");
-                throw new KeyNotFoundException("Parent not found.");
-            }
-
-            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
-            if (child == null || child.ParentId != parentId)
-            {
-                _loggerService.Warn($"Child {childId} not found or does not belong to parent {parentId}");
-                throw new KeyNotFoundException("Child not found or access denied.");
-            }
-
-            child.FullName = childDto.FullName ?? child.FullName;
-            child.DateOfBirth = childDto.DateOfBirth ?? child.DateOfBirth;
-            child.Gender = childDto.Gender ?? child.Gender;
-            child.MedicalHistory = childDto.MedicalHistory ?? child.MedicalHistory;
-            child.BloodType = childDto.BloodType ?? child.BloodType;
-            child.HasChronicIllnesses = childDto.HasChronicIllnesses ?? child.HasChronicIllnesses;
-            child.ChronicIllnessesDescription = childDto.ChronicIllnessesDescription ?? child.ChronicIllnessesDescription;
-            child.HasAllergies = childDto.HasAllergies ?? child.HasAllergies;
-            child.AllergiesDescription = childDto.AllergiesDescription ?? child.AllergiesDescription;
-            child.HasRecentMedication = childDto.HasRecentMedication ?? child.HasRecentMedication;
-            child.RecentMedicationDescription = childDto.RecentMedicationDescription ?? child.RecentMedicationDescription;
-            child.HasOtherSpecialCondition = childDto.HasOtherSpecialCondition ?? child.HasOtherSpecialCondition;
-            child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription ?? child.OtherSpecialConditionDescription;
-
-            await _unitOfWork.ChildRepository.Update(child);
-            await _unitOfWork.SaveChangesAsync();
-
-            _loggerService.Success($"Parent {parentId} successfully updated child profile {childId}");
-
-            return new ChildDto
-            {
-                Id = child.Id,
-                FullName = child.FullName,
-                DateOfBirth = child.DateOfBirth,
-                Gender = child.Gender,
-                MedicalHistory = child.MedicalHistory,
-                BloodType = child.BloodType,
-                HasChronicIllnesses = child.HasChronicIllnesses,
-                ChronicIllnessesDescription = child.ChronicIllnessesDescription,
-                HasAllergies = child.HasAllergies,
-                AllergiesDescription = child.AllergiesDescription,
-                HasRecentMedication = child.HasRecentMedication,
-                RecentMedicationDescription = child.RecentMedicationDescription,
-                HasOtherSpecialCondition = child.HasOtherSpecialCondition,
-                OtherSpecialConditionDescription = child.OtherSpecialConditionDescription
-            };
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _loggerService.Warn($"Warning: {ex.Message}");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _loggerService.Error($"Error while updating child profile: {ex.Message}");
-            throw new Exception("An error occurred while updating the child profile. Please try again later.");
         }
     }
 }
