@@ -18,6 +18,9 @@ public partial class Vaccine : BaseEntity
     public string? Type { get; set; }
     
     public int RequiredDoses { get; set; }
+    
+    public int DoseIntervalDays { get; set; } //khoảng cách giữa các mũi tiêm
+
     public decimal? Price { get; set; }
     public BloodType? ForBloodType { get; set; }
     public bool? AvoidChronic { get; set; } // Không khuyến khích cho bệnh mãn tính
