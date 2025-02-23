@@ -28,7 +28,7 @@ public class AppointmentController : ControllerBase
     }
 
     //Book lịch tư vấn
-    [HttpPost("consultation")]
+    [HttpPost("vaccine/consultation")]
     [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -71,8 +71,56 @@ public class AppointmentController : ControllerBase
         }
     }
 
+    [HttpPost("vaccine/single")]
+    [Authorize(Policy = "CustomerPolicy")]
+    [ProducesResponseType(typeof(ApiResult<IEnumerable<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> BookSingleVaccine([FromBody] BookSingleVaccineRequestDto request)
+    {
+        try
+        {
+            var appointments =
+                await _appointmentService.BookSingleVaccineAppointment(request.ChildId, request.VaccineId,
+                    request.StartDate);
+
+            if (appointments == null || !appointments.Any())
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Không thể tạo lịch hẹn cho vaccine này."
+                });
+            }
+
+            // Convert list Appointment -> AppointmentDTO
+            var appointmentDTOs = appointments.Select(a => new AppointmentDTO
+            {
+                Id = a.Id,
+                ChildId = a.ChildId,
+                AppointmentDate = a.AppointmentDate,
+                Status = a.Status,
+                VaccineType = a.VaccineType,
+                VaccineIds = a.AppointmentsVaccines.Select(av => av.VaccineId.Value).ToList() // Lấy danh sách VaccineId
+            }).ToList();
+
+            return Ok(new ApiResult<IEnumerable<AppointmentDTO>>
+            {
+                IsSuccess = true,
+                Message = "Đặt lịch thành công!",
+                Data = appointmentDTOs
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+
     //User book Apppointment dựa trên Vaccines đã được tư vấn
-    [HttpPost("suggestion/vaccines/{childId}")]
+    [HttpPost("vaccine/suggestion/{childId}")]
     [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<IEnumerable<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
