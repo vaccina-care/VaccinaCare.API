@@ -69,6 +69,33 @@ public class VaccineService : IVaccineService
             throw;
         }
     }
+    
+    
+    /// <summary>
+    /// Lấy số mũi cần tiêm và khoảng cách giữa các mũi của vaccine.
+    /// </summary>
+    /// <param name="vaccineId">ID của vaccine</param>
+    /// <returns>Tuple chứa số mũi tiêm và khoảng cách ngày giữa các mũi</returns>
+    public async Task<(int RequiredDoses, int DoseIntervalDays)> GetVaccineDoseInfo(Guid vaccineId)
+    {
+        try
+        {
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+            if (vaccine == null)
+            {
+                throw new ArgumentException("Vaccine không hợp lệ.");
+            }
+
+            return (vaccine.RequiredDoses, vaccine.DoseIntervalDays);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error in GetVaccineDoseInfo: {ex.Message}");
+            throw;
+        }
+    }
+
+
 
     /// <summary>
     /// Lấy giá của Vaccine dựa trên ID

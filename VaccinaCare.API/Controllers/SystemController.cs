@@ -46,9 +46,6 @@ namespace VaccinaCare.API.Controllers
                     TotalUsers = users.Count,
                     TotalVaccines = vaccines.Count,
                     TotalPolicies = policies.Count,
-                    RoleNames = roles.Select(r => r.RoleName),
-                    UserEmails = users.Select(u => u.Email),
-                    PolicyNames = policies.Select(p => p.PolicyName)
                 }));
             }
             catch (DbUpdateException dbEx)
@@ -194,24 +191,12 @@ namespace VaccinaCare.API.Controllers
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FBCG.jpg&version_id=null",
                     RequiredDoses = 1,
+                    DoseIntervalDays = 0, // Không cần khoảng cách giữa các mũi
                     AvoidChronic = true,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
-                // new Vaccine
-                // {
-                //     VaccineName = "Hepatitis B",
-                //     Description = "Viêm gan B",
-                //     Type = "Vietnam",
-                //     Price = 200000,
-                //     PicUrl = 
-                //     RequiredDoses = 3,
-                //     AvoidChronic = false,
-                //     AvoidAllergy = false,
-                //     HasDrugInteraction = false,
-                //     HasSpecialWarning = false
-                // },
                 new Vaccine
                 {
                     VaccineName = "Pentaxim",
@@ -221,6 +206,7 @@ namespace VaccinaCare.API.Controllers
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FPentaxim.jpg&version_id=null",
                     RequiredDoses = 3,
+                    DoseIntervalDays = 30, // Mỗi mũi cách nhau 30 ngày
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -235,6 +221,7 @@ namespace VaccinaCare.API.Controllers
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FInfanrix%20Hexa.jpg&version_id=null",
                     RequiredDoses = 3,
+                    DoseIntervalDays = 28, // Mỗi mũi cách nhau 28 ngày
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -249,6 +236,7 @@ namespace VaccinaCare.API.Controllers
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FRotateq.jpg&version_id=null",
                     RequiredDoses = 3,
+                    DoseIntervalDays = 42, // Mỗi mũi cách nhau 42 ngày
                     AvoidChronic = true,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -260,21 +248,27 @@ namespace VaccinaCare.API.Controllers
                     Description = "Bại liệt (tiêm)",
                     Type = "Belgium",
                     Price = 450000,
-                    PicUrl = "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FIPV.png&version_id=null",
+                    PicUrl =
+                        "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FIPV.png&version_id=null",
                     RequiredDoses = 4,
+                    DoseIntervalDays = 60, // Mỗi mũi cách nhau 60 ngày
                     AvoidChronic = false,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
+
+
                 new Vaccine
                 {
                     VaccineName = "OPV",
                     Description = "Bại liệt (uống)",
                     Type = "Vietnam",
                     Price = 100000,
-                    PicUrl = "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FOPV.png&version_id=null",
+                    PicUrl =
+                        "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FOPV.png&version_id=null",
                     RequiredDoses = 4,
+                    DoseIntervalDays = 30, // Mỗi mũi cách nhau 30 ngày
                     AvoidChronic = false,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
@@ -287,7 +281,9 @@ namespace VaccinaCare.API.Controllers
                     Type = "Vietnam",
                     Price = 396000,
                     RequiredDoses = 2,
-                    PicUrl = "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FOPV.png&version_id=null",
+                    DoseIntervalDays = 90, // Mỗi mũi cách nhau 90 ngày (3 tháng)
+                    PicUrl =
+                        "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FOPV.png&version_id=null",
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -300,6 +296,7 @@ namespace VaccinaCare.API.Controllers
                     Type = "USA",
                     Price = 445000,
                     RequiredDoses = 2,
+                    DoseIntervalDays = 180, // Cách nhau 6 tháng
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FMMR.jpg&version_id=null",
                     AvoidChronic = false,
@@ -313,9 +310,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "Thủy đậu",
                     Type = "USA",
                     Price = 1085000,
+                    RequiredDoses = 2,
+                    DoseIntervalDays = 90, // Cách nhau 3 tháng
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FVARIVAX.jpg&version_id=null",
-                    RequiredDoses = 2,
                     AvoidChronic = true,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -328,12 +326,16 @@ namespace VaccinaCare.API.Controllers
                     Type = "UK",
                     Price = 850000,
                     RequiredDoses = 2,
-                    PicUrl = "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FHavrix.jpg&version_id=null",
+                    DoseIntervalDays = 180, // Cách nhau 6 tháng
+                    PicUrl =
+                        "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FHavrix.jpg&version_id=null",
                     AvoidChronic = false,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
                     HasSpecialWarning = false
                 },
+
+
                 new Vaccine
                 {
                     VaccineName = "Ixiaro",
@@ -341,7 +343,9 @@ namespace VaccinaCare.API.Controllers
                     Type = "Austria",
                     Price = 1300000,
                     RequiredDoses = 2,
-                    PicUrl = "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FIxiaro.jpg&version_id=null",
+                    DoseIntervalDays = 28, // Cách nhau 4 tuần
+                    PicUrl =
+                        "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FIxiaro.jpg&version_id=null",
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -353,9 +357,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "Thương hàn",
                     Type = "France",
                     Price = 900000,
+                    RequiredDoses = 1,
+                    DoseIntervalDays = 0, // Chỉ tiêm một liều
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FTyphim%20Vi.jpg&version_id=null",
-                    RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
@@ -367,9 +372,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "Dại",
                     Type = "France",
                     Price = 950000,
+                    RequiredDoses = 4,
+                    DoseIntervalDays = 7, // Mỗi mũi cách nhau 7 ngày
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FVerorab.jpg&version_id=null",
-                    RequiredDoses = 4,
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -381,9 +387,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "Viêm màng não mô cầu",
                     Type = "USA",
                     Price = 1750000,
+                    RequiredDoses = 1,
+                    DoseIntervalDays = 0, // Chỉ tiêm một liều
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FMenactra.jpg&version_id=null",
-                    RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -395,9 +402,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "HPV (Ngừa ung thư cổ tử cung)",
                     Type = "USA",
                     Price = 1790000,
+                    RequiredDoses = 2,
+                    DoseIntervalDays = 180, // Mỗi mũi cách nhau 6 tháng
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FGardasil.png&version_id=null",
-                    RequiredDoses = 2,
                     AvoidChronic = false,
                     AvoidAllergy = false,
                     HasDrugInteraction = false,
@@ -409,9 +417,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "Cúm mùa",
                     Type = "France",
                     Price = 356000,
+                    RequiredDoses = 1,
+                    DoseIntervalDays = 0, // Chỉ tiêm một liều
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FVaxigrip.jpg&version_id=null",
-                    RequiredDoses = 1,
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,
@@ -423,9 +432,10 @@ namespace VaccinaCare.API.Controllers
                     Description = "COVID-19 (5+)",
                     Type = "USA",
                     Price = 1200000,
+                    RequiredDoses = 2,
+                    DoseIntervalDays = 21, // Mũi thứ hai sau 21 ngày
                     PicUrl =
                         "https://minio.ae-tao-fullstack-api.site/api/v1/buckets/vaccinacare-bucket/objects/download?preview=true&prefix=vaccines%2FPfizer-BioNTech%20COVID-19.png&version_id=null",
-                    RequiredDoses = 2,
                     AvoidChronic = false,
                     AvoidAllergy = true,
                     HasDrugInteraction = false,

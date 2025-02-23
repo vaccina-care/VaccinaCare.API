@@ -23,7 +23,6 @@ public class Appointment : BaseEntity
     public virtual ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
     
     public virtual ICollection<AppointmentVaccineSuggestions> AppointmentVaccineSuggestions { get; set; } = new List<AppointmentVaccineSuggestions>();
-
 }
 
 
