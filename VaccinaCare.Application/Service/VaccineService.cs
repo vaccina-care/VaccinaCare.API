@@ -21,17 +21,7 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
     }
     
-    /// <summary>
-    /// Check xem Children đã chích Vaccine nào chưa, nếu có chích thì đang ở mũi thứ mấy
-    /// </summary>
-    /// <param name="childId"></param>
-    /// <param name="vaccineId"></param>
-    /// <returns></returns>
-    public async Task<int> GetVaccineDoseCount(Guid childId, Guid vaccineId)
-    {
-        return 0;
-    }
-    
+   
     /// <summary>
     /// Kiểm tra xem hai vaccine có thể tiêm cùng nhau không.
     /// </summary>
