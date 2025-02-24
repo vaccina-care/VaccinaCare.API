@@ -76,6 +76,42 @@ public class VaccineController : ControllerBase
         }
     }
 
+    [Authorize(Policy = "StaffPolicy")]
+    [HttpPost("create")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto)
+    {
+        _logger.Info("Create vaccine request received.");
+
+        if (createVaccineDto == null)
+        {
+            _logger.Warn("CreateVaccine: Vaccine data is null.");
+            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
+        }
+
+        try
+        {
+            _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {createVaccineDto.VaccineName}.");
+
+            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto);
+
+            if (createdVaccine == null)
+            {
+                _logger.Warn("CreateVaccine: Vaccine creation failed due to validation issues.");
+                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
+            }
+
+            _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
+            return Ok(ApiResult<CreateVaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error during creation: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
+        }
+    }
 
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -121,7 +157,6 @@ public class VaccineController : ControllerBase
         }
     }
 
-
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResult<VaccineDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -143,42 +178,7 @@ public class VaccineController : ControllerBase
         }
     }
 
-    [Authorize(Policy = "StaffPolicy")]
-    [HttpPost("create")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto)
-    {
-        _logger.Info("Create vaccine request received.");
 
-        if (createVaccineDto == null)
-        {
-            _logger.Warn("CreateVaccine: Vaccine data is null.");
-            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-        }
-
-        try
-        {
-            _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {createVaccineDto.VaccineName}.");
-
-            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto);
-
-            if (createdVaccine == null)
-            {
-                _logger.Warn("CreateVaccine: Vaccine creation failed due to validation issues.");
-                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
-            }
-
-            _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
-            return Ok(ApiResult<CreateVaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error during creation: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
-        }
-    }
 
     [HttpPut("{id}")]
     [Authorize(Policy = "StaffPolicy")]
