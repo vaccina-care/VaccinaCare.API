@@ -16,7 +16,8 @@ public class ChildService : IChildService
     private readonly IVaccineSuggestionService _vaccineSuggestionService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService, IVaccineSuggestionService vaccineSuggestionService)
+    public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService,
+        IVaccineSuggestionService vaccineSuggestionService)
     {
         _loggerService = loggerService;
         _unitOfWork = unitOfWork;
@@ -24,6 +25,13 @@ public class ChildService : IChildService
         _vaccineSuggestionService = vaccineSuggestionService;
     }
 
+    /// <summary>
+    /// Cho phép Parent tạo thông tin của trẻ em
+    /// </summary>
+    /// <param name="childDto"></param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="Exception"></exception>
     public async Task<ChildDto> CreateChildAsync(CreateChildDto childDto)
     {
         try
@@ -99,63 +107,37 @@ public class ChildService : IChildService
         }
     }
 
-    public async Task DeleteChildAsync(Guid childId)
+
+    /// <summary>
+    /// GET tất cả thông tin của trẻ em thông qua Id của Parent
+    /// </summary>
+    /// <param name="pagination"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    public async Task<List<ChildDto>> GetChildrenByParentAsync()
     {
         try
         {
-            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
-            if (child == null)
-            {
-                _loggerService.Warn($"Child with ID {childId} not found.");
-                throw new KeyNotFoundException("Child not found.");
-            }
-
-            await _unitOfWork.ChildRepository.SoftRemove(child);
-            await _unitOfWork.SaveChangesAsync();
-            _loggerService.Success($"Child profile {childId} deleted successfully.");
-        }
-        catch (Exception ex)
-        {
-            _loggerService.Error($"Error deleting child profile {childId}: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<Pagination<ChildDto>> GetChildrenByParentAsync(PaginationParameter pagination)
-    {
-        try
-        {
-            // Get ParentId from ClaimsService
+            // Lấy ParentId từ ClaimsService
             Guid parentId = _claimsService.GetCurrentUserId;
+            _loggerService.Info($"Fetching all children for parent {parentId}");
 
-            _loggerService.Info(
-                $"Fetching children for parent {parentId} with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
-
-            // Retrieve queryable list of children
-            var query = _unitOfWork.ChildRepository.GetQueryable()
-                .Where(c => c.ParentId == parentId);
-
-            // Get total count before applying pagination
-            int totalChildren = await query.CountAsync();
-
-            // Apply pagination
-            var children = await query
-                .OrderBy(c => c.FullName) // Sorting by name, modify if needed
-                .Skip((pagination.PageIndex - 1) * pagination.PageSize)
-                .Take(pagination.PageSize)
+            // Truy vấn danh sách trẻ em thuộc về phụ huynh
+            var children = await _unitOfWork.ChildRepository.GetQueryable()
+                .Where(c => c.ParentId == parentId)
+                .OrderBy(c => c.FullName) // Sắp xếp theo tên (nếu cần)
                 .ToListAsync();
 
             if (!children.Any())
             {
-                _loggerService.Warn($"No children found for parent {parentId} on page {pagination.PageIndex}.");
-                return new Pagination<ChildDto>(new List<ChildDto>(), 0, pagination.PageIndex, pagination.PageSize);
+                _loggerService.Warn($"No children found for parent {parentId}.");
+                return new List<ChildDto>(); // Trả về danh sách rỗng thay vì null
             }
 
-            _loggerService.Success(
-                $"Retrieved {children.Count} children for parent {parentId} on page {pagination.PageIndex}");
+            _loggerService.Success($"Retrieved {children.Count} children for parent {parentId}");
 
-            // Convert to ChildDto list
-            var childDtos = children.Select(child => new ChildDto
+            // Convert sang danh sách ChildDto
+            return children.Select(child => new ChildDto
             {
                 Id = child.Id,
                 FullName = child.FullName,
@@ -172,8 +154,6 @@ public class ChildService : IChildService
                 HasOtherSpecialCondition = child.HasOtherSpecialCondition,
                 OtherSpecialConditionDescription = child.OtherSpecialConditionDescription
             }).ToList();
-
-            return new Pagination<ChildDto>(childDtos, totalChildren, pagination.PageIndex, pagination.PageSize);
         }
         catch (Exception ex)
         {
@@ -182,7 +162,58 @@ public class ChildService : IChildService
         }
     }
 
-    public async Task<ChildDto> UpdateChildAsync(Guid childId, UpdateChildDto childDto)
+
+    /// <summary>
+    /// Soft delete 1 trẻ em thuộc về parent dựa trên parent id
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <exception cref="KeyNotFoundException"></exception>
+    public async Task DeleteChildrenByParentIdAsync(Guid childId)
+    {
+        try
+        {
+            // Lấy ParentId
+            Guid parentId = _claimsService.GetCurrentUserId;
+            _loggerService.Info($"Parent {parentId} requested to delete child {childId}");
+
+            // Lấy thông tin trẻ em từ DB
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+        
+            // Kiểm tra xem child có tồn tại và có thuộc về parent hay không
+            if (child == null || child.ParentId != parentId)
+            {
+                _loggerService.Warn($"Child {childId} not found or does not belong to parent {parentId}.");
+                throw new KeyNotFoundException("Child not found or access denied.");
+            }
+
+            // Thực hiện Soft Delete
+            await _unitOfWork.ChildRepository.SoftRemove(child);
+            await _unitOfWork.SaveChangesAsync();
+        
+            _loggerService.Success($"Parent {parentId} successfully deleted child {childId}.");
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _loggerService.Warn($"Warning: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error deleting child profile {childId}: {ex.Message}");
+            throw new Exception("An error occurred while deleting the child profile. Please try again later.");
+        }
+    }
+
+
+    /// <summary>
+    /// Update thông tin của children, field nào có nhập thì update, không nhập thì để nguyên
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <param name="childDto"></param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException"></exception>
+    /// <exception cref="Exception"></exception>
+    public async Task<ChildDto> UpdateChildrenAsync(Guid childId, UpdateChildDto childDto)
     {
         try
         {
@@ -203,19 +234,49 @@ public class ChildService : IChildService
                 throw new KeyNotFoundException("Child not found or access denied.");
             }
 
-            child.FullName = childDto.FullName ?? child.FullName;
-            child.DateOfBirth = childDto.DateOfBirth ?? child.DateOfBirth;
-            child.Gender = childDto.Gender ?? child.Gender;
-            child.MedicalHistory = childDto.MedicalHistory ?? child.MedicalHistory;
-            child.BloodType = childDto.BloodType ?? child.BloodType;
-            child.HasChronicIllnesses = childDto.HasChronicIllnesses ?? child.HasChronicIllnesses;
-            child.ChronicIllnessesDescription = childDto.ChronicIllnessesDescription ?? child.ChronicIllnessesDescription;
-            child.HasAllergies = childDto.HasAllergies ?? child.HasAllergies;
-            child.AllergiesDescription = childDto.AllergiesDescription ?? child.AllergiesDescription;
-            child.HasRecentMedication = childDto.HasRecentMedication ?? child.HasRecentMedication;
-            child.RecentMedicationDescription = childDto.RecentMedicationDescription ?? child.RecentMedicationDescription;
-            child.HasOtherSpecialCondition = childDto.HasOtherSpecialCondition ?? child.HasOtherSpecialCondition;
-            child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription ?? child.OtherSpecialConditionDescription;
+            #region Cập nhật các trường chỉ nếu chúng không phải là null
+
+            if (childDto.FullName != null)
+                child.FullName = childDto.FullName;
+
+            if (childDto.DateOfBirth != null)
+                child.DateOfBirth = childDto.DateOfBirth;
+
+            if (childDto.Gender != null)
+                child.Gender = childDto.Gender;
+
+            if (childDto.MedicalHistory != null)
+                child.MedicalHistory = childDto.MedicalHistory;
+
+            if (childDto.BloodType != null)
+                child.BloodType = childDto.BloodType;
+
+            if (childDto.HasChronicIllnesses != null)
+                child.HasChronicIllnesses = childDto.HasChronicIllnesses;
+
+            if (childDto.ChronicIllnessesDescription != null)
+                child.ChronicIllnessesDescription = childDto.ChronicIllnessesDescription;
+
+            if (childDto.HasAllergies != null)
+                child.HasAllergies = childDto.HasAllergies;
+
+            if (childDto.AllergiesDescription != null)
+                child.AllergiesDescription = childDto.AllergiesDescription;
+
+            if (childDto.HasRecentMedication != null)
+                child.HasRecentMedication = childDto.HasRecentMedication;
+
+            if (childDto.RecentMedicationDescription != null)
+                child.RecentMedicationDescription = childDto.RecentMedicationDescription;
+
+            if (childDto.HasOtherSpecialCondition != null)
+                child.HasOtherSpecialCondition = childDto.HasOtherSpecialCondition;
+
+            if (childDto.OtherSpecialConditionDescription != null)
+                child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription;
+
+            #endregion
+
 
             await _unitOfWork.ChildRepository.Update(child);
             await _unitOfWork.SaveChangesAsync();

@@ -25,7 +25,63 @@ namespace VaccinaCare.Application.Service
             _vaccineService = vaccineService;
         }
 
-        public async Task<IEnumerable<Appointment>> GenerateAppointmentsFromVaccineSuggestions(Guid childId, DateTime startDate)
+        public async Task<List<Appointment>> BookSingleVaccineAppointment(Guid childId, Guid vaccineId,
+            DateTime startDate)
+        {
+            try
+            {
+                var (requiredDoses, doseIntervalDays) = await _vaccineService.GetVaccineDoseInfo(vaccineId);
+
+                if (requiredDoses <= 0)
+                {
+                    throw new ArgumentException("Số mũi tiêm không hợp lệ.");
+                }
+
+                List<Appointment> appointments = new List<Appointment>();
+
+                for (int i = 0; i < requiredDoses; i++)
+                {
+                    var appointmentDate = startDate.AddDays(i * doseIntervalDays);
+
+                    var appointment = new Appointment
+                    {
+                        ChildId = childId,
+                        AppointmentDate = appointmentDate,
+                        Status = AppointmentStatus.Pending, // Trạng thái mặc định
+                        VaccineType = VaccineType.SingleDose,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    await _unitOfWork.AppointmentRepository.AddAsync(appointment);
+                    await _unitOfWork.SaveChangesAsync(); // Lưu trước để có AppointmentId
+
+                    // Tạo liên kết trong AppointmentsVaccine (Mối quan hệ N-N)
+                    var appointmentVaccine = new AppointmentsVaccine
+                    {
+                        AppointmentId = appointment.Id,
+                        VaccineId = vaccineId,
+                        DoseNumber = i + 1, // Mũi thứ 1, 2, 3...
+                        TotalPrice = 0 // Có thể cập nhật giá sau
+                    };
+
+                    _unitOfWork.AppointmentsVaccineRepository.AddAsync(appointmentVaccine);
+                    await _unitOfWork.SaveChangesAsync();
+
+                    appointments.Add(appointment);
+                }
+
+                return appointments;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error($"Error in BookSingleVaccineAppointment: {ex.Message}");
+                throw;
+            }
+        }
+
+
+        public async Task<IEnumerable<Appointment>> GenerateAppointmentsFromVaccineSuggestions(Guid childId,
+            DateTime startDate)
         {
             try
             {
@@ -44,7 +100,8 @@ namespace VaccinaCare.Application.Service
                 var selectedVaccineIds = vaccineSuggestions.Select(vs => vs.VaccineId.Value).ToList();
 
                 // Gọi hàm GenerateAppointmentsForVaccines để tạo danh sách lịch hẹn từ danh sách vaccine đã tư vấn
-                var generatedAppointments = await GenerateAppointmentsForVaccines(childId, selectedVaccineIds, startDate);
+                var generatedAppointments =
+                    await GenerateAppointmentsForVaccines(childId, selectedVaccineIds, startDate);
 
                 if (!generatedAppointments.Any())
                 {
@@ -153,14 +210,14 @@ namespace VaccinaCare.Application.Service
                     Status = AppointmentStatus.Pending,
                     VaccineType = VaccineType.SingleDose,
                     AppointmentsVaccines = new List<AppointmentsVaccine>
+                    {
+                        new AppointmentsVaccine
                         {
-                            new AppointmentsVaccine
-                            {
-                                VaccineId = vaccineId,
-                                DoseNumber = 1,
-                                TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
-                            }
+                            VaccineId = vaccineId,
+                            DoseNumber = 1,
+                            TotalPrice = await _vaccineService.GetVaccinePrice(vaccineId)
                         }
+                    }
                 };
 
                 appointments.Add(appointment);

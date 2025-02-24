@@ -21,13 +21,12 @@ public class ChildController : ControllerBase
         _logger = logger;
     }
 
-    // [Authorize(Policy = "StaffPolicy")]
     [HttpPost]
     [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> AddChildrenInfo([FromForm] CreateChildDto childDto)
+    public async Task<IActionResult> AddChildrenInfo([FromBody] CreateChildDto childDto)
     {
         try
         {
@@ -76,20 +75,20 @@ public class ChildController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = "CustomerPolicy")]
-    [ProducesResponseType(typeof(ApiResult<Pagination<ChildDto>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<List<ChildDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetChildrenByParent([FromQuery] PaginationParameter pagination)
+    public async Task<IActionResult> GetChildrenByParent()
     {
         try
         {
             _logger.Info("Received request to get children list.");
 
-            var children = await _childService.GetChildrenByParentAsync(pagination);
+            var children = await _childService.GetChildrenByParentAsync(); // Gọi service mà KHÔNG truyền pagination
 
             _logger.Success($"Fetched {children.Count} children successfully.");
 
-            return Ok(new ApiResult<Pagination<ChildDto>>
+            return Ok(new ApiResult<List<ChildDto>>
             {
                 IsSuccess = true,
                 Message = "Children list retrieved successfully.",
@@ -107,6 +106,7 @@ public class ChildController : ControllerBase
         }
     }
 
+
     [HttpPut("{childId}")]
     [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
@@ -121,19 +121,27 @@ public class ChildController : ControllerBase
 
         try
         {
-            var result = await _childService.UpdateChildAsync(childId, updateChildDto);
-            return Ok(new ApiResult<ChildDto> { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
+            var result = await _childService.UpdateChildrenAsync(childId, updateChildDto);
+            return Ok(new ApiResult<ChildDto>
+                { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
         }
-        catch (Exception )
+        catch (Exception)
         {
-            return StatusCode(500, new ApiResult<object> { IsSuccess = false, Message = "An error occurred while updating the child profile. Please try again later." });
+            return StatusCode(500,
+                new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred while updating the child profile. Please try again later."
+                });
         }
     }
+
     [HttpDelete("{childId}")]
+    [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -141,16 +149,21 @@ public class ChildController : ControllerBase
     {
         try
         {
-            await _childService.DeleteChildAsync(childId);
+            await _childService.DeleteChildrenByParentIdAsync(childId);
             return Ok(new ApiResult<object> { IsSuccess = true, Message = "Child profile deleted successfully." });
         }
         catch (KeyNotFoundException ex)
         {
             return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
         }
-        catch (Exception )
+        catch (Exception)
         {
-            return StatusCode(500, new ApiResult<object> { IsSuccess = false, Message = "An error occurred while deleting the child profile. Please try again later." });
+            return StatusCode(500,
+                new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "An error occurred while deleting the child profile. Please try again later."
+                });
         }
     }
 }
