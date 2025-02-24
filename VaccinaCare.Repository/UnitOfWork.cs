@@ -16,6 +16,7 @@ namespace VaccinaCare.Repository
         private readonly IGenericRepository<VaccinePackage> _vaccinePackageRepository;
         private readonly IGenericRepository<VaccinePackageDetail> _vaccinePackageDetailRepository;
         private readonly IGenericRepository<VaccineSuggestion> _vaccineSuggestionRepository;
+        private readonly IGenericRepository<VaccinationRecord> _vaccinationRecordRepository;
         private readonly IGenericRepository<VaccineIntervalRules> _vaccineIntervalRules;
         private readonly IGenericRepository<AppointmentVaccineSuggestions> _appointmentVaccineSuggestionsRepository;
         private readonly IGenericRepository<AppointmentsVaccine> _appointmentsVaccineRepository;
@@ -29,7 +30,7 @@ namespace VaccinaCare.Repository
             IGenericRepository<VaccineSuggestion> vaccineSuggestionRepository,
             IGenericRepository<VaccineIntervalRules> vaccineIntervalRules,
             IGenericRepository<AppointmentVaccineSuggestions> appointmentVaccineSuggestionsRepository, 
-            IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository)
+            IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository, IGenericRepository<VaccinationRecord> vaccinationRecordRepository)
         {
             _dbContext = dbContext;
             _notificationRepository = notificationRepository;
@@ -44,6 +45,7 @@ namespace VaccinaCare.Repository
             _vaccineIntervalRules = vaccineIntervalRules;
             _appointmentVaccineSuggestionsRepository = appointmentVaccineSuggestionsRepository;
             _appointmentsVaccineRepository = appointmentsVaccineRepository;
+            _vaccinationRecordRepository = vaccinationRecordRepository;
         }
 
         public IGenericRepository<Notification> NotificationRepository => _notificationRepository;
@@ -58,6 +60,7 @@ namespace VaccinaCare.Repository
             _vaccinePackageDetailRepository;
 
         public IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository => _vaccineSuggestionRepository;
+        public IGenericRepository<VaccinationRecord> VaccinationRecordRepository => _vaccinationRecordRepository;
         public IGenericRepository<VaccineIntervalRules> VaccineIntervalRulesRepository => _vaccineIntervalRules;
 
         public IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository => _appointmentVaccineSuggestionsRepository;

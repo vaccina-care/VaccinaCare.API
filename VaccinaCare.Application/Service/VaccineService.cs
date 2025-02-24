@@ -20,7 +20,18 @@ public class VaccineService : IVaccineService
         _logger = logger;
         _claimsService = claimsService;
     }
-
+    
+    /// <summary>
+    /// Check xem Children đã chích Vaccine nào chưa, nếu có chích thì đang ở mũi thứ mấy
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <param name="vaccineId"></param>
+    /// <returns></returns>
+    public async Task<int> GetVaccineDoseCount(Guid childId, Guid vaccineId)
+    {
+        return 0;
+    }
+    
     /// <summary>
     /// Kiểm tra xem hai vaccine có thể tiêm cùng nhau không.
     /// </summary>
@@ -69,7 +80,6 @@ public class VaccineService : IVaccineService
         }
     }
 
-
     /// <summary>
     /// Lấy số mũi cần tiêm và khoảng cách giữa các mũi của vaccine.
     /// </summary>
@@ -93,8 +103,6 @@ public class VaccineService : IVaccineService
             throw;
         }
     }
-
-
 
     /// <summary>
     /// Lấy giá của Vaccine dựa trên ID
@@ -122,10 +130,7 @@ public class VaccineService : IVaccineService
             throw;
         }
     }
-
-
-
-
+    
     //CRUD Vaccines
     public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page, int pageSize)
     {
