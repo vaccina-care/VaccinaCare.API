@@ -4,8 +4,15 @@ namespace VaccinaCare.Application.Interface;
 
 public interface IVaccineService
 {
-    
-    //
+    Task<bool> IsVaccineInPackage(Guid childId, Guid vaccineId);
+
+    Task<bool> CanChildReceiveVaccine(Guid childId, Guid vaccineId);
+
+    Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId);
+
+    Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+        DateTime appointmentDate);
+    //CRUD
     Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto vaccineDTO);
     Task<VaccineDTO> DeleteVaccine(Guid id);
 

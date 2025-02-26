@@ -21,14 +21,10 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
     }
 
-
     /// <summary>
     /// Kiểm tra xem vaccine có nằm trong một package đã có sẵn của hệ thống hay không.
     /// </summary>
-    /// <param name="vaccineId"></param>
-    /// <param name="userId"></param>
-    /// <returns></returns>
-    public async Task<bool> IsVaccineInPackage(Guid vaccineId, Guid userId)
+    public async Task<bool> IsVaccineInPackage(Guid childId, Guid vaccineId)
     {
         var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
             .GetAllAsync(vp => vp.VaccineId == vaccineId);
@@ -38,9 +34,6 @@ public class VaccineService : IVaccineService
     /// <summary>
     /// Kiểm tra thông tin sức khỏe của trẻ có phù hợp với vaccine không.
     /// </summary>
-    /// <param name="childId"></param>
-    /// <param name="vaccineId"></param>
-    /// <returns></returns>
     public async Task<bool> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
     {
         var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
@@ -61,11 +54,8 @@ public class VaccineService : IVaccineService
     }
 
     /// <summary>
-    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
+    /// Kiểm tra xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
     /// </summary>
-    /// <param name="childId"></param>
-    /// <param name="vaccineId"></param>
-    /// <returns></returns>
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
         var records = await _unitOfWork.VaccinationRecordRepository
@@ -108,6 +98,7 @@ public class VaccineService : IVaccineService
         return true;
     }
 
+    
     //CRUD Vaccines
     public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy,
         bool isDescending, int page, int pageSize)
