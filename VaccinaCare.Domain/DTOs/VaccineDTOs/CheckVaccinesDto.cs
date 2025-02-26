@@ -2,7 +2,5 @@
 
 public class CheckVaccinesDto
 {
-    public Guid ChildId { get; set; }
-
-    public Guid VaccineId { get; set; }
+    public List<Guid> VaccineIds { get; set; } = new();
 }

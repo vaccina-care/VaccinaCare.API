@@ -22,13 +22,51 @@ public class VaccineService : IVaccineService
     }
 
     /// <summary>
-    /// Kiểm tra xem vaccine có nằm trong một package đã có sẵn của hệ thống hay không.
+    /// Kiểm tra xem tất cả vaccine trong danh sách có thuộc một package đã có sẵn không.
+    /// Nếu tất cả vaccine truyền vào đều thuộc package thì chặn đặt lẻ.
     /// </summary>
-    public async Task<bool> IsVaccineInPackage(Guid childId, Guid vaccineId)
+    public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
     {
-        var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
-            .GetAllAsync(vp => vp.VaccineId == vaccineId);
-        return packageDetails.Any();
+        if (vaccineIds == null || vaccineIds.Count == 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Lấy tất cả các package có chứa vaccine trong danh sách vaccineIds
+            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
+                .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
+
+            if (!packageDetails.Any())
+            {
+                return false;
+            }
+
+            // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
+            var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
+
+            foreach (var packageId in packageIds)
+            {
+                // Lấy danh sách vaccine của package này
+                var packageVaccineIds = await _unitOfWork.VaccinePackageDetailRepository
+                    .GetAllAsync(vpd => vpd.PackageId == packageId);
+
+                var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
+
+                // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
+                if (packageVaccineList.All(v => vaccineIds.Contains(v)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"[IsVaccineInPackage] Exception occurred: {ex.Message}");
+            throw;
+        }
     }
 
     /// <summary>
@@ -50,15 +88,6 @@ public class VaccineService : IVaccineService
         {
             var message = $"Vaccine ID {vaccineId} not found.";
             _logger.Error(message);
-            return (false, message);
-        }
-
-        // Kiểm tra nhóm máu
-        if (vaccine.ForBloodType.HasValue && vaccine.ForBloodType != child.BloodType)
-        {
-            var message =
-                $"Child {child.FullName} has blood type {child.BloodType}, which is incompatible with vaccine ID {vaccineId} (requires {vaccine.ForBloodType}).";
-            _logger.Warn(message);
             return (false, message);
         }
 
@@ -119,7 +148,7 @@ public class VaccineService : IVaccineService
     /// - Nếu khoảng cách không đủ → trả về false.
     /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
-    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
         DateTime appointmentDate)
     {
         _logger.Info(

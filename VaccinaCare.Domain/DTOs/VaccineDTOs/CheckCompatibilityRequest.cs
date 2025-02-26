@@ -3,6 +3,6 @@
 public class CheckCompatibilityRequest
 {
     public Guid VaccineId { get; set; }
-    public List<Guid> BookedVaccineIds { get; set; }
+    public List<Guid?> BookedVaccineIds { get; set; }
     public DateTime AppointmentDate { get; set; }
 }

@@ -26,13 +26,26 @@ public class VaccineController : ControllerBase
 
 
     /// <summary>
-    /// Kiểm tra vaccine có thuộc gói vaccine không.
+    /// Kiểm tra xem danh sách vaccine có nằm trong một package không.
     /// </summary>
-    [HttpGet("check-package")]
-    public async Task<IActionResult> CheckVaccineInPackage([FromQuery] Guid vaccineId, [FromQuery] Guid userId)
+    [HttpPost("check-vaccine-package")]
+    public async Task<IActionResult> CheckVaccinePackage([FromBody] CheckVaccinesDto request)
     {
-        var result = await _vaccineService.IsVaccineInPackage(vaccineId, userId);
-        return Ok(new { vaccineId, isInPackage = result });
+        if (request.VaccineIds == null || !request.VaccineIds.Any())
+        {
+            return BadRequest("Danh sách vaccine không được trống.");
+        }
+
+        var isInPackage = await _vaccineService.IsVaccineInPackage(request.VaccineIds);
+
+        if (isInPackage)
+        {
+            return Ok(new { message = "Các vaccine này thuộc một gói vaccine. Bạn nên đặt gói để có giá ưu đãi hơn.", isInPackage = true });
+        }
+        else
+        {
+            return Ok(new { message = "Bạn có thể đặt lẻ các vaccine này.", isInPackage = false });
+        }
     }
 
     /// <summary>

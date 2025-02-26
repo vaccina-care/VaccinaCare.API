@@ -1,8 +1,8 @@
 namespace VaccinaCare.Domain.DTOs.AppointmentDTOs;
 
-public class BookSingleVaccineRequestDto
+public class GenerateAppointmentsRequest
 {
-    public Guid VaccineId { get; set; }
+    public List<Guid> VaccineIds { get; set; } = new List<Guid>();
     public Guid ChildId { get; set; }
     public DateTime StartDate { get; set; }
 }

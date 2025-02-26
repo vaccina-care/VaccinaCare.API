@@ -27,6 +27,55 @@ public class AppointmentController : ControllerBase
         _claimsService = claimsService;
     }
 
+    [HttpPost("booking/single-vaccines")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GenerateAppointments([FromBody] GenerateAppointmentsRequest request)
+    {
+        try
+        {
+            Guid parentId = _claimsService.GetCurrentUserId;
+
+            if (request.VaccineIds == null || !request.VaccineIds.Any())
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Danh sách vaccine không hợp lệ."
+                });
+            }
+            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(
+                request.VaccineIds, request.ChildId, parentId, request.StartDate);
+
+            return Ok(new ApiResult<List<AppointmentDTO>>
+            {
+                IsSuccess = true,
+                Message = "Appointments created successfully.",
+                Data = result
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.Error($"Validation error: {ex.Message}");
+            return BadRequest(new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Internal server error. Please try again later."
+            });
+        }
+    }
+
     [HttpGet("child/{childId}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<Appointment>), 200)]
@@ -69,7 +118,4 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-
-
-   
 }
