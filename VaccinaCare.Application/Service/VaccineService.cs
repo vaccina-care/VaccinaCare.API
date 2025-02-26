@@ -34,7 +34,7 @@ public class VaccineService : IVaccineService
             .GetAllAsync(vp => vp.VaccineId == vaccineId);
         return packageDetails.Any();
     }
-    
+
     /// <summary>
     /// Kiểm tra thông tin sức khỏe của trẻ có phù hợp với vaccine không.
     /// </summary>
@@ -56,9 +56,57 @@ public class VaccineService : IVaccineService
         {
             return false;
         }
+
         return true;
     }
 
+    /// <summary>
+    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <param name="vaccineId"></param>
+    /// <returns></returns>
+    public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
+    {
+        var records = await _unitOfWork.VaccinationRecordRepository
+            .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
+        return records.Count + 1;
+    }
+
+    /// <summary>
+    /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    /// </summary>
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+        DateTime appointmentDate)
+    {
+        foreach (var bookedVaccineId in bookedVaccineIds)
+        {
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                .FirstOrDefaultAsync(r =>
+                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
+
+            if (rule != null)
+            {
+                if (!rule.CanBeGivenTogether)
+                    return false;
+
+                if (rule.MinIntervalDays > 0)
+                {
+                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                        .FirstOrDefaultAsync(a =>
+                            a.VaccineId == bookedVaccineId &&
+                            a.Appointment.AppointmentDate.HasValue &&
+                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
+
+                    if (lastAppointment != null)
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     //CRUD Vaccines
     public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy,
