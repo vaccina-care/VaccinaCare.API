@@ -31,6 +31,9 @@ public class VaccineService : IVaccineService
         return packageDetails.Any();
     }
 
+    /// <summary>
+    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
+    /// </summary>
     public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
     {
         var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
@@ -79,17 +82,30 @@ public class VaccineService : IVaccineService
         return (true, successMessage);
     }
 
-
-
     /// <summary>
-    /// Kiểm tra xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
+    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
     /// </summary>
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
+        _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
+
+        // Lấy lịch sử tiêm chủng của trẻ với vaccine này
         var records = await _unitOfWork.VaccinationRecordRepository
             .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
-        return records.Count + 1;
+
+        if (records == null || !records.Any())
+        {
+            _logger.Warn($"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
+            return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
+        }
+        int lastDoseNumber = records.Max(r => r.DoseNumber);
+        int nextDose = lastDoseNumber + 1;
+
+        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
+
+        return nextDose;
     }
+
 
     /// <summary>
     /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
