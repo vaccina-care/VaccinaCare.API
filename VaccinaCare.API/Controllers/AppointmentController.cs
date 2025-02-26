@@ -27,140 +27,54 @@ public class AppointmentController : ControllerBase
         _claimsService = claimsService;
     }
 
-    //Book lịch tư vấn
-    [HttpPost("vaccine/consultation")]
-    [Authorize(Policy = "CustomerPolicy")]
-    [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
+    [HttpPost("booking/single-vaccines")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> MakeConsultationAppointment([FromBody] BookConsultationDto request)
+    public async Task<IActionResult> GenerateAppointments([FromBody] GenerateAppointmentsRequest request)
     {
         try
         {
-            _logger.Info("Received request to book a consultation appointment.");
+            Guid parentId = _claimsService.GetCurrentUserId;
 
-            if (request == null || request.ChildId == Guid.Empty || request.AppointmentDate == default)
+            if (request.VaccineIds == null || !request.VaccineIds.Any())
             {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
-                    Message = "Invalid request. Please provide valid child ID and appointment date."
+                    Message = "Danh sách vaccine không hợp lệ."
                 });
             }
+            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(
+                request.VaccineIds, request.ChildId, parentId, request.StartDate);
 
-            var appointment =
-                await _appointmentService.BookConsultationAppointment(request.ChildId, request.AppointmentDate);
-
-            _logger.Success($"Consultation appointment booked successfully with ID: {appointment.Id}");
-
-            return Ok(new ApiResult<AppointmentDTO>
+            return Ok(new ApiResult<List<AppointmentDTO>>
             {
                 IsSuccess = true,
-                Message = "Consultation appointment booked successfully.",
-                Data = appointment
+                Message = "Appointments created successfully.",
+                Data = result
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.Error($"Validation error: {ex.Message}");
+            return BadRequest(new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = ex.Message
             });
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while booking consultation appointment: {ex.Message}");
+            _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
-                Message = "An error occurred while booking the consultation appointment. Please try again later."
+                Message = "Internal server error. Please try again later."
             });
         }
     }
-
-    [HttpPost("vaccine/single")]
-    [Authorize(Policy = "CustomerPolicy")]
-    [ProducesResponseType(typeof(ApiResult<IEnumerable<AppointmentDTO>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> BookSingleVaccine([FromBody] BookSingleVaccineRequestDto request)
-    {
-        try
-        {
-            var appointments =
-                await _appointmentService.BookSingleVaccineAppointment(request.ChildId, request.VaccineId,
-                    request.StartDate);
-
-            if (appointments == null || !appointments.Any())
-            {
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Không thể tạo lịch hẹn cho vaccine này."
-                });
-            }
-
-            // Convert list Appointment -> AppointmentDTO
-            var appointmentDTOs = appointments.Select(a => new AppointmentDTO
-            {
-                Id = a.Id,
-                ChildId = a.ChildId,
-                AppointmentDate = a.AppointmentDate,
-                Status = a.Status,
-                VaccineType = a.VaccineType,
-                VaccineIds = a.AppointmentsVaccines.Select(av => av.VaccineId.Value).ToList() // Lấy danh sách VaccineId
-            }).ToList();
-
-            return Ok(new ApiResult<IEnumerable<AppointmentDTO>>
-            {
-                IsSuccess = true,
-                Message = "Đặt lịch thành công!",
-                Data = appointmentDTOs
-            });
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
-
-    //User book Apppointment dựa trên Vaccines đã được tư vấn
-    [HttpPost("vaccine/suggestion/{childId}")]
-    [Authorize(Policy = "CustomerPolicy")]
-    [ProducesResponseType(typeof(ApiResult<IEnumerable<AppointmentDTO>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GenerateAppointmentsFromVaccineSuggestions(Guid childId, DateTime startDate)
-    {
-        try
-        {
-            _logger.Info($"Received request to generate appointments from vaccine suggestions for child ID: {childId}");
-
-            var appointments = await _appointmentService.GenerateAppointmentsFromVaccineSuggestions(childId, startDate);
-
-            var appointmentDTOs = appointments.Select(a => new AppointmentDTO
-            {
-                Id = a.Id,
-                ChildId = a.ChildId,
-                AppointmentDate = a.AppointmentDate,
-                Status = a.Status,
-                VaccineType = a.VaccineType,
-                VaccineIds = a.AppointmentsVaccines.Select(av => av.VaccineId ?? Guid.Empty).ToList()
-            }).ToList();
-
-            return Ok(new ApiResult<IEnumerable<AppointmentDTO>>
-            {
-                IsSuccess = true,
-                Message = "Appointments generated successfully.",
-                Data = appointmentDTOs
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error while generating appointments: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while generating appointments. Please try again later."
-            });
-        }
-    }
-
 
     [HttpGet("child/{childId}")]
     [Authorize]
@@ -201,40 +115,6 @@ public class AppointmentController : ControllerBase
             {
                 IsSuccess = false,
                 Message = "An error occurred while retrieving the appointment details. Please try again later."
-            });
-        }
-    }
-
-
-    [HttpGet]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResult<Pagination<CreateAppointmentDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAppointmentByParent([FromQuery] PaginationParameter pagination)
-    {
-        try
-        {
-            _logger.Info("Received request to get appointment list.");
-            Guid parentId = _claimsService.GetCurrentUserId;
-            var appointment = await _appointmentService.GetAppointmentByParent(parentId, pagination);
-
-            _logger.Success($"Fetched {appointment.Count} appointment successfully.");
-
-            return Ok(new ApiResult<Pagination<CreateAppointmentDto>>
-            {
-                IsSuccess = true,
-                Message = "Appointment list retrieved successfully.",
-                Data = appointment
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error while fetching appointment: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while retrieving the appointment list. Please try again later."
             });
         }
     }
