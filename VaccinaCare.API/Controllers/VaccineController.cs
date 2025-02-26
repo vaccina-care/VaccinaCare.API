@@ -41,9 +41,10 @@ public class VaccineController : ControllerBase
     [HttpGet("check-eligibility")]
     public async Task<IActionResult> CheckChildEligibility([FromQuery] Guid childId, [FromQuery] Guid vaccineId)
     {
-        var result = await _vaccineService.CanChildReceiveVaccine(childId, vaccineId);
-        return Ok(new { childId, vaccineId, canReceive = result });
+        var (canReceive, message) = await _vaccineService.CanChildReceiveVaccine(childId, vaccineId);
+        return Ok(new { childId, vaccineId, canReceive, message });
     }
+
 
     /// <summary>
     /// Xác định mũi tiếp theo của vaccine mà trẻ cần tiêm.
@@ -160,6 +161,7 @@ public class VaccineController : ControllerBase
             {
                 return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
             }
+
             return Ok(ApiResult<VaccineDTO>.Success(vaccine, "Get vaccine details successfully"));
         }
         catch (Exception ex)
@@ -167,7 +169,6 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
         }
     }
-
 
 
     [HttpPut("{id}")]
@@ -181,6 +182,7 @@ public class VaccineController : ControllerBase
         {
             return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
         }
+
         try
         {
             var updateVaccine = await _vaccineService.UpdateVaccine(id, vaccineDTO);
@@ -212,6 +214,7 @@ public class VaccineController : ControllerBase
             {
                 return BadRequest(ApiResult<object>.Error("400 - Vaccine deleting failed. Please check input data."));
             }
+
             return Ok(ApiResult<VaccineDTO>.Success(deletedVaccine, "Vaccine deleted successfully."));
         }
         catch (ValidationException ex)

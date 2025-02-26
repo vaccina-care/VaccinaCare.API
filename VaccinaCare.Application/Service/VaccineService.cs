@@ -31,27 +31,55 @@ public class VaccineService : IVaccineService
         return packageDetails.Any();
     }
 
-    /// <summary>
-    /// Kiểm tra thông tin sức khỏe của trẻ có phù hợp với vaccine không.
-    /// </summary>
-    public async Task<bool> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
+    public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
     {
         var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
         var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
 
-        if (child == null || vaccine == null)
-            return false;
-
-        if (vaccine.ForBloodType.HasValue && vaccine.ForBloodType != child.BloodType)
-            return false;
-        if ((vaccine.AvoidChronic == true && child.HasChronicIllnesses) ||
-            (vaccine.AvoidAllergy == true && child.HasAllergies))
+        if (child == null)
         {
-            return false;
+            var message = $"Child ID {childId} not found.";
+            _logger.Error(message);
+            return (false, message);
         }
 
-        return true;
+        if (vaccine == null)
+        {
+            var message = $"Vaccine ID {vaccineId} not found.";
+            _logger.Error(message);
+            return (false, message);
+        }
+
+        // Kiểm tra nhóm máu
+        if (vaccine.ForBloodType.HasValue && vaccine.ForBloodType != child.BloodType)
+        {
+            var message = $"Child {child.FullName} has blood type {child.BloodType}, which is incompatible with vaccine ID {vaccineId} (requires {vaccine.ForBloodType}).";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        // Kiểm tra bệnh mãn tính
+        if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
+        {
+            var message = $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        // Kiểm tra dị ứng
+        if (vaccine.AvoidAllergy == true && child.HasAllergies)
+        {
+            var message = $"Child {child.FullName} has allergies, which makes vaccine ID {vaccineId} unsafe.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        var successMessage = $"Child {child.FullName} is eligible for vaccine ID {vaccineId}.";
+        _logger.Success(successMessage);
+        return (true, successMessage);
     }
+
+
 
     /// <summary>
     /// Kiểm tra xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
