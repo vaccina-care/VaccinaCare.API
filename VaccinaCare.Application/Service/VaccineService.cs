@@ -56,7 +56,8 @@ public class VaccineService : IVaccineService
         // Kiểm tra nhóm máu
         if (vaccine.ForBloodType.HasValue && vaccine.ForBloodType != child.BloodType)
         {
-            var message = $"Child {child.FullName} has blood type {child.BloodType}, which is incompatible with vaccine ID {vaccineId} (requires {vaccine.ForBloodType}).";
+            var message =
+                $"Child {child.FullName} has blood type {child.BloodType}, which is incompatible with vaccine ID {vaccineId} (requires {vaccine.ForBloodType}).";
             _logger.Warn(message);
             return (false, message);
         }
@@ -64,7 +65,8 @@ public class VaccineService : IVaccineService
         // Kiểm tra bệnh mãn tính
         if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
         {
-            var message = $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
+            var message =
+                $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
             _logger.Warn(message);
             return (false, message);
         }
@@ -95,9 +97,11 @@ public class VaccineService : IVaccineService
 
         if (records == null || !records.Any())
         {
-            _logger.Warn($"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
+            _logger.Warn(
+                $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
             return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
         }
+
         int lastDoseNumber = records.Max(r => r.DoseNumber);
         int nextDose = lastDoseNumber + 1;
 
@@ -109,40 +113,73 @@ public class VaccineService : IVaccineService
 
     /// <summary>
     /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    /// - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
+    /// - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
+    ///   kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
+    /// - Nếu khoảng cách không đủ → trả về false.
+    /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
     public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
         DateTime appointmentDate)
     {
+        _logger.Info(
+            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
+
         foreach (var bookedVaccineId in bookedVaccineIds)
         {
+            _logger.Info(
+                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
+
+            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
             var rule = await _unitOfWork.VaccineIntervalRulesRepository
                 .FirstOrDefaultAsync(r =>
                     (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
                     (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
 
+            // Nếu có quy tắc xác định
             if (rule != null)
             {
-                if (!rule.CanBeGivenTogether)
-                    return false;
+                _logger.Info(
+                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
 
+                // Nếu hai loại vaccine không thể tiêm chung, trả về false
+                if (!rule.CanBeGivenTogether)
+                {
+                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
+                    return false;
+                }
+
+                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
                 if (rule.MinIntervalDays > 0)
                 {
+                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
                     var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
                         .FirstOrDefaultAsync(a =>
                             a.VaccineId == bookedVaccineId &&
                             a.Appointment.AppointmentDate.HasValue &&
                             a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
 
+                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
                     if (lastAppointment != null)
+                    {
+                        _logger.Info(
+                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
                         return false;
+                    }
                 }
+            }
+            else
+            {
+                _logger.Info(
+                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
             }
         }
 
+        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
         return true;
     }
 
-    
+
     //CRUD Vaccines
     public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy,
         bool isDescending, int page, int pageSize)
