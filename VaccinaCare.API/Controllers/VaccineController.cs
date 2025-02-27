@@ -25,61 +25,6 @@ public class VaccineController : ControllerBase
     }
 
 
-    /// <summary>
-    /// Kiểm tra xem danh sách vaccine có nằm trong một package không.
-    /// </summary>
-    [HttpPost("check-vaccine-package")]
-    public async Task<IActionResult> CheckVaccinePackage([FromBody] CheckVaccinesDto request)
-    {
-        if (request.VaccineIds == null || !request.VaccineIds.Any())
-        {
-            return BadRequest("Danh sách vaccine không được trống.");
-        }
-
-        var isInPackage = await _vaccineService.IsVaccineInPackage(request.VaccineIds);
-
-        if (isInPackage)
-        {
-            return Ok(new { message = "Các vaccine này thuộc một gói vaccine. Bạn nên đặt gói để có giá ưu đãi hơn.", isInPackage = true });
-        }
-        else
-        {
-            return Ok(new { message = "Bạn có thể đặt lẻ các vaccine này.", isInPackage = false });
-        }
-    }
-
-    /// <summary>
-    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
-    /// </summary>
-    [HttpGet("check-eligibility")]
-    public async Task<IActionResult> CheckChildEligibility([FromQuery] Guid childId, [FromQuery] Guid vaccineId)
-    {
-        var (canReceive, message) = await _vaccineService.CanChildReceiveVaccine(childId, vaccineId);
-        return Ok(new { childId, vaccineId, canReceive, message });
-    }
-
-
-    /// <summary>
-    /// Xác định mũi tiếp theo của vaccine mà trẻ cần tiêm.
-    /// </summary>
-    [HttpGet("next-dose")]
-    public async Task<IActionResult> GetNextDoseNumber([FromQuery] Guid childId, [FromQuery] Guid vaccineId)
-    {
-        var nextDose = await _vaccineService.GetNextDoseNumber(childId, vaccineId);
-        return Ok(new { childId, vaccineId, nextDose });
-    }
-
-    /// <summary>
-    /// Kiểm tra vaccine có thể tiêm chung với các vaccine khác không.
-    /// </summary>
-    [HttpPost("check-compatibility")]
-    public async Task<IActionResult> CheckVaccineCompatibility([FromBody] CheckCompatibilityRequest request)
-    {
-        var isCompatible = await _vaccineService.CheckVaccineCompatibility(
-            request.VaccineId, request.BookedVaccineIds, request.AppointmentDate);
-        return Ok(new { request.VaccineId, request.BookedVaccineIds, request.AppointmentDate, isCompatible });
-    }
-
     [Authorize(Policy = "StaffPolicy")]
     [HttpPost("create")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
