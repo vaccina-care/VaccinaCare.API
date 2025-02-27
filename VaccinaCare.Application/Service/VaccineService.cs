@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Reflection.PortableExecutable;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
@@ -22,109 +21,339 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
     }
 
-    public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
+    /// <summary>
+    /// Kiểm tra xem tất cả vaccine trong danh sách có thuộc một package đã có sẵn không.
+    /// Nếu tất cả vaccine truyền vào đều thuộc package thì chặn đặt lẻ.
+    /// </summary>
+    public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
     {
-        _logger.Info($"Starting the update process for vaccine with ID: {id}");
-
-        if (vaccineDTO == null)
+        if (vaccineIds == null || vaccineIds.Count == 0)
         {
-            _logger.Warn("Update failed: VaccineDTO is null.");
-            throw new ArgumentNullException(nameof(vaccineDTO));
+            return false;
         }
 
         try
         {
-            _logger.Info($"Fetching vaccine details for ID: {id}");
-            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+            // Lấy tất cả các package có chứa vaccine trong danh sách vaccineIds
+            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
+                .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
 
-            if (vaccine == null)
+            if (!packageDetails.Any())
             {
-                _logger.Warn($"Vaccine with ID: {id} not found in the database.");
-                throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
+                return false;
             }
 
-            _logger.Info(
-                $"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
-            );
+            // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
+            var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
 
-            // Updating only non-null fields
-            vaccine.VaccineName = !string.IsNullOrWhiteSpace(vaccineDTO.VaccineName) ? vaccineDTO.VaccineName : vaccine.VaccineName;
-            vaccine.Description = !string.IsNullOrWhiteSpace(vaccineDTO.Description) ? vaccineDTO.Description : vaccine.Description;
-            vaccine.PicUrl = !string.IsNullOrWhiteSpace(vaccineDTO.PicUrl) ? vaccineDTO.PicUrl : vaccine.PicUrl;
-            vaccine.Type = !string.IsNullOrWhiteSpace(vaccineDTO.Type) ? vaccineDTO.Type : vaccine.Type;
-            vaccine.Price = vaccineDTO.Price >= 0 ? vaccineDTO.Price : vaccine.Price;
-            vaccine.RequiredDoses = vaccineDTO.RequiredDoses >=0 ? vaccineDTO.RequiredDoses : vaccine.RequiredDoses;
-            vaccine.ForBloodType = vaccineDTO.ForBloodType ?? vaccine.ForBloodType;
-            vaccine.AvoidChronic = vaccineDTO.AvoidChronic ?? vaccine.AvoidChronic;
-            vaccine.AvoidAllergy = vaccineDTO.AvoidAllergy ?? vaccine.AvoidAllergy;
-            vaccine.HasDrugInteraction = vaccineDTO.HasDrugInteraction ?? vaccine.HasDrugInteraction;
-            vaccine.HasSpecialWarning = vaccineDTO.HasSpecialWarning ?? vaccine.HasSpecialWarning;
-
-            _logger.Info(
-                $"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
-            );
-
-            await _unitOfWork.VaccineRepository.Update(vaccine);
-            await _unitOfWork.SaveChangesAsync();
-
-            _logger.Success($"Vaccine with ID {id} updated successfully.");
-
-            var updatedVaccineDTO = new VaccineDTO
+            foreach (var packageId in packageIds)
             {
+                // Lấy danh sách vaccine của package này
+                var packageVaccineIds = await _unitOfWork.VaccinePackageDetailRepository
+                    .GetAllAsync(vpd => vpd.PackageId == packageId);
+
+                var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
+
+                // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
+                if (packageVaccineList.All(v => vaccineIds.Contains(v)))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"[IsVaccineInPackage] Exception occurred: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
+    /// </summary>
+    public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
+    {
+        var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+        var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+
+        if (child == null)
+        {
+            var message = $"Child ID {childId} not found.";
+            _logger.Error(message);
+            return (false, message);
+        }
+
+        if (vaccine == null)
+        {
+            var message = $"Vaccine ID {vaccineId} not found.";
+            _logger.Error(message);
+            return (false, message);
+        }
+
+        // Kiểm tra bệnh mãn tính
+        if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
+        {
+            var message =
+                $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        // Kiểm tra dị ứng
+        if (vaccine.AvoidAllergy == true && child.HasAllergies)
+        {
+            var message = $"Child {child.FullName} has allergies, which makes vaccine ID {vaccineId} unsafe.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        var successMessage = $"Child {child.FullName} is eligible for vaccine ID {vaccineId}.";
+        _logger.Success(successMessage);
+        return (true, successMessage);
+    }
+
+    /// <summary>
+    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
+    /// </summary>
+    public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
+    {
+        _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
+
+        // Lấy lịch sử tiêm chủng của trẻ với vaccine này
+        var records = await _unitOfWork.VaccinationRecordRepository
+            .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
+
+        if (records == null || !records.Any())
+        {
+            _logger.Warn(
+                $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
+            return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
+        }
+
+        int lastDoseNumber = records.Max(r => r.DoseNumber);
+        int nextDose = lastDoseNumber + 1;
+
+        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
+
+        return nextDose;
+    }
+
+
+    /// <summary>
+    /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    /// - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
+    /// - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
+    ///   kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
+    /// - Nếu khoảng cách không đủ → trả về false.
+    /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
+    /// </summary>
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
+        DateTime appointmentDate)
+    {
+        _logger.Info(
+            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
+
+        foreach (var bookedVaccineId in bookedVaccineIds)
+        {
+            _logger.Info(
+                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
+
+            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                .FirstOrDefaultAsync(r =>
+                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
+
+            // Nếu có quy tắc xác định
+            if (rule != null)
+            {
+                _logger.Info(
+                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
+
+                // Nếu hai loại vaccine không thể tiêm chung, trả về false
+                if (!rule.CanBeGivenTogether)
+                {
+                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
+                    return false;
+                }
+
+                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
+                if (rule.MinIntervalDays > 0)
+                {
+                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
+                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                        .FirstOrDefaultAsync(a =>
+                            a.VaccineId == bookedVaccineId &&
+                            a.Appointment.AppointmentDate.HasValue &&
+                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
+
+                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
+                    if (lastAppointment != null)
+                    {
+                        _logger.Info(
+                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                _logger.Info(
+                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
+            }
+        }
+
+        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
+        return true;
+    }
+
+
+    //CRUD Vaccines
+    public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy,
+        bool isDescending, int page, int pageSize)
+    {
+        try
+        {
+            var query = await _unitOfWork.VaccineRepository.GetAllAsync();
+            var queryList = query.ToList();
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                string searchLower = search.Trim().ToLower();
+                queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(type))
+            {
+                queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
+            }
+            //Sorting
+
+            if (!string.IsNullOrWhiteSpace(sortBy))
+            {
+                switch (sortBy.ToLower())
+                {
+                    case "vaccinename":
+                        queryList = isDescending
+                            ? queryList.OrderByDescending(v => v.VaccineName).ToList()
+                            : queryList.OrderBy(v => v.VaccineName).ToList();
+                        break;
+                    case "price":
+                        queryList = isDescending
+                            ? queryList.OrderByDescending(v => v.Price).ToList()
+                            : queryList.OrderBy(v => v.Price).ToList();
+                        break;
+                    case "type":
+                        queryList = isDescending
+                            ? queryList.OrderByDescending(v => v.Type).ToList()
+                            : queryList.OrderBy(v => v.Type).ToList();
+                        break;
+                    default:
+                        _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
+                        queryList = queryList.OrderBy(v => v.VaccineName).ToList();
+                        break;
+                }
+            }
+
+            // Pagination
+            var totalItems = queryList.Count();
+            var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            // Mapping to DTOs
+            var vaccineDTOs = vaccines.Select(v => new VaccineDTO
+            {
+                Id = v.Id,
+                VaccineName = v.VaccineName,
+                Description = v.Description,
+                PicUrl = v.PicUrl,
+                Type = v.Type,
+                Price = v.Price,
+                RequiredDoses = v.RequiredDoses,
+                DoseIntervalDays = v.DoseIntervalDays,
+                ForBloodType = v.ForBloodType,
+                AvoidChronic = v.AvoidChronic,
+                AvoidAllergy = v.AvoidAllergy,
+                HasDrugInteraction = v.HasDrugInteraction,
+                HasSpecialWarning = v.HasSpecialWarning
+            }).ToList();
+
+            var result = new PagedResult<VaccineDTO>(vaccineDTOs, totalItems, page, pageSize);
+
+            return result;
+        }
+        catch (Exception)
+        {
+            throw;
+        }
+    }
+
+    public async Task<VaccineDTO> GetVaccineById(Guid id)
+    {
+        _logger.Info($"Fetching vaccine with ID: {id}");
+        try
+        {
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+            if (vaccine == null)
+            {
+                _logger.Warn($"Vaccine with ID {id} not found.");
+                return null;
+            }
+
+            _logger.Info($"Vaccine with ID {id} found: {vaccine.VaccineName}");
+
+            return new VaccineDTO
+            {
+                Id = vaccine.Id,
                 VaccineName = vaccine.VaccineName,
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
                 Type = vaccine.Type,
                 Price = vaccine.Price,
                 RequiredDoses = vaccine.RequiredDoses,
+                DoseIntervalDays = vaccine.DoseIntervalDays,
                 ForBloodType = vaccine.ForBloodType,
                 AvoidChronic = vaccine.AvoidChronic,
                 AvoidAllergy = vaccine.AvoidAllergy,
                 HasDrugInteraction = vaccine.HasDrugInteraction,
                 HasSpecialWarning = vaccine.HasSpecialWarning
             };
-
-            return updatedVaccineDTO;
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Update failed: {ex.Message}");
-            throw;
         }
         catch (Exception ex)
         {
-            _logger.Error($"500 - Error during vaccine update for ID {id}: {ex.Message}");
+            _logger.Error($"Failed to fetch vaccine with ID {id}. Error: {ex.Message}");
             throw;
         }
     }
 
-    public async Task<CreateVaccineDTO> CreateVaccine(CreateVaccineDTO vaccineDTO)
+    public async Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto)
     {
         _logger.Info("Starting to create a new vaccine.");
 
         try
         {
             _logger.Info(
-                $"Received VaccineDTO with VaccineName: {vaccineDTO.VaccineName}, Type: {vaccineDTO.Type}, Price: {vaccineDTO.Price}, BloodType: {vaccineDTO.ForBloodType}, AvoidChronic: {vaccineDTO.AvoidChronic}, AvoidAllergy: {vaccineDTO.AvoidAllergy}, HasDrugInteraction: {vaccineDTO.HasDrugInteraction}, HasSpecialWarning: {vaccineDTO.HasSpecialWarning}"
+                $"Received VaccineDTO with VaccineName: {createVaccineDto.VaccineName}, Type: {createVaccineDto.Type}, Price: {createVaccineDto.Price}, BloodType: {createVaccineDto.ForBloodType}, AvoidChronic: {createVaccineDto.AvoidChronic}, AvoidAllergy: {createVaccineDto.AvoidAllergy}, HasDrugInteraction: {createVaccineDto.HasDrugInteraction}, HasSpecialWarning: {createVaccineDto.HasSpecialWarning}"
             );
 
             var validationErrors = new List<string>();
 
-            if (string.IsNullOrWhiteSpace(vaccineDTO.VaccineName))
+            if (string.IsNullOrWhiteSpace(createVaccineDto.VaccineName))
                 validationErrors.Add("Vaccine name is required.");
 
-            if (vaccineDTO.Price <= 0)
+            if (createVaccineDto.Price <= 0)
                 validationErrors.Add("Price must be greater than zero.");
 
-            if (string.IsNullOrWhiteSpace(vaccineDTO.Description))
+            if (string.IsNullOrWhiteSpace(createVaccineDto.Description))
                 validationErrors.Add("Description is required.");
 
-            if (string.IsNullOrWhiteSpace(vaccineDTO.Type))
+            if (string.IsNullOrWhiteSpace(createVaccineDto.Type))
                 validationErrors.Add("Type is required.");
 
-            if (string.IsNullOrWhiteSpace(vaccineDTO.PicUrl))
+            if (string.IsNullOrWhiteSpace(createVaccineDto.PicUrl))
                 validationErrors.Add("PicUrl is required.");
-            if (vaccineDTO.RequiredDoses <= 0)
+            if (createVaccineDto.RequiredDoses <= 0)
                 validationErrors.Add("RequiredDoses must be greater than zero.");
             if (validationErrors.Any())
             {
@@ -134,25 +363,27 @@ public class VaccineService : IVaccineService
 
             var vaccine = new Vaccine
             {
-                VaccineName = vaccineDTO.VaccineName,
-                Description = vaccineDTO.Description,
-                PicUrl = vaccineDTO.PicUrl,
-                Type = vaccineDTO.Type,
-                Price = vaccineDTO.Price,
-                RequiredDoses = vaccineDTO.RequiredDoses,
-                ForBloodType = vaccineDTO.ForBloodType,
-                AvoidChronic = vaccineDTO.AvoidChronic,
-                AvoidAllergy = vaccineDTO.AvoidAllergy,
-                HasDrugInteraction = vaccineDTO.HasDrugInteraction,
-                HasSpecialWarning = vaccineDTO.HasSpecialWarning
+                VaccineName = createVaccineDto.VaccineName,
+                Description = createVaccineDto.Description,
+                PicUrl = createVaccineDto.PicUrl,
+                Type = createVaccineDto.Type,
+                Price = createVaccineDto.Price,
+                RequiredDoses = createVaccineDto.RequiredDoses,
+                DoseIntervalDays = createVaccineDto.DoseIntervalDays,
+                ForBloodType = createVaccineDto.ForBloodType,
+                AvoidChronic = createVaccineDto.AvoidChronic,
+                AvoidAllergy = createVaccineDto.AvoidAllergy,
+                HasDrugInteraction = createVaccineDto.HasDrugInteraction,
+                HasSpecialWarning = createVaccineDto.HasSpecialWarning
             };
 
-            _logger.Info($"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+            _logger.Info(
+                $"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
 
             await _unitOfWork.VaccineRepository.AddAsync(vaccine);
             await _unitOfWork.SaveChangesAsync();
 
-            var createdVaccineDTO = new CreateVaccineDTO
+            var createdVaccineDTO = new CreateVaccineDto
             {
                 VaccineName = vaccine.VaccineName,
                 Description = vaccine.Description,
@@ -201,9 +432,11 @@ public class VaccineService : IVaccineService
 
             if (vaccinePackageDetails.Any())
             {
-                _logger.Info($"Found {vaccinePackageDetails.Count} VaccinePackageDetails associated with Vaccine ID: {id}. Soft deleting...");
+                _logger.Info(
+                    $"Found {vaccinePackageDetails.Count} VaccinePackageDetails associated with Vaccine ID: {id}. Soft deleting...");
 
-                bool packageDetailDeleteResult = await _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(vaccinePackageDetails);
+                bool packageDetailDeleteResult =
+                    await _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(vaccinePackageDetails);
                 if (!packageDetailDeleteResult)
                 {
                     _logger.Warn($"Failed to soft delete VaccinePackageDetails for Vaccine ID: {id}");
@@ -217,6 +450,7 @@ public class VaccineService : IVaccineService
                 _logger.Warn($"Vaccine with ID {id} could not be deleted.");
                 return null;
             }
+
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Success($"Vaccine with ID {id} ('{vaccine.VaccineName}') deleted successfully.");
@@ -246,87 +480,62 @@ public class VaccineService : IVaccineService
         }
     }
 
-    public async Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page, int pageSize)
+    public async Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO)
     {
-        var query = await _unitOfWork.VaccineRepository.GetAllAsync();
-        var queryList = query.ToList();
-
-        // Filtering
-        if (!string.IsNullOrWhiteSpace(search))
+        if (vaccineDTO == null)
         {
-            string searchLower = search.Trim().ToLower();
-            queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
+            _logger.Warn("Update failed: VaccineDTO is null.");
+            throw new ArgumentNullException(nameof(vaccineDTO));
         }
 
-        if (!string.IsNullOrWhiteSpace(type))
-        {
-            queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
-        }
-        //Sorting
+        #region try-catch
 
-        if (!string.IsNullOrWhiteSpace(sortBy))
-        {
-            switch (sortBy.ToLower())
-            {
-                case "vaccinename":
-                    queryList = isDescending ? queryList.OrderByDescending(v => v.VaccineName).ToList() : queryList.OrderBy(v => v.VaccineName).ToList();
-                    break;
-                case "price":
-                    queryList = isDescending ? queryList.OrderByDescending(v => v.Price).ToList() : queryList.OrderBy(v => v.Price).ToList();
-                    break;
-                case "type":
-                    queryList = isDescending ? queryList.OrderByDescending(v => v.Type).ToList() : queryList.OrderBy(v => v.Type).ToList();
-                    break;
-                default:
-                    _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
-                    queryList = queryList.OrderBy(v => v.VaccineName).ToList();
-                    break;
-            }
-        }
-
-        // Pagination
-        var totalItems = queryList.Count();
-        var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-        // Mapping to DTOs
-        var vaccineDTOs = vaccines.Select(v => new VaccineDTO
-        {
-            Id = v.Id,
-            VaccineName = v.VaccineName,
-            Description = v.Description,
-            PicUrl = v.PicUrl,
-            Type = v.Type,
-            Price = v.Price,
-            RequiredDoses = v.RequiredDoses,
-            ForBloodType = v.ForBloodType,
-            AvoidChronic = v.AvoidChronic,
-            AvoidAllergy = v.AvoidAllergy,
-            HasDrugInteraction = v.HasDrugInteraction,
-            HasSpecialWarning = v.HasSpecialWarning
-        }).ToList();
-
-        var result = new PagedResult<VaccineDTO>(vaccineDTOs, totalItems, page, pageSize);
-
-        return result;
-    }
-
-    public async Task<VaccineDTO> GetVaccineById(Guid id)
-    {
-        _logger.Info($"Fetching vaccine with ID: {id}");
         try
         {
+            _logger.Info($"Fetching vaccine details for ID: {id}");
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(id);
+
             if (vaccine == null)
             {
-                _logger.Warn($"Vaccine with ID {id} not found.");
-                return null;
+                _logger.Warn($"Vaccine with ID: {id} not found in the database.");
+                throw new KeyNotFoundException($"Vaccine with ID {id} not found.");
             }
 
-            _logger.Info($"Vaccine with ID {id} found: {vaccine.VaccineName}");
+            _logger.Info(
+                $"Vaccine found. Current details: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
+            );
 
-            return new VaccineDTO
+            // Updating only non-null fields
+            vaccine.VaccineName = !string.IsNullOrWhiteSpace(vaccineDTO.VaccineName)
+                ? vaccineDTO.VaccineName
+                : vaccine.VaccineName;
+            vaccine.Description = !string.IsNullOrWhiteSpace(vaccineDTO.Description)
+                ? vaccineDTO.Description
+                : vaccine.Description;
+            vaccine.PicUrl = !string.IsNullOrWhiteSpace(vaccineDTO.PicUrl) ? vaccineDTO.PicUrl : vaccine.PicUrl;
+            vaccine.Type = !string.IsNullOrWhiteSpace(vaccineDTO.Type) ? vaccineDTO.Type : vaccine.Type;
+            vaccine.Price = vaccineDTO.Price >= 0 ? vaccineDTO.Price : vaccine.Price;
+            vaccine.RequiredDoses = vaccineDTO.RequiredDoses >= 0 ? vaccineDTO.RequiredDoses : vaccine.RequiredDoses;
+            vaccine.DoseIntervalDays = vaccineDTO.DoseIntervalDays >= 0
+                ? vaccineDTO.DoseIntervalDays
+                : vaccine.DoseIntervalDays;
+            vaccine.ForBloodType = vaccineDTO.ForBloodType ?? vaccine.ForBloodType;
+            vaccine.AvoidChronic = vaccineDTO.AvoidChronic ?? vaccine.AvoidChronic;
+            vaccine.AvoidAllergy = vaccineDTO.AvoidAllergy ?? vaccine.AvoidAllergy;
+            vaccine.HasDrugInteraction = vaccineDTO.HasDrugInteraction ?? vaccine.HasDrugInteraction;
+            vaccine.HasSpecialWarning = vaccineDTO.HasSpecialWarning ?? vaccine.HasSpecialWarning;
+
+            _logger.Info(
+                $"Updating vaccine to: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}, BloodType = {vaccine.ForBloodType}, AvoidChronic = {vaccine.AvoidChronic}, AvoidAllergy = {vaccine.AvoidAllergy}, HasDrugInteraction = {vaccine.HasDrugInteraction}, HasSpecialWarning = {vaccine.HasSpecialWarning}"
+            );
+
+            await _unitOfWork.VaccineRepository.Update(vaccine);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"Vaccine with ID {id} updated successfully.");
+
+            var updatedVaccineDTO = new VaccineDTO
             {
-                Id = vaccine.Id,
                 VaccineName = vaccine.VaccineName,
                 Description = vaccine.Description,
                 PicUrl = vaccine.PicUrl,
@@ -339,11 +548,20 @@ public class VaccineService : IVaccineService
                 HasDrugInteraction = vaccine.HasDrugInteraction,
                 HasSpecialWarning = vaccine.HasSpecialWarning
             };
+
+            return updatedVaccineDTO;
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.Warn($"Update failed: {ex.Message}");
+            throw;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Failed to fetch vaccine with ID {id}. Error: {ex.Message}");
+            _logger.Error($"500 - Error during vaccine update for ID {id}: {ex.Message}");
             throw;
         }
+
+        #endregion
     }
 }

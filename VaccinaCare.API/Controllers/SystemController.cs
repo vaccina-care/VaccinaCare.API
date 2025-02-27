@@ -451,7 +451,6 @@ namespace VaccinaCare.API.Controllers
             return vaccines;
         }
 
-
         private async Task ClearDatabase(VaccinaCareDbContext context)
         {
             using var transaction = await context.Database.BeginTransactionAsync();

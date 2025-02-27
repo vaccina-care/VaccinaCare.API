@@ -22,6 +22,7 @@ namespace VaccinaCare.Application.Service
             _claimsService = claimsService;
         }
 
+        
         public async Task<VaccinePackageDTO> CreateVaccinePackageAsync(CreateVaccinePackageDTO dto)
         {
             _loggerService.Info($"Creating Vaccine Package: {dto.PackageName}");

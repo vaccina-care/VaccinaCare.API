@@ -1,4 +1,4 @@
-using VaccinaCare.Application.Interface;
+﻿using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
@@ -20,8 +20,13 @@ public class VaccineSuggestionService : IVaccineSuggestionService
         _appointmentService = appointmentService;
     }
 
-
-    public async Task<bool> SaveVaccineSuggestionAsync(Guid childId, List<Guid> vaccineIds)
+    /// <summary>
+    /// Sau khi tư vấn, staff sẽ cho Parent 1 list các vaccine để chích và User sẽ xài List này để book Appointment
+    /// </summary>
+    /// <param name="childId"></param>
+    /// <param name="vaccineIds"></param>
+    /// <returns></returns>
+    public async Task<List<VaccineSuggestion>> SaveVaccineSuggestionAsync(Guid childId, List<Guid> vaccineIds)
     {
         try
         {
@@ -89,7 +94,7 @@ public class VaccineSuggestionService : IVaccineSuggestionService
             }
 
             _logger.Success($"Vaccine suggestions saved successfully for child ID: {childId}");
-            return true;
+            return vaccineSuggestions;
         }
         catch (Exception ex)
         {

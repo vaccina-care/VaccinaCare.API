@@ -27,6 +27,54 @@ public class AppointmentController : ControllerBase
         _claimsService = claimsService;
     }
 
+    [HttpPost("booking/single-vaccines")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GenerateAppointments([FromBody] GenerateAppointmentsRequest request)
+    {
+        try
+        {
+            Guid parentId = _claimsService.GetCurrentUserId;
+
+            if (request.VaccineIds == null || !request.VaccineIds.Any())
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Danh sách vaccine không hợp lệ."
+                });
+            }
+            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(
+                request.VaccineIds, request.ChildId, parentId, request.StartDate);
+
+            return Ok(new ApiResult<List<AppointmentDTO>>
+            {
+                IsSuccess = true,
+                Message = "Appointments created successfully.",
+                Data = result
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.Error($"Validation error: {ex.Message}");
+            return BadRequest(new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Internal server error. Please try again later."
+            });
+        }
+    }
 
     [HttpGet("child/{childId}")]
     [Authorize]
@@ -67,40 +115,6 @@ public class AppointmentController : ControllerBase
             {
                 IsSuccess = false,
                 Message = "An error occurred while retrieving the appointment details. Please try again later."
-            });
-        }
-    }
-
-
-    [HttpGet]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResult<Pagination<CreateAppointmentDto>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAppointmentByParent([FromQuery] PaginationParameter pagination)
-    {
-        try
-        {
-            _logger.Info("Received request to get appointment list.");
-            Guid parentId = _claimsService.GetCurrentUserId;
-            var appointment = await _appointmentService.GetAppointmentByParent(parentId, pagination);
-
-            _logger.Success($"Fetched {appointment.Count} appointment successfully.");
-
-            return Ok(new ApiResult<Pagination<CreateAppointmentDto>>
-            {
-                IsSuccess = true,
-                Message = "Appointment list retrieved successfully.",
-                Data = appointment
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error while fetching appointment: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while retrieving the appointment list. Please try again later."
             });
         }
     }

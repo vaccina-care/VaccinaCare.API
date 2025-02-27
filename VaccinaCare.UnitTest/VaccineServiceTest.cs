@@ -19,7 +19,6 @@ namespace VaccinaCare.UnitTest
         private readonly IVaccineService _vaccineService;
         private readonly Mock<IUnitOfWork> _unitOfWorkMock;
         private readonly Mock<IClaimsService> _claimsMock;
-
         public VaccineServiceTest()
         {
             _loggerMock = new Mock<ILoggerService>();
@@ -28,14 +27,12 @@ namespace VaccinaCare.UnitTest
 
             _vaccineService = new VaccineService(_unitOfWorkMock.Object, _loggerMock.Object, _claimsMock.Object);
         }
-
-
         [Fact]
         //Test case 1 : Create Vaccine Successfully
         public async Task CreateVaccine_Successfully()
         {
             //Arrange
-            var vaccineDTO = new CreateVaccineDTO()
+            var vaccineDTO = new CreateVaccineDto
             {
                 VaccineName = "Test Vaccine",
                 Description = "Test Description",
@@ -77,7 +74,7 @@ namespace VaccinaCare.UnitTest
         public async Task CreateVaccine_MissingRequiredFields()
         {
             //Arrange
-            var vaccineDTO = new CreateVaccineDTO
+            var vaccineDTO = new CreateVaccineDto
             {
                 VaccineName = "", //Missing VaccineName
                 Description = "Test Description",
@@ -98,7 +95,7 @@ namespace VaccinaCare.UnitTest
         public async Task CreateVaccine_NegativePrice_ReturnsNull()
         {
             //Arrange
-            var vaccineDTO = new CreateVaccineDTO
+            var vaccineDTO = new CreateVaccineDto
             {
                 VaccineName = "COVID-19 Vaccine",
                 Description = "Effective for COVID-19",
@@ -402,7 +399,5 @@ namespace VaccinaCare.UnitTest
             // Assert
             Assert.Null(result); 
         }
-
-
     }
 }

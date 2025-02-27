@@ -6,9 +6,7 @@ public partial class VaccinationRecord : BaseEntity
     public Guid? VaccineId { get; set; }
     public DateTime? VaccinationDate { get; set; }
     public string? ReactionDetails { get; set; }
-
     public int DoseNumber { get; set; } // Số mũi đã tiêm
-
     public virtual Child? Child { get; set; }
     public virtual Vaccine? Vaccine { get; set; }
 }

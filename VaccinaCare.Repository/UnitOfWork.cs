@@ -16,6 +16,7 @@ namespace VaccinaCare.Repository
         private readonly IGenericRepository<VaccinePackage> _vaccinePackageRepository;
         private readonly IGenericRepository<VaccinePackageDetail> _vaccinePackageDetailRepository;
         private readonly IGenericRepository<VaccineSuggestion> _vaccineSuggestionRepository;
+        private readonly IGenericRepository<VaccinationRecord> _vaccinationRecordRepository;
         private readonly IGenericRepository<VaccineIntervalRules> _vaccineIntervalRules;
         private readonly IGenericRepository<AppointmentVaccineSuggestions> _appointmentVaccineSuggestionsRepository;
         private readonly IGenericRepository<AppointmentsVaccine> _appointmentsVaccineRepository;
@@ -29,8 +30,10 @@ namespace VaccinaCare.Repository
             IGenericRepository<VaccinePackageDetail> vaccinePackageDetailRepository,
             IGenericRepository<VaccineSuggestion> vaccineSuggestionRepository,
             IGenericRepository<VaccineIntervalRules> vaccineIntervalRules,
-            IGenericRepository<AppointmentVaccineSuggestions> appointmentVaccineSuggestionsRepository, 
-            IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository, IGenericRepository<Feedback> feedbackRepository)
+            IGenericRepository<AppointmentVaccineSuggestions> appointmentVaccineSuggestionsRepository,
+            IGenericRepository<VaccinationRecord> vaccinationRecordRepository,
+            IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository,
+            IGenericRepository<Feedback> feedbackRepository)
         {
             _dbContext = dbContext;
             _notificationRepository = notificationRepository;
@@ -45,6 +48,7 @@ namespace VaccinaCare.Repository
             _vaccineIntervalRules = vaccineIntervalRules;
             _appointmentVaccineSuggestionsRepository = appointmentVaccineSuggestionsRepository;
             _appointmentsVaccineRepository = appointmentsVaccineRepository;
+            _vaccinationRecordRepository = vaccinationRecordRepository;
             _feedbackRepository = feedbackRepository;
         }
 
@@ -60,11 +64,15 @@ namespace VaccinaCare.Repository
             _vaccinePackageDetailRepository;
 
         public IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository => _vaccineSuggestionRepository;
+        public IGenericRepository<VaccinationRecord> VaccinationRecordRepository => _vaccinationRecordRepository;
         public IGenericRepository<VaccineIntervalRules> VaccineIntervalRulesRepository => _vaccineIntervalRules;
 
-        public IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository => _appointmentVaccineSuggestionsRepository;
+        public IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository =>
+            _appointmentVaccineSuggestionsRepository;
+
         public IGenericRepository<AppointmentsVaccine> AppointmentsVaccineRepository => _appointmentsVaccineRepository;
         public IGenericRepository<Feedback> FeedbackRepository => _feedbackRepository;
+
         public Task<int> SaveChangesAsync()
         {
             try
