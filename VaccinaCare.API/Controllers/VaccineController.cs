@@ -25,56 +25,6 @@ public class VaccineController : ControllerBase
     }
 
 
-    [HttpPost("save-vaccine-suggestions")]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> SaveVaccineSuggestions([FromBody] SaveVaccineSuggestionDto request)
-    {
-        try
-        {
-            _logger.Info($"Received request to save vaccine suggestions for child ID: {request.ChildId}");
-
-            if (request == null || request.ChildId == Guid.Empty || request.VaccineIds == null ||
-                !request.VaccineIds.Any())
-            {
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Invalid request. Please provide a valid child ID and a list of vaccine IDs."
-                });
-            }
-
-            var result = await _vaccineSuggestionService.SaveVaccineSuggestionAsync(request.ChildId, request.VaccineIds);
-
-            if (!result)
-            {
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Failed to save vaccine suggestions."
-                });
-            }
-
-            return Ok(new ApiResult<object>
-            {
-                IsSuccess = true,
-                Message = "Vaccine suggestions saved successfully."
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error while saving vaccine suggestions: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while saving the vaccine suggestions. Please try again later."
-            });
-        }
-    }
-
-
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery] string? search,
@@ -202,6 +152,7 @@ public class VaccineController : ControllerBase
 
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
