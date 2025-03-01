@@ -3,6 +3,7 @@ using Microsoft.VisualBasic;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
+using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
@@ -15,14 +16,16 @@ public class ChildService : IChildService
     private readonly IClaimsService _claimsService;
     private readonly IVaccineSuggestionService _vaccineSuggestionService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
     public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService,
-        IVaccineSuggestionService vaccineSuggestionService)
+        IVaccineSuggestionService vaccineSuggestionService,INotificationService notificationService)
     {
         _loggerService = loggerService;
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _vaccineSuggestionService = vaccineSuggestionService;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -76,6 +79,14 @@ public class ChildService : IChildService
 
             _loggerService.Success($"Parent {parentId} successfully created child profile {child.Id}");
 
+            var notificationDTO = new NotificationForUserDTO
+            {
+                Title = "Child Profile Created!",
+                Content = "Your child's profile has been successfully created.",
+                Url = "",
+                UserId = parentId
+            };
+            await _notificationService.PushNotificationWhenUserUseService(parentId, notificationDTO);
             // Convert to ChildDto
             return new ChildDto
             {
