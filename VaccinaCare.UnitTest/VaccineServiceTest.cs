@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Moq;
@@ -9,6 +10,7 @@ using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Service;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.UnitTest
@@ -38,7 +40,14 @@ namespace VaccinaCare.UnitTest
                 Description = "Test Description",
                 PicUrl = "testpicurl.jpg",
                 Type = "COVID-19",
-                Price = 100
+                Price = 100,
+                RequiredDoses = 2,
+                DoseIntervalDays = 14, 
+                ForBloodType = BloodType.O, 
+                AvoidChronic = false,
+                AvoidAllergy = false,
+                HasDrugInteraction = false,
+                HasSpecialWarning = false
             };
 
             var vaccine = new Vaccine
@@ -47,7 +56,14 @@ namespace VaccinaCare.UnitTest
                 Description = vaccineDTO.Description,
                 Type = vaccineDTO.Type,
                 Price = vaccineDTO.Price,
-                PicUrl = vaccineDTO.PicUrl
+                PicUrl = vaccineDTO.PicUrl,
+                RequiredDoses = vaccineDTO.RequiredDoses,
+                DoseIntervalDays = vaccineDTO.DoseIntervalDays,
+                ForBloodType = vaccineDTO.ForBloodType,
+                AvoidChronic = vaccineDTO.AvoidChronic,
+                AvoidAllergy = vaccineDTO.AvoidAllergy,
+                HasDrugInteraction = vaccineDTO.HasDrugInteraction,
+                HasSpecialWarning = vaccineDTO.HasSpecialWarning,
             };
 
             _unitOfWorkMock.Setup(u => u.VaccineRepository.AddAsync(It.IsAny<Vaccine>()))
@@ -112,14 +128,16 @@ namespace VaccinaCare.UnitTest
         //Test case 4 : Update Vaccine - VaccineDTO Null
         public async Task UpdateVaccine_VaccineDTOIsNull_ThrowsArgumentNullException()
         {
-            //Arrange
+            // Arrange
             Guid vaccineId = Guid.NewGuid();
             VaccineDTO vaccineDTO = null; // VaccineDTO is null
 
-            //Act & Assert
+            // Act & Assert
             var exception = await Assert.ThrowsAsync<ArgumentNullException>(() => _vaccineService.UpdateVaccine(vaccineId, vaccineDTO));
-            Assert.Equal("Value cannot be null.", exception.Message);
+
+            Assert.Equal("vaccineDTO", exception.ParamName); // Kiểm tra đúng tham số null
         }
+
         [Fact]
         //Test case 5 : Update Vaccine - VaccineDTO Not Found
         public async Task UpdateVaccine_VaccineNotFound_ThrowsKeyNotFoundException()
@@ -284,10 +302,10 @@ namespace VaccinaCare.UnitTest
             Assert.Equal("Database error", exception.Message);
         }
         [Fact]
-        //Test case 10 : Delete Vaccine - Successfully
+        //Test case 10 :Delete Vaccine Successfully
         public async Task DeleteVaccine_Successfully()
         {
-            //Arrange
+            // Arrange
             var vaccineId = Guid.NewGuid();
             var vaccine = new Vaccine
             {
@@ -297,21 +315,67 @@ namespace VaccinaCare.UnitTest
                 PicUrl = "testpicurl.jpg",
                 Type = "COVID-19",
                 Price = 100,
-                IsDeleted = false
+                IsDeleted = false,
+                RequiredDoses = 2,
+                ForBloodType = BloodType.O, // ✅ Sửa lỗi kiểu dữ liệu
+                AvoidChronic = true,
+                AvoidAllergy = false,
+                HasDrugInteraction = false,
+                HasSpecialWarning = true
             };
-            _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId)).ReturnsAsync(vaccine);
-            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>())).ReturnsAsync(true);
+
+            var vaccinePackageDetails = new List<VaccinePackageDetail>
+    {
+        new VaccinePackageDetail { Id = Guid.NewGuid(), VaccineId = vaccineId },
+        new VaccinePackageDetail { Id = Guid.NewGuid(), VaccineId = vaccineId }
+    };
+
+            _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(
+                It.Is<Guid>(id => id == vaccineId),
+                It.IsAny<Expression<Func<Vaccine, object>>[]>()
+            )).ReturnsAsync(vaccine);
+
+            _unitOfWorkMock.Setup(u => u.VaccinePackageDetailRepository
+                .GetAllAsync(It.IsAny<Expression<Func<VaccinePackageDetail, bool>>>()))
+                .ReturnsAsync(vaccinePackageDetails);
+
+            // ✅ Chuyển đổi IEnumerable thành List trước khi gọi SoftRemoveRange
+            _unitOfWorkMock.Setup(u => u.VaccinePackageDetailRepository
+                .SoftRemoveRange(It.IsAny<List<VaccinePackageDetail>>()))
+                .ReturnsAsync(true);
+
+            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>()))
+                .ReturnsAsync(true);
+
             _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
             // Act
             var result = await _vaccineService.DeleteVaccine(vaccineId);
 
             // Assert
-            _unitOfWorkMock.Verify(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>()), Times.Once);
+            _unitOfWorkMock.Verify(u => u.VaccineRepository.GetByIdAsync(It.Is<Guid>(id => id == vaccineId),
+                It.IsAny<Expression<Func<Vaccine, object>>[]>()), Times.Once);
+            _unitOfWorkMock.Verify(u => u.VaccinePackageDetailRepository.GetAllAsync(It.IsAny<Expression<Func<VaccinePackageDetail, bool>>>()), Times.Once);
+            _unitOfWorkMock.Verify(u => u.VaccinePackageDetailRepository.SoftRemoveRange(It.IsAny<List<VaccinePackageDetail>>()), Times.Once);
+            _unitOfWorkMock.Verify(u => u.VaccineRepository.SoftRemove(It.Is<Vaccine>(v => v.Id == vaccineId)), Times.Once);
             _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
+
             Assert.NotNull(result);
             Assert.Equal(vaccine.VaccineName, result.VaccineName);
+            Assert.Equal(vaccine.Description, result.Description);
+            Assert.Equal(vaccine.PicUrl, result.PicUrl);
+            Assert.Equal(vaccine.Type, result.Type);
+            Assert.Equal(vaccine.Price, result.Price);
+            Assert.Equal(vaccine.RequiredDoses, result.RequiredDoses);
+            Assert.Equal(vaccine.ForBloodType, result.ForBloodType);
+            Assert.Equal(vaccine.AvoidChronic, result.AvoidChronic);
+            Assert.Equal(vaccine.AvoidAllergy, result.AvoidAllergy);
+            Assert.Equal(vaccine.HasDrugInteraction, result.HasDrugInteraction);
+            Assert.Equal(vaccine.HasSpecialWarning, result.HasSpecialWarning);
         }
+
+
+
         [Fact]
         //Test case 11 : Delete Vaccine - Not Found
         public async Task DeleteVaccine_VaccineNotFound()
@@ -366,11 +430,11 @@ namespace VaccinaCare.UnitTest
             };
 
             _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId)).ReturnsAsync(vaccine);
-            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>())).ThrowsAsync(new Exception("Deletion failed"));
+            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>())).ThrowsAsync(new Exception($"Vaccine with ID {vaccineId} not found or already deleted."));
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() => _vaccineService.DeleteVaccine(vaccineId));
-            Assert.Equal("Deletion failed", exception.Message);
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => _vaccineService.DeleteVaccine(vaccineId));
+            Assert.Equal($"Vaccine with ID {vaccineId} not found or already deleted.", exception.Message);
         }
         [Fact]
         //Test case 14 : Delete Vaccine - Fails
@@ -389,15 +453,20 @@ namespace VaccinaCare.UnitTest
                 IsDeleted = false
             };
 
-            _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId)).ReturnsAsync(vaccine);
-            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>())).ReturnsAsync(false); 
-            _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId, It.IsAny<Expression<Func<Vaccine, object>>[]>()))
+                           .ReturnsAsync(vaccine);
+
+            _unitOfWorkMock.Setup(u => u.VaccinePackageDetailRepository.GetAllAsync(It.IsAny<Expression<Func<VaccinePackageDetail, bool>>>()))
+                           .ReturnsAsync(new List<VaccinePackageDetail>());
+
+            _unitOfWorkMock.Setup(u => u.VaccineRepository.SoftRemove(It.IsAny<Vaccine>()))
+                           .ReturnsAsync(false);
 
             // Act
             var result = await _vaccineService.DeleteVaccine(vaccineId);
 
             // Assert
-            Assert.Null(result); 
+            Assert.Null(result);
         }
     }
 }
