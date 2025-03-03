@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -22,41 +23,41 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDTO, IConfiguration configuration)
+    public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDto, IConfiguration configuration)
     {
         _logger.Info("Login process initiated.");
 
         try
         {
-            if (string.IsNullOrWhiteSpace(loginDTO.Email) || string.IsNullOrWhiteSpace(loginDTO.Password))
+            if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
             {
                 _logger.Warn("Login attempt failed: Missing email or password. Both fields are required.");
                 return null;
             }
 
-            _logger.Info($"Login request received for email: {loginDTO.Email}");
+            _logger.Info($"Login request received for email: {loginDto.Email}");
 
             var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(
-                u => u.Email == loginDTO.Email && !u.IsDeleted
+                u => u.Email == loginDto.Email && !u.IsDeleted
             );
 
             if (user == null)
             {
-                _logger.Warn($"Login attempt failed: No active user found with email: {loginDTO.Email}.");
+                _logger.Warn($"Login attempt failed: No active user found with email: {loginDto.Email}.");
                 return null;
             }
 
             var passwordHasher = new PasswordHasher();
-            if (!passwordHasher.VerifyPassword(loginDTO.Password, user.PasswordHash))
+            if (!passwordHasher.VerifyPassword(loginDto.Password, user.PasswordHash))
             {
-                _logger.Warn($"Login attempt failed: Invalid password for email: {loginDTO.Email}.");
+                _logger.Warn($"Login attempt failed: Invalid password for email: {loginDto.Email}.");
                 return null;
             }
 
-            _logger.Info($"User found for email: {loginDTO.Email}. Verifying user role and generating tokens.");
+            _logger.Info($"User found for email: {loginDto.Email}. Verifying user role and generating tokens.");
 
             var roleName = user.RoleName.ToString();
-            _logger.Info($"Role '{roleName}' identified for user with email: {loginDTO.Email}.");
+            _logger.Info($"Role '{roleName}' identified for user with email: {loginDto.Email}.");
 
             var accessToken = JwtUtils.GenerateJwtToken(
                 user.Id,
@@ -71,13 +72,13 @@ public class AuthService : IAuthService
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
             _logger.Info(
-                $"Tokens successfully generated for user with email: {loginDTO.Email}. Updating user record with refresh token.");
+                $"Tokens successfully generated for user with email: {loginDto.Email}. Updating user record with refresh token.");
 
             await _unitOfWork.UserRepository.Update(user);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info(
-                $"User record successfully updated with refresh token for email: {loginDTO.Email}. Login process completed successfully.");
+                $"User record successfully updated with refresh token for email: {loginDto.Email}. Login process completed successfully.");
 
             return new LoginResponseDTO
             {
@@ -88,7 +89,7 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.Error(
-                $"Unexpected error during login process for email: {loginDTO?.Email ?? "Unknown"}. Exception: {ex.Message}");
+                $"Unexpected error during login process for email: {loginDto?.Email ?? "Unknown"}. Exception: {ex.Message}");
             _logger.Error($"StackTrace: {ex.StackTrace}");
             throw;
         }
@@ -184,6 +185,113 @@ public class AuthService : IAuthService
         catch (Exception ex)
         {
             _logger.Error($"Unexpected error during logout for user ID: {userId}. Exception: {ex.Message}");
+            _logger.Error($"StackTrace: {ex.StackTrace}");
+            throw;
+        }
+    }
+
+    public async Task<LoginResponseDTO?> RefreshTokenAsync(TokenRefreshRequestDTO tokenRequest,
+        IConfiguration configuration)
+
+    {
+        _logger.Info("Refresh token process initiated.");
+
+        try
+        {
+            if (string.IsNullOrWhiteSpace(tokenRequest.RefreshToken) ||
+                string.IsNullOrWhiteSpace(tokenRequest.AccessToken))
+            {
+                _logger.Warn("Missing refresh token or access token.");
+                return null;
+            }
+
+            _logger.Info($"Received refresh token: {tokenRequest.RefreshToken}");
+
+            // 🛑 Giải mã Access Token nhưng KHÔNG kiểm tra expiration
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtToken = tokenHandler.ReadJwtToken(tokenRequest.AccessToken);
+
+            if (jwtToken == null)
+            {
+                _logger.Warn("Invalid access token.");
+                return null;
+            }
+
+            var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email);
+            if (emailClaim == null)
+            {
+                _logger.Warn("Email claim missing from access token.");
+                return null;
+            }
+
+            string email = emailClaim.Value;
+
+            //Tìm user có email trong database
+            var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == email);
+
+            if (user == null)
+            {
+                _logger.Warn("User not found.");
+                return null;
+            }
+
+            //Kiểm tra Refresh Token có được gửi lên không
+            if (string.IsNullOrEmpty(tokenRequest.RefreshToken))
+            {
+                _logger.Warn("Refresh token is missing.");
+                return null;
+            }
+
+            //Kiểm tra Refresh Token gửi từ frontend có giống với trong DB không
+            if (user.RefreshToken != tokenRequest.RefreshToken)
+            {
+                _logger.Warn("Refresh token mismatch.");
+                return null;
+            }
+
+            // 🛑 Kiểm tra Refresh Token có hợp lệ không (thời gian hết hạn)
+            if (user.RefreshTokenExpiryTime < DateTime.UtcNow)
+            {
+                _logger.Warn("Refresh token invalid or expired.");
+                return null;
+            }
+
+            _logger.Info($"Valid refresh token for user {user.Email}. Generating new tokens...");
+
+            // 🛑 Lấy role của user
+            string roleName = user.RoleName.ToString();
+
+            // 🛑 Tạo Access Token mới (1 giờ)
+            var newAccessToken = JwtUtils.GenerateJwtToken(
+                user.Id,
+                user.Email,
+                roleName,
+                configuration,
+                TimeSpan.FromHours(1)
+            );
+
+            // 🛑 Tạo Refresh Token mới (Valid trong 7 ngày)
+            var newRefreshToken = Guid.NewGuid().ToString();
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+            _logger.Info($"Generated new tokens for user {user.Email}. Updating database.");
+
+            // 🛑 Lưu refresh token mới vào database
+            await _unitOfWork.UserRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Info($"Refresh token updated successfully for user {user.Email}.");
+
+            return new LoginResponseDTO
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error during refresh token process: {ex.Message}");
             _logger.Error($"StackTrace: {ex.StackTrace}");
             throw;
         }
