@@ -14,5 +14,4 @@ public interface IAuthService
 
     Task<LoginResponseDTO?> RefreshTokenAsync(TokenRefreshRequestDTO tokenRequest,
         IConfiguration configuration);
-    
 }

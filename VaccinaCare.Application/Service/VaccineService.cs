@@ -257,7 +257,7 @@ public class VaccineService : IVaccineService
             _logger.Info("Vaccine found. Preparing to update...");
 
             // Nếu có ảnh mới, upload lên MinIO và cập nhật PicUrl
-            string? newPicUrl = vaccine.PicUrl;
+            var newPicUrl = vaccine.PicUrl;
             if (vaccinePictureFile != null && vaccinePictureFile.Length > 0)
             {
                 _logger.Info("Uploading new vaccine image...");

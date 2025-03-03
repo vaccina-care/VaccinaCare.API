@@ -41,7 +41,7 @@ public class SystemController : ControllerBase
                 Message = "Data seeded successfully.",
                 TotalRoles = roles.Count,
                 TotalUsers = users.Count,
-                TotalVaccines = vaccines.Count,
+                TotalVaccines = vaccines.Count
             }));
         }
         catch (DbUpdateException dbEx)

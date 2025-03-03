@@ -224,7 +224,7 @@ public class AuthService : IAuthService
                 return null;
             }
 
-            string email = emailClaim.Value;
+            var email = emailClaim.Value;
 
             //Tìm user có email trong database
             var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == email);
@@ -259,7 +259,7 @@ public class AuthService : IAuthService
             _logger.Info($"Valid refresh token for user {user.Email}. Generating new tokens...");
 
             // 🛑 Lấy role của user
-            string roleName = user.RoleName.ToString();
+            var roleName = user.RoleName.ToString();
 
             // 🛑 Tạo Access Token mới (1 giờ)
             var newAccessToken = JwtUtils.GenerateJwtToken(

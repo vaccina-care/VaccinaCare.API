@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel;
 using VaccinaCare.Domain.Enums;
 
+namespace VaccinaCare.Domain.DTOs.ChildDTOs;
+
 public class CreateChildDto
 {
     [DefaultValue("Nguyen Van A")] public string FullName { get; set; } = "Nguyen Van A";

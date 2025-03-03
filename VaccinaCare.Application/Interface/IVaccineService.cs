@@ -16,6 +16,7 @@ public interface IVaccineService
     Task<VaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto, IFormFile vaccinePictureFile);
     Task<VaccineDto> DeleteVaccine(Guid id);
     Task<VaccineDto> UpdateVaccine(Guid id, UpdateVaccineDto updateDto, IFormFile? vaccinePictureFile);
+
     Task<PagedResult<VaccineDto>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page,
         int pageSize);
 
