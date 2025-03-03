@@ -13,4 +13,3 @@ public class UserUpdateDto
     public string? ImageUrl { get; set; } // Add this to return the stored image URL
     public string? PhoneNumber { get; set; }
 }
-

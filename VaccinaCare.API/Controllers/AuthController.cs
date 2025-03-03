@@ -64,9 +64,9 @@ public class AuthController : ControllerBase
                 Title = "Welcome to VaccinaCare!",
                 Content = "Thank you for registering with VaccinaCare. We're excited to have you on board!",
                 Url = "/welcome",
+                
                 UserId = user.Id
             };
-            await _notificationService.PushNotificationToUser(user.Id, notificationDTO);
 
             if (!string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(user.Email))
             {
@@ -93,7 +93,6 @@ public class AuthController : ControllerBase
         }
     }
 
-
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -113,7 +112,7 @@ public class AuthController : ControllerBase
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
             var loginResponse = await _authService.LoginAsync(loginDTO, configuration);
@@ -137,7 +136,7 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during login."));
         }
     }
-    
+
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
@@ -147,7 +146,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            Guid currentUserId = _claimsService.GetCurrentUserId;
+            var currentUserId = _claimsService.GetCurrentUserId;
 
             _logger.Info($"Logout request initiated for user ID: {currentUserId}");
 
@@ -167,7 +166,4 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during logout."));
         }
     }
-
-    
-
 }

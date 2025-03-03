@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using Microsoft.AspNetCore.Http;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
@@ -12,201 +13,17 @@ public class VaccineService : IVaccineService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
+    private readonly IBlobService _blobService;
 
 
-    public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger, IClaimsService claimsService)
+    public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger, IClaimsService claimsService, IBlobService blobService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
         _claimsService = claimsService;
+        _blobService = blobService;
     }
 
-    /// <summary>
-    /// Kiểm tra xem tất cả vaccine trong danh sách có thuộc một package đã có sẵn không.
-    /// Nếu tất cả vaccine truyền vào đều thuộc package thì chặn đặt lẻ.
-    /// </summary>
-    public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
-    {
-        if (vaccineIds == null || vaccineIds.Count == 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            // Lấy tất cả các package có chứa vaccine trong danh sách vaccineIds
-            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
-                .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
-
-            if (!packageDetails.Any())
-            {
-                return false;
-            }
-
-            // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
-            var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
-
-            foreach (var packageId in packageIds)
-            {
-                // Lấy danh sách vaccine của package này
-                var packageVaccineIds = await _unitOfWork.VaccinePackageDetailRepository
-                    .GetAllAsync(vpd => vpd.PackageId == packageId);
-
-                var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
-
-                // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
-                if (packageVaccineList.All(v => vaccineIds.Contains(v)))
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"[IsVaccineInPackage] Exception occurred: {ex.Message}");
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
-    /// </summary>
-    public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
-    {
-        var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
-        var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
-
-        if (child == null)
-        {
-            var message = $"Child ID {childId} not found.";
-            _logger.Error(message);
-            return (false, message);
-        }
-
-        if (vaccine == null)
-        {
-            var message = $"Vaccine ID {vaccineId} not found.";
-            _logger.Error(message);
-            return (false, message);
-        }
-
-        // Kiểm tra bệnh mãn tính
-        if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
-        {
-            var message =
-                $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
-            _logger.Warn(message);
-            return (false, message);
-        }
-
-        // Kiểm tra dị ứng
-        if (vaccine.AvoidAllergy == true && child.HasAllergies)
-        {
-            var message = $"Child {child.FullName} has allergies, which makes vaccine ID {vaccineId} unsafe.";
-            _logger.Warn(message);
-            return (false, message);
-        }
-
-        var successMessage = $"Child {child.FullName} is eligible for vaccine ID {vaccineId}.";
-        _logger.Success(successMessage);
-        return (true, successMessage);
-    }
-
-    /// <summary>
-    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
-    /// </summary>
-    public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
-    {
-        _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
-
-        // Lấy lịch sử tiêm chủng của trẻ với vaccine này
-        var records = await _unitOfWork.VaccinationRecordRepository
-            .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
-
-        if (records == null || !records.Any())
-        {
-            _logger.Warn(
-                $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
-            return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
-        }
-
-        int lastDoseNumber = records.Max(r => r.DoseNumber);
-        int nextDose = lastDoseNumber + 1;
-
-        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
-
-        return nextDose;
-    }
-
-
-    /// <summary>
-    /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
-    /// - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
-    /// - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
-    ///   kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
-    /// - Nếu khoảng cách không đủ → trả về false.
-    /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
-    /// </summary>
-    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
-        DateTime appointmentDate)
-    {
-        _logger.Info(
-            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
-
-        foreach (var bookedVaccineId in bookedVaccineIds)
-        {
-            _logger.Info(
-                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
-
-            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
-            var rule = await _unitOfWork.VaccineIntervalRulesRepository
-                .FirstOrDefaultAsync(r =>
-                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
-                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
-
-            // Nếu có quy tắc xác định
-            if (rule != null)
-            {
-                _logger.Info(
-                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
-
-                // Nếu hai loại vaccine không thể tiêm chung, trả về false
-                if (!rule.CanBeGivenTogether)
-                {
-                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
-                    return false;
-                }
-
-                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
-                if (rule.MinIntervalDays > 0)
-                {
-                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
-                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
-                        .FirstOrDefaultAsync(a =>
-                            a.VaccineId == bookedVaccineId &&
-                            a.Appointment.AppointmentDate.HasValue &&
-                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
-
-                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
-                    if (lastAppointment != null)
-                    {
-                        _logger.Info(
-                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
-                        return false;
-                    }
-                }
-            }
-            else
-            {
-                _logger.Info(
-                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
-            }
-        }
-
-        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
-        return true;
-    }
 
 
     //CRUD Vaccines
@@ -221,18 +38,15 @@ public class VaccineService : IVaccineService
             // Filtering
             if (!string.IsNullOrWhiteSpace(search))
             {
-                string searchLower = search.Trim().ToLower();
+                var searchLower = search.Trim().ToLower();
                 queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
             }
 
             if (!string.IsNullOrWhiteSpace(type))
-            {
                 queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
-            }
             //Sorting
 
             if (!string.IsNullOrWhiteSpace(sortBy))
-            {
                 switch (sortBy.ToLower())
                 {
                     case "vaccinename":
@@ -255,7 +69,6 @@ public class VaccineService : IVaccineService
                         queryList = queryList.OrderBy(v => v.VaccineName).ToList();
                         break;
                 }
-            }
 
             // Pagination
             var totalItems = queryList.Count();
@@ -327,86 +140,97 @@ public class VaccineService : IVaccineService
         }
     }
 
-    public async Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto)
+    public async Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto, IFormFile vaccinePictureFile)
+{
+    _logger.Info("Starting to create a new vaccine.");
+
+    try
     {
-        _logger.Info("Starting to create a new vaccine.");
+        _logger.Info(
+            $"Received VaccineDTO with VaccineName: {createVaccineDto.VaccineName}, Type: {createVaccineDto.Type}, Price: {createVaccineDto.Price}, BloodType: {createVaccineDto.ForBloodType}, AvoidChronic: {createVaccineDto.AvoidChronic}, AvoidAllergy: {createVaccineDto.AvoidAllergy}, HasDrugInteraction: {createVaccineDto.HasDrugInteraction}, HasSpecialWarning: {createVaccineDto.HasSpecialWarning}"
+        );
 
-        try
+        var validationErrors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(createVaccineDto.VaccineName))
+            validationErrors.Add("Vaccine name is required.");
+
+        if (createVaccineDto.Price <= 0)
+            validationErrors.Add("Price must be greater than zero.");
+
+        if (string.IsNullOrWhiteSpace(createVaccineDto.Description))
+            validationErrors.Add("Description is required.");
+
+        if (string.IsNullOrWhiteSpace(createVaccineDto.Type))
+            validationErrors.Add("Type is required.");
+
+        if (createVaccineDto.RequiredDoses <= 0)
+            validationErrors.Add("RequiredDoses must be greater than zero.");
+
+        if (vaccinePictureFile == null || vaccinePictureFile.Length == 0)
+            validationErrors.Add("Vaccine picture is required.");
+
+        if (validationErrors.Any())
         {
-            _logger.Info(
-                $"Received VaccineDTO with VaccineName: {createVaccineDto.VaccineName}, Type: {createVaccineDto.Type}, Price: {createVaccineDto.Price}, BloodType: {createVaccineDto.ForBloodType}, AvoidChronic: {createVaccineDto.AvoidChronic}, AvoidAllergy: {createVaccineDto.AvoidAllergy}, HasDrugInteraction: {createVaccineDto.HasDrugInteraction}, HasSpecialWarning: {createVaccineDto.HasSpecialWarning}"
-            );
-
-            var validationErrors = new List<string>();
-
-            if (string.IsNullOrWhiteSpace(createVaccineDto.VaccineName))
-                validationErrors.Add("Vaccine name is required.");
-
-            if (createVaccineDto.Price <= 0)
-                validationErrors.Add("Price must be greater than zero.");
-
-            if (string.IsNullOrWhiteSpace(createVaccineDto.Description))
-                validationErrors.Add("Description is required.");
-
-            if (string.IsNullOrWhiteSpace(createVaccineDto.Type))
-                validationErrors.Add("Type is required.");
-
-            if (string.IsNullOrWhiteSpace(createVaccineDto.PicUrl))
-                validationErrors.Add("PicUrl is required.");
-            if (createVaccineDto.RequiredDoses <= 0)
-                validationErrors.Add("RequiredDoses must be greater than zero.");
-            if (validationErrors.Any())
-            {
-                _logger.Warn($"Validation failed for VaccineDTO: {string.Join("; ", validationErrors)}");
-                return null;
-            }
-
-            var vaccine = new Vaccine
-            {
-                VaccineName = createVaccineDto.VaccineName,
-                Description = createVaccineDto.Description,
-                PicUrl = createVaccineDto.PicUrl,
-                Type = createVaccineDto.Type,
-                Price = createVaccineDto.Price,
-                RequiredDoses = createVaccineDto.RequiredDoses,
-                DoseIntervalDays = createVaccineDto.DoseIntervalDays,
-                ForBloodType = createVaccineDto.ForBloodType,
-                AvoidChronic = createVaccineDto.AvoidChronic,
-                AvoidAllergy = createVaccineDto.AvoidAllergy,
-                HasDrugInteraction = createVaccineDto.HasDrugInteraction,
-                HasSpecialWarning = createVaccineDto.HasSpecialWarning
-            };
-
-            _logger.Info(
-                $"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
-
-            await _unitOfWork.VaccineRepository.AddAsync(vaccine);
-            await _unitOfWork.SaveChangesAsync();
-
-            var createdVaccineDTO = new CreateVaccineDto
-            {
-                VaccineName = vaccine.VaccineName,
-                Description = vaccine.Description,
-                PicUrl = vaccine.PicUrl,
-                Type = vaccine.Type,
-                Price = vaccine.Price,
-                RequiredDoses = vaccine.RequiredDoses,
-                ForBloodType = vaccine.ForBloodType,
-                AvoidChronic = vaccine.AvoidChronic,
-                AvoidAllergy = vaccine.AvoidAllergy,
-                HasDrugInteraction = vaccine.HasDrugInteraction,
-                HasSpecialWarning = vaccine.HasSpecialWarning
-            };
-
-            _logger.Success($"Vaccine '{createdVaccineDTO.VaccineName}' created successfully with ID {vaccine.Id}.");
-            return createdVaccineDTO;
+            _logger.Warn($"Validation failed for VaccineDTO: {string.Join("; ", validationErrors)}");
+            return null;
         }
-        catch (Exception ex)
+
+        // Upload image to MinIO
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(vaccinePictureFile.FileName)}";
+        using (var stream = vaccinePictureFile.OpenReadStream())
         {
-            _logger.Error($"An error occurred while creating the vaccine. Error: {ex.Message}");
-            throw;
+            await _blobService.UploadFileAsync(fileName, stream);
         }
+
+        var picUrl = await _blobService.GetFileUrlAsync(fileName);
+
+        var vaccine = new Vaccine
+        {
+            VaccineName = createVaccineDto.VaccineName,
+            Description = createVaccineDto.Description,
+            PicUrl = picUrl, // Lưu URL của ảnh vào database
+            Type = createVaccineDto.Type,
+            Price = createVaccineDto.Price,
+            RequiredDoses = createVaccineDto.RequiredDoses,
+            DoseIntervalDays = createVaccineDto.DoseIntervalDays,
+            ForBloodType = createVaccineDto.ForBloodType,
+            AvoidChronic = createVaccineDto.AvoidChronic,
+            AvoidAllergy = createVaccineDto.AvoidAllergy,
+            HasDrugInteraction = createVaccineDto.HasDrugInteraction,
+            HasSpecialWarning = createVaccineDto.HasSpecialWarning
+        };
+
+        _logger.Info($"Vaccine object created. Ready to save: VaccineName = {vaccine.VaccineName}, Type = {vaccine.Type}, Price = {vaccine.Price}");
+
+        await _unitOfWork.VaccineRepository.AddAsync(vaccine);
+        await _unitOfWork.SaveChangesAsync();
+
+        var createdVaccineDTO = new CreateVaccineDto
+        {
+            VaccineName = vaccine.VaccineName,
+            Description = vaccine.Description,
+            PicUrl = vaccine.PicUrl,
+            Type = vaccine.Type,
+            Price = vaccine.Price,
+            RequiredDoses = vaccine.RequiredDoses,
+            ForBloodType = vaccine.ForBloodType,
+            AvoidChronic = vaccine.AvoidChronic,
+            AvoidAllergy = vaccine.AvoidAllergy,
+            HasDrugInteraction = vaccine.HasDrugInteraction,
+            HasSpecialWarning = vaccine.HasSpecialWarning
+        };
+
+        _logger.Success($"Vaccine '{createdVaccineDTO.VaccineName}' created successfully with ID {vaccine.Id}.");
+        return createdVaccineDTO;
     }
+    catch (Exception ex)
+    {
+        _logger.Error($"An error occurred while creating the vaccine. Error: {ex.Message}");
+        throw;
+    }
+}
+
 
     public async Task<VaccineDTO> DeleteVaccine(Guid id)
     {
@@ -435,7 +259,7 @@ public class VaccineService : IVaccineService
                 _logger.Info(
                     $"Found {vaccinePackageDetails.Count} VaccinePackageDetails associated with Vaccine ID: {id}. Soft deleting...");
 
-                bool packageDetailDeleteResult =
+                var packageDetailDeleteResult =
                     await _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(vaccinePackageDetails);
                 if (!packageDetailDeleteResult)
                 {
@@ -444,7 +268,7 @@ public class VaccineService : IVaccineService
                 }
             }
 
-            bool deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
+            var deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
             if (!deleteResult)
             {
                 _logger.Warn($"Vaccine with ID {id} could not be deleted.");
@@ -563,5 +387,183 @@ public class VaccineService : IVaccineService
         }
 
         #endregion
+    }
+    
+        /// <summary>
+    /// Kiểm tra xem tất cả vaccine trong danh sách có thuộc một package đã có sẵn không.
+    /// Nếu tất cả vaccine truyền vào đều thuộc package thì chặn đặt lẻ.
+    /// </summary>
+    public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
+    {
+        if (vaccineIds == null || vaccineIds.Count == 0) return false;
+
+        try
+        {
+            // Lấy tất cả các package có chứa vaccine trong danh sách vaccineIds
+            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
+                .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
+
+            if (!packageDetails.Any()) return false;
+
+            // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
+            var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
+
+            foreach (var packageId in packageIds)
+            {
+                // Lấy danh sách vaccine của package này
+                var packageVaccineIds = await _unitOfWork.VaccinePackageDetailRepository
+                    .GetAllAsync(vpd => vpd.PackageId == packageId);
+
+                var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
+
+                // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
+                if (packageVaccineList.All(v => vaccineIds.Contains(v))) return true;
+            }
+
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"[IsVaccineInPackage] Exception occurred: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
+    /// </summary>
+    public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
+    {
+        var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+        var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+
+        if (child == null)
+        {
+            var message = $"Child ID {childId} not found.";
+            _logger.Error(message);
+            return (false, message);
+        }
+
+        if (vaccine == null)
+        {
+            var message = $"Vaccine ID {vaccineId} not found.";
+            _logger.Error(message);
+            return (false, message);
+        }
+
+        // Kiểm tra bệnh mãn tính
+        if (vaccine.AvoidChronic == true && child.HasChronicIllnesses)
+        {
+            var message =
+                $"Child {child.FullName} has chronic illnesses, and vaccine ID {vaccineId} should not be given to such cases.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        // Kiểm tra dị ứng
+        if (vaccine.AvoidAllergy == true && child.HasAllergies)
+        {
+            var message = $"Child {child.FullName} has allergies, which makes vaccine ID {vaccineId} unsafe.";
+            _logger.Warn(message);
+            return (false, message);
+        }
+
+        var successMessage = $"Child {child.FullName} is eligible for vaccine ID {vaccineId}.";
+        _logger.Success(successMessage);
+        return (true, successMessage);
+    }
+
+    /// <summary>
+    /// Xác định xem trẻ đã tiêm mũi nào rồi, mũi tiếp theo cần tiêm là số mấy.
+    /// </summary>
+    public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
+    {
+        _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
+
+        // Lấy lịch sử tiêm chủng của trẻ với vaccine này
+        var records = await _unitOfWork.VaccinationRecordRepository
+            .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
+
+        if (records == null || !records.Any())
+        {
+            _logger.Warn(
+                $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
+            return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
+        }
+
+        var lastDoseNumber = records.Max(r => r.DoseNumber);
+        var nextDose = lastDoseNumber + 1;
+
+        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
+
+        return nextDose;
+    }
+
+    /// <summary>
+    /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    /// - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
+    /// - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
+    ///   kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
+    /// - Nếu khoảng cách không đủ → trả về false.
+    /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
+    /// </summary>
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
+        DateTime appointmentDate)
+    {
+        _logger.Info(
+            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
+
+        foreach (var bookedVaccineId in bookedVaccineIds)
+        {
+            _logger.Info(
+                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
+
+            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                .FirstOrDefaultAsync(r =>
+                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
+
+            // Nếu có quy tắc xác định
+            if (rule != null)
+            {
+                _logger.Info(
+                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
+
+                // Nếu hai loại vaccine không thể tiêm chung, trả về false
+                if (!rule.CanBeGivenTogether)
+                {
+                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
+                    return false;
+                }
+
+                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
+                if (rule.MinIntervalDays > 0)
+                {
+                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
+                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                        .FirstOrDefaultAsync(a =>
+                            a.VaccineId == bookedVaccineId &&
+                            a.Appointment.AppointmentDate.HasValue &&
+                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
+
+                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
+                    if (lastAppointment != null)
+                    {
+                        _logger.Info(
+                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                _logger.Info(
+                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
+            }
+        }
+
+        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
+        return true;
     }
 }

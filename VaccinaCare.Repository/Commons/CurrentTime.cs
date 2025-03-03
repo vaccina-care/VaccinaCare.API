@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using VaccinaCare.Repository.Interfaces;
 
-namespace VaccinaCare.Repository.Commons
+namespace VaccinaCare.Repository.Commons;
+
+public class CurrentTime : ICurrentTime
 {
-    public class CurrentTime : ICurrentTime
+    public DateTime GetCurrentTime()
     {
-        public DateTime GetCurrentTime()
-        {
-            return DateTime.UtcNow.AddHours(7);
-        }
+        return DateTime.UtcNow.AddHours(7);
     }
 }

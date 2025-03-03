@@ -50,6 +50,4 @@ public class NotificationService : INotificationService
             throw;
         }
     }
-
-
 }

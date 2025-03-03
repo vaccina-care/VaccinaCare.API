@@ -1,12 +1,12 @@
-﻿
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs;
+
 namespace VaccinaCare.API.Controllers;
 
 using Humanizer;
-using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Ultils;
+using Application.Interface.Common;
+using Application.Ultils;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -15,7 +15,8 @@ public class VaccineIntervalRulesController : ControllerBase
     private readonly IVaccineIntervalRulesService _vaccineIntervalRulesService;
     private readonly ILoggerService _logger;
 
-    public VaccineIntervalRulesController(IVaccineIntervalRulesService vaccineIntervalRulesService, ILoggerService logger)
+    public VaccineIntervalRulesController(IVaccineIntervalRulesService vaccineIntervalRulesService,
+        ILoggerService logger)
     {
         _vaccineIntervalRulesService = vaccineIntervalRulesService;
         _logger = logger;
@@ -36,7 +37,7 @@ public class VaccineIntervalRulesController : ControllerBase
             _logger.Info($"Attempting to create vaccine interval rule for VaccineId: {rulesDTO.VaccineId}");
 
             var createdRule = await _vaccineIntervalRulesService.CreateVaccineIntervalRuleAsync(
-            rulesDTO.VaccineId, rulesDTO.RelatedVaccineId, rulesDTO.MinIntervalDays, rulesDTO.CanBeGivenTogether);
+                rulesDTO.VaccineId, rulesDTO.RelatedVaccineId, rulesDTO.MinIntervalDays, rulesDTO.CanBeGivenTogether);
 
             if (createdRule == null)
             {
@@ -44,7 +45,8 @@ public class VaccineIntervalRulesController : ControllerBase
                 return BadRequest(ApiResult<object>.Error("400 - Rule creation failed. Please check input data."));
             }
 
-            _logger.Success($"CreateVaccineIntervalRule: Rule created successfully for VaccineId: {rulesDTO.VaccineId}");
+            _logger.Success(
+                $"CreateVaccineIntervalRule: Rule created successfully for VaccineId: {rulesDTO.VaccineId}");
             return Ok(ApiResult<VaccineIntervalRulesDTO>.Success(createdRule, "Rule created successfully."));
         }
         catch (Exception ex)
@@ -54,4 +56,3 @@ public class VaccineIntervalRulesController : ControllerBase
         }
     }
 }
-

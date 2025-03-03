@@ -11,5 +11,4 @@ public interface IAuthService
     Task<User?> RegisterAsync(RegisterRequestDTO registerRequest);
     Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDTO, IConfiguration configuration);
     Task<bool> LogoutAsync(Guid userId);
-
 }

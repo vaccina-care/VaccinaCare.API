@@ -4,185 +4,184 @@ using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
-namespace VaccinaCare.Application.Service
+namespace VaccinaCare.Application.Service;
+
+public class UserService : IUserService
 {
-    public class UserService : IUserService
+    private readonly ILoggerService _logger;
+    private readonly IBlobService _blobService;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService)
     {
-        private readonly ILoggerService _logger;
-        private readonly IBlobService _blobService;
-        private readonly IUnitOfWork _unitOfWork;
+        _logger = logger;
+        _unitOfWork = unitOfWork;
+        _blobService = blobService;
+    }
 
-        public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService)
+    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        try
         {
-            _logger = logger;
-            _unitOfWork = unitOfWork;
-            _blobService = blobService;
+            // Log the start of the operation
+            _logger.Info("Fetching all users from the database.");
+
+            // Fetch all users from the repository
+            var users = await _unitOfWork.UserRepository.GetAllAsync();
+
+            // Log the success of the operation
+            _logger.Info($"Successfully fetched {users.Count()} users.");
+
+            return users;
+        }
+        catch (Exception ex)
+        {
+            // Log the exception
+            _logger.Error($"An error occurred while fetching users: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<CurrentUserDTO> GetUserDetails(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            _logger.Warn("Attempted to fetch user with an empty GUID.");
+            throw new ArgumentException("Invalid user ID.");
         }
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        try
         {
-            try
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+
+            if (user == null)
             {
-                // Log the start of the operation
-                _logger.Info("Fetching all users from the database.");
-
-                // Fetch all users from the repository
-                var users = await _unitOfWork.UserRepository.GetAllAsync();
-
-                // Log the success of the operation
-                _logger.Info($"Successfully fetched {users.Count()} users.");
-
-                return users;
+                _logger.Warn($"No user found with ID: {id}");
+                throw new KeyNotFoundException($"User with ID {id} not found.");
             }
-            catch (Exception ex)
+
+            _logger.Info($"Successfully fetched user with ID: {id}.");
+
+            return new CurrentUserDTO
             {
-                // Log the exception
-                _logger.Error($"An error occurred while fetching users: {ex.Message}");
-                throw;
-            }
+                FullName = user.FullName,
+                Email = user.Email,
+                Gender = user.Gender,
+                PhoneNumber = user.PhoneNumber,
+                Address = user.Address,
+                RoleName = user.RoleName,
+                ImageUrl = user.ImageUrl,
+                DateOfBirth = user.DateOfBirth
+            };
         }
-
-        public async Task<CurrentUserDTO> GetUserDetails(Guid id)
+        catch (KeyNotFoundException knfEx)
         {
-            if (id == Guid.Empty)
-            {
-                _logger.Warn("Attempted to fetch user with an empty GUID.");
-                throw new ArgumentException("Invalid user ID.");
-            }
-
-            try
-            {
-                var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
-
-                if (user == null)
-                {
-                    _logger.Warn($"No user found with ID: {id}");
-                    throw new KeyNotFoundException($"User with ID {id} not found.");
-                }
-
-                _logger.Info($"Successfully fetched user with ID: {id}.");
-
-                return new CurrentUserDTO
-                {
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    Gender = user.Gender,
-                    PhoneNumber = user.PhoneNumber,
-                    Address = user.Address,
-                    RoleName = user.RoleName,
-                    ImageUrl = user.ImageUrl,
-                    DateOfBirth = user.DateOfBirth
-                };
-            }
-            catch (KeyNotFoundException knfEx)
-            {
-                _logger.Error($"User retrieval error: {knfEx.Message}");
-                throw;
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.Error($"Invalid argument: {argEx.Message}");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"An unexpected error occurred while fetching user details for ID {id}: {ex.Message}");
-                throw;
-            }
+            _logger.Error($"User retrieval error: {knfEx.Message}");
+            throw;
         }
-
-        public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
+        catch (ArgumentException argEx)
         {
-            try
+            _logger.Error($"Invalid argument: {argEx.Message}");
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An unexpected error occurred while fetching user details for ID {id}: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
+    {
+        try
+        {
+            _logger.Info($"Starting user info update for UserId: {userId}");
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
             {
-                _logger.Info($"Starting user info update for UserId: {userId}");
+                _logger.Warn($"User with ID {userId} not found.");
+                throw new KeyNotFoundException("User not found.");
+            }
 
-                var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-                if (user == null)
-                {
-                    _logger.Warn($"User with ID {userId} not found.");
-                    throw new KeyNotFoundException("User not found.");
-                }
+            var isUpdated = false;
 
-                bool isUpdated = false;
+            if (!string.IsNullOrEmpty(userUpdateDto.FullName) && user.FullName != userUpdateDto.FullName)
+            {
+                user.FullName = userUpdateDto.FullName;
+                isUpdated = true;
+            }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.FullName) && user.FullName != userUpdateDto.FullName)
-                {
-                    user.FullName = userUpdateDto.FullName;
-                    isUpdated = true;
-                }
+            if (userUpdateDto.Gender.HasValue && user.Gender != userUpdateDto.Gender)
+            {
+                user.Gender = userUpdateDto.Gender;
+                isUpdated = true;
+            }
 
-                if (userUpdateDto.Gender.HasValue && user.Gender != userUpdateDto.Gender)
-                {
-                    user.Gender = userUpdateDto.Gender;
-                    isUpdated = true;
-                }
+            if (userUpdateDto.DateOfBirth.HasValue && user.DateOfBirth != userUpdateDto.DateOfBirth)
+            {
+                user.DateOfBirth = userUpdateDto.DateOfBirth;
+                isUpdated = true;
+            }
 
-                if (userUpdateDto.DateOfBirth.HasValue && user.DateOfBirth != userUpdateDto.DateOfBirth)
-                {
-                    user.DateOfBirth = userUpdateDto.DateOfBirth;
-                    isUpdated = true;
-                }
+            // ✅ Xử lý upload ảnh
+            if (userUpdateDto.ImageFile != null && userUpdateDto.ImageFile.Length > 0)
+            {
+                using var stream = userUpdateDto.ImageFile.OpenReadStream();
+                var fileName = $"profile_pictures/{userId}_{userUpdateDto.ImageFile.FileName}";
 
-                // ✅ Xử lý upload ảnh
-                if (userUpdateDto.ImageFile != null && userUpdateDto.ImageFile.Length > 0)
-                {
-                    using var stream = userUpdateDto.ImageFile.OpenReadStream();
-                    string fileName = $"profile_pictures/{userId}_{userUpdateDto.ImageFile.FileName}";
+                await _blobService.UploadFileAsync(fileName, stream);
+                var previewUrl = await _blobService.GetPreviewUrlAsync(fileName);
 
-                    await _blobService.UploadFileAsync(fileName, stream);
-                    string previewUrl = await _blobService.GetPreviewUrlAsync(fileName);
+                user.ImageUrl = previewUrl; // Cập nhật link preview ảnh
+                isUpdated = true;
+            }
 
-                    user.ImageUrl = previewUrl; // Cập nhật link preview ảnh
-                    isUpdated = true;
-                }
+            if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber) && user.PhoneNumber != userUpdateDto.PhoneNumber)
+            {
+                user.PhoneNumber = userUpdateDto.PhoneNumber;
+                isUpdated = true;
+            }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber) && user.PhoneNumber != userUpdateDto.PhoneNumber)
-                {
-                    user.PhoneNumber = userUpdateDto.PhoneNumber;
-                    isUpdated = true;
-                }
+            if (!string.IsNullOrEmpty(userUpdateDto.Address) && user.Address != userUpdateDto.Address)
+            {
+                user.Address = userUpdateDto.Address;
+                isUpdated = true;
+            }
 
-                if (!string.IsNullOrEmpty(userUpdateDto.Address) && user.Address != userUpdateDto.Address)
-                {
-                    user.Address = userUpdateDto.Address;
-                    isUpdated = true;
-                }
-
-                if (!isUpdated)
-                {
-                    _logger.Warn($"No changes detected for UserId: {userId}");
-                    return new UserUpdateDto
-                    {
-                        FullName = user.FullName,
-                        Gender = user.Gender,
-                        DateOfBirth = user.DateOfBirth,
-                        Address = user.Address,
-                        ImageUrl = user.ImageUrl,
-                        PhoneNumber = user.PhoneNumber
-                    };
-                }
-
-                await _unitOfWork.UserRepository.Update(user);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.Success($"User info updated successfully for UserId: {userId}");
-
+            if (!isUpdated)
+            {
+                _logger.Warn($"No changes detected for UserId: {userId}");
                 return new UserUpdateDto
                 {
                     FullName = user.FullName,
                     Gender = user.Gender,
                     DateOfBirth = user.DateOfBirth,
                     Address = user.Address,
-                    ImageUrl = user.ImageUrl, // Trả về link preview ảnh
+                    ImageUrl = user.ImageUrl,
                     PhoneNumber = user.PhoneNumber
                 };
             }
-            catch (Exception ex)
+
+            await _unitOfWork.UserRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"User info updated successfully for UserId: {userId}");
+
+            return new UserUpdateDto
             {
-                _logger.Error($"Error updating user info for UserId: {userId}. Exception: {ex.Message}");
-                throw;
-            }
+                FullName = user.FullName,
+                Gender = user.Gender,
+                DateOfBirth = user.DateOfBirth,
+                Address = user.Address,
+                ImageUrl = user.ImageUrl, // Trả về link preview ảnh
+                PhoneNumber = user.PhoneNumber
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error updating user info for UserId: {userId}. Exception: {ex.Message}");
+            throw;
         }
     }
 }

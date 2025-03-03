@@ -9,7 +9,9 @@ using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Repository.Commons;
+
 namespace VaccinaCare.API.Controllers;
+
 [ApiController]
 [Route("api/[controller]")]
 public class VaccinePackageController : ControllerBase
@@ -22,6 +24,7 @@ public class VaccinePackageController : ControllerBase
         _vaccinePackageService = vaccinePackageService;
         _logger = logger;
     }
+
     [HttpPost]
     public async Task<IActionResult> CreateVaccinePackage([FromBody] CreateVaccinePackageDTO dto)
     {
@@ -40,9 +43,12 @@ public class VaccinePackageController : ControllerBase
             if (createdPackage == null)
             {
                 _logger.Warn("CreateVaccinePackage: Vaccine pacakage creation failed due to validation issues");
-                return BadRequest(ApiResult<object>.Error("400 - Vaccine package creation failed. Please check input data."));
+                return BadRequest(
+                    ApiResult<object>.Error("400 - Vaccine package creation failed. Please check input data."));
             }
-            _logger.Success($"CreateVaccinePackage: Vaccine Package '{createdPackage.PackageName}' created successfully");
+
+            _logger.Success(
+                $"CreateVaccinePackage: Vaccine Package '{createdPackage.PackageName}' created successfully");
             return Ok(ApiResult<VaccinePackageDTO>.Success(createdPackage, "Vaccine package created successfully."));
         }
         catch (Exception ex)
@@ -51,7 +57,7 @@ public class VaccinePackageController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetAllVaccinePackages()
     {
@@ -67,21 +73,23 @@ public class VaccinePackageController : ControllerBase
             }
 
             _logger.Success($"GetAllVaccinePackages: {vaccinePackages.Count} vaccine packages retrieved successfully.");
-            return Ok(ApiResult<List<VaccinePackageDTO>>.Success(vaccinePackages, "Vaccine packages retrieved successfully."));
+            return Ok(ApiResult<List<VaccinePackageDTO>>.Success(vaccinePackages,
+                "Vaccine packages retrieved successfully."));
         }
         catch (Exception ex)
         {
             _logger.Error($"Unexpected error while fetching vaccine packages: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
+            return StatusCode(500,
+                ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVaccinePackageById(Guid id)
     {
         _logger.Info($"Fetching Vaccine Package with ID: {id}");
         try
         {
-
             if (id == Guid.Empty)
                 return BadRequest("Invalid package ID.");
 
@@ -95,13 +103,15 @@ public class VaccinePackageController : ControllerBase
 
             _logger.Success($"Get Vaccine Package with ID : {id} retrieved succesfully.");
             return Ok(ApiResult<VaccinePackageDTO>.Success(result, "Vaccine package retrieved successfully."));
-        } 
-        catch (Exception ex) 
+        }
+        catch (Exception ex)
         {
             _logger.Error($"Unexpected error while fetching vaccine packages: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
+            return StatusCode(500,
+                ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
+
     [HttpDelete("id")]
     public async Task<IActionResult> DeleteVaccinePackage(Guid id)
     {
@@ -124,23 +134,19 @@ public class VaccinePackageController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
         }
     }
+
     [HttpPut("id")]
     public async Task<IActionResult> UpdateVaccinePackage(Guid id, [FromBody] UpdateVaccinePackageDTO dto)
     {
-        if (dto == null)
-        {
-            return BadRequest(ApiResult<object>.Error("400 - Invalid request data."));
-        }
+        if (dto == null) return BadRequest(ApiResult<object>.Error("400 - Invalid request data."));
 
         var updatedPackage = await _vaccinePackageService.UpdateVaccinePackageByIdAsync(id, dto);
 
-        if (updatedPackage == null)
-        {
-            return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
-        }
+        if (updatedPackage == null) return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
 
         return Ok(ApiResult<VaccinePackageDTO>.Success(updatedPackage, "Vaccine package updated successfully."));
     }
+
     [HttpGet("paging")]
     [ProducesResponseType(typeof(ApiResult<Pagination<VaccinePackageDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -172,7 +178,4 @@ public class VaccinePackageController : ControllerBase
             });
         }
     }
-
 }
-
-

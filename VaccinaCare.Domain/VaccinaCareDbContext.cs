@@ -46,7 +46,6 @@ public partial class VaccinaCareDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) && entityType.ClrType != typeof(BaseEntity))
             {
                 // Configure common properties for BaseEntity
@@ -77,7 +76,6 @@ public partial class VaccinaCareDbContext : DbContext
 
                 hasQueryFilterMethod.Invoke(entityBuilder, new object[] { lambda });
             }
-        }
 
         // Map tables to match entity names
 
@@ -151,7 +149,6 @@ public partial class VaccinaCareDbContext : DbContext
         });
 
 
-
         modelBuilder.Entity<Appointment>()
             .Property(a => a.Status)
             .HasConversion<string>()
@@ -161,7 +158,7 @@ public partial class VaccinaCareDbContext : DbContext
             .Property(a => a.VaccineType)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
         modelBuilder.Entity<AppointmentVaccineSuggestions>()
             .HasKey(av => new { av.AppointmentId, av.VaccineSuggestionId });
 
@@ -174,7 +171,6 @@ public partial class VaccinaCareDbContext : DbContext
             .HasOne(av => av.VaccineSuggestion)
             .WithMany(vs => vs.AppointmentVaccineSuggestions)
             .HasForeignKey(av => av.VaccineSuggestionId);
-
 
 
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
