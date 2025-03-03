@@ -35,7 +35,6 @@ public class SystemController : ControllerBase
             var roles = await SeedRoles();
             var users = await SeedUsers();
             var vaccines = await SeedVaccines();
-            var policies = await SeedPolicies();
 
             return Ok(ApiResult<object>.Success(new
             {
@@ -43,7 +42,6 @@ public class SystemController : ControllerBase
                 TotalRoles = roles.Count,
                 TotalUsers = users.Count,
                 TotalVaccines = vaccines.Count,
-                TotalPolicies = policies.Count
             }));
         }
         catch (DbUpdateException dbEx)
@@ -58,45 +56,51 @@ public class SystemController : ControllerBase
         }
     }
 
+    [HttpPost("seed-policy")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> SeedPolicyData()
+    {
+        try
+        {
+            await ClearCancellationPolicyTable(_context);
+            //seed policy
+            var policies = await SeedPolicies();
+            return Ok(ApiResult<object>.Success(new
+            {
+                Message = "Data seeded successfully.",
+                Policy = policies.Count
+            }));
+        }
+        catch (DbUpdateException dbEx)
+        {
+            _logger.Error($"Database update error: {dbEx.Message}");
+            return StatusCode(500, "Error seeding data: Database issue.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"General error: {ex.Message}");
+            return StatusCode(500, "Error seeding data: General failure.");
+        }
+    }
+
+    //Seed policy table
     private async Task<List<CancellationPolicy>> SeedPolicies()
     {
         var policies = new List<CancellationPolicy>
         {
             new()
             {
-                PolicyName = "Free Cancellation Before 24 Hours",
-                Description =
-                    "Customers can cancel their appointment at least 24 hours in advance without any fees.",
-                CancellationDeadline = 24, // Hours before the appointment
-                PenaltyFee = 0
-            },
-            new()
-            {
-                PolicyName = "Cancellation Within 24 Hours",
-                Description =
-                    "Cancelling within 24 hours before the appointment will incur a penalty of 10% of the total booking value.",
-                CancellationDeadline = 12,
-                PenaltyFee = 10 // Percentage of the penalty fee
-            },
-            new()
-            {
-                PolicyName = "Last-Minute Cancellation",
-                Description =
-                    "Cancelling within 6 hours before the appointment will incur a penalty of 50% of the total booking value.",
-                CancellationDeadline = 6,
-                PenaltyFee = 50
-            },
-            new()
-            {
-                PolicyName = "No Cancellation Before Appointment",
-                Description =
-                    "If the customer does not cancel before the appointment time, a 100% penalty fee of the total booking value will be applied.",
-                CancellationDeadline = 0,
-                PenaltyFee = 100
+                PolicyName = "Chính sách hủy tiêu chuẩn",
+                Description = "Quý khách vui lòng thông báo hủy lịch hẹn ít nhất 24 giờ trước thời gian tiêm chủng. " +
+                              "Trường hợp hủy đặt lịch, trung tâm sẽ giữ lại 20% tiền đặt cọc như một khoản phí xử lý. " +
+                              "Chúng tôi mong quý khách thông cảm và tuân thủ chính sách này để đảm bảo quyền lợi cho tất cả khách hàng.",
+                CancellationDeadline = 24, // Hủy trước 24 giờ
+                PenaltyFee = 20m // Giữ 20% tiền đặt cọc
             }
         };
-
-        // Check if data already exists to avoid duplication
+        // Kiểm tra nếu bảng đã có dữ liệu thì không seed lại để tránh trùng lặp
         if (!_context.CancellationPolicies.Any())
         {
             await _context.CancellationPolicies.AddRangeAsync(policies);
@@ -106,6 +110,34 @@ public class SystemController : ControllerBase
         return policies;
     }
 
+    private async Task ClearCancellationPolicyTable(VaccinaCareDbContext context)
+    {
+        using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
+        {
+            _logger.Info("Bắt đầu xóa dữ liệu trong policyTable...");
+
+            var policyTable = new List<Func<Task>>
+            {
+                () => context.CancellationPolicies.ExecuteDeleteAsync()
+            };
+
+            foreach (var deleteFunc in policyTable) await deleteFunc();
+
+            await transaction.CommitAsync();
+            _logger.Success("Xóa sạch dữ liệu trong policyTable thành công.");
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.Error($"Xóa dữ liệu thất bại: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    //Seed other tables
     private async Task<List<Role>> SeedRoles()
     {
         var roles = new List<Role>

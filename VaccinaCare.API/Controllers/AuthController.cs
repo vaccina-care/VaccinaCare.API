@@ -115,6 +115,7 @@ public class AuthController : ControllerBase
                 .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
+
             var loginResponse = await _authService.LoginAsync(loginDTO, configuration);
 
             if (loginResponse == null)
@@ -164,6 +165,50 @@ public class AuthController : ControllerBase
         {
             _logger.Error($"Unexpected error during logout: {ex.Message}");
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during logout."));
+        }
+    }
+
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(typeof(ApiResult<LoginResponseDTO>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 401)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> RefreshToken([FromBody] TokenRefreshRequestDTO tokenRefreshRequestDto)
+    {
+        _logger.Info("Token refresh attempt initiated.");
+
+        try
+        {
+            if (tokenRefreshRequestDto == null ||
+                string.IsNullOrWhiteSpace(tokenRefreshRequestDto.AccessToken) ||
+                string.IsNullOrWhiteSpace(tokenRefreshRequestDto.RefreshToken))
+            {
+                _logger.Warn("Invalid token refresh request.");
+                return BadRequest(ApiResult<object>.Error("Invalid token request."));
+            }
+
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, false)
+                .AddEnvironmentVariables()
+                .Build();
+
+            // Gọi AuthService để làm mới token
+            var response = await _authService.RefreshTokenAsync(tokenRefreshRequestDto, configuration);
+
+            if (response == null)
+            {
+                _logger.Warn("Token refresh failed. Invalid or expired refresh token.");
+                return Unauthorized(ApiResult<object>.Error("Invalid or expired refresh token."));
+            }
+
+            _logger.Info("Token refresh successful.");
+            return Ok(ApiResult<LoginResponseDTO>.Success(response, "Token refreshed successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error during token refresh: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("Internal server error."));
         }
     }
 }
