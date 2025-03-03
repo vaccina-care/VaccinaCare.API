@@ -2,7 +2,7 @@
 
 namespace VaccinaCare.Domain.DTOs.VaccineDTOs;
 
-public class VaccineDTO
+public class VaccineDto
 {
     public Guid Id { get; set; }
     public string? VaccineName { get; set; }

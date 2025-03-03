@@ -13,13 +13,11 @@ public interface IVaccineService
         DateTime appointmentDate);
 
     //CRUD
-    Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto, IFormFile vaccinePictureFile);
-    Task<VaccineDTO> DeleteVaccine(Guid id);
-
-    Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);
-
-    Task<PagedResult<VaccineDTO>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page,
+    Task<VaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto, IFormFile vaccinePictureFile);
+    Task<VaccineDto> DeleteVaccine(Guid id);
+    Task<VaccineDto> UpdateVaccine(Guid id, UpdateVaccineDto updateDto, IFormFile? vaccinePictureFile);
+    Task<PagedResult<VaccineDto>> GetVaccines(string? search, string? type, string? sortBy, bool isDescending, int page,
         int pageSize);
 
-    Task<VaccineDTO> GetVaccineById(Guid id);
+    Task<VaccineDto> GetVaccineById(Guid id);
 }
