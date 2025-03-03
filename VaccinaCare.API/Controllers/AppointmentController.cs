@@ -126,24 +126,20 @@ public class AppointmentController : ControllerBase
         try
         {
             if (childId == Guid.Empty)
-            {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Child ID không hợp lệ."
                 });
-            }
 
             var appointments = await _appointmentService.GetAllAppointmentsByChildIdAsync(childId);
 
             if (appointments == null || !appointments.Any())
-            {
                 return NotFound(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Không có lịch hẹn nào cho trẻ này."
                 });
-            }
 
             return Ok(new ApiResult<List<AppointmentDTO>>
             {

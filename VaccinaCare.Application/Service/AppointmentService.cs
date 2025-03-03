@@ -141,7 +141,8 @@ public class AppointmentService : IAppointmentService
                 ChildId = a.ChildId.Value,
                 AppointmentDate = a.AppointmentDate.Value,
                 Status = a.Status.ToString(),
-                VaccineName = a.AppointmentsVaccines.FirstOrDefault()?.Vaccine?.VaccineName ?? "Unknown", // ✅ Fix lỗi VaccineName
+                VaccineName =
+                    a.AppointmentsVaccines.FirstOrDefault()?.Vaccine?.VaccineName ?? "Unknown", // ✅ Fix lỗi VaccineName
                 DoseNumber = a.AppointmentsVaccines.FirstOrDefault()?.DoseNumber ?? 0,
                 TotalPrice = a.AppointmentsVaccines.FirstOrDefault()?.TotalPrice ?? 0,
                 Notes = a.Notes
@@ -164,57 +165,56 @@ public class AppointmentService : IAppointmentService
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     public async Task<AppointmentDTO> GetAppointmentDetailsByChildIdAsync(Guid childId)
-{
-    try
     {
-        _logger.Info($"Fetching appointment details for child ID: {childId}");
-
-        // Kiểm tra nếu trẻ tồn tại
-        var childExists = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
-        if (childExists == null)
+        try
         {
-            _logger.Warn($"Child with ID {childId} not found.");
-            throw new Exception("Child not found.");
+            _logger.Info($"Fetching appointment details for child ID: {childId}");
+
+            // Kiểm tra nếu trẻ tồn tại
+            var childExists = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
+            if (childExists == null)
+            {
+                _logger.Warn($"Child with ID {childId} not found.");
+                throw new Exception("Child not found.");
+            }
+
+            // Lấy cuộc hẹn gần nhất của trẻ, Include AppointmentsVaccines và Vaccine
+            var appointment = await _unitOfWork.AppointmentRepository.GetQueryable()
+                .Where(a => a.ChildId == childId)
+                .Include(a => a.AppointmentsVaccines) // Bao gồm danh sách vaccine
+                .ThenInclude(av => av.Vaccine) // Nạp Vaccine đúng cách
+                .FirstOrDefaultAsync(); // Lấy cuộc hẹn gần nhất
+
+            if (appointment == null)
+            {
+                _logger.Warn($"No appointment found for child ID: {childId}");
+                return null;
+            }
+
+            // Lấy thông tin vaccine từ AppointmentsVaccines
+            var vaccine = appointment.AppointmentsVaccines.FirstOrDefault()?.Vaccine;
+
+            _logger.Info($"Successfully retrieved appointment ID: {appointment.Id} for child ID: {childId}");
+
+            // Chuyển đổi sang DTO
+            var appointmentDto = new AppointmentDTO
+            {
+                AppointmentId = appointment.Id,
+                ChildId = appointment.ChildId.Value,
+                AppointmentDate = appointment.AppointmentDate.Value,
+                Status = appointment.Status.ToString(),
+                VaccineName = vaccine?.VaccineName ?? "Unknown", // ✅ Fix lỗi VaccineName
+                DoseNumber = appointment.AppointmentsVaccines.FirstOrDefault()?.DoseNumber ?? 0,
+                TotalPrice = appointment.AppointmentsVaccines.FirstOrDefault()?.TotalPrice ?? 0,
+                Notes = appointment.Notes
+            };
+
+            return appointmentDto;
         }
-
-        // Lấy cuộc hẹn gần nhất của trẻ, Include AppointmentsVaccines và Vaccine
-        var appointment = await _unitOfWork.AppointmentRepository.GetQueryable()
-            .Where(a => a.ChildId == childId)
-            .Include(a => a.AppointmentsVaccines) // Bao gồm danh sách vaccine
-            .ThenInclude(av => av.Vaccine) // Nạp Vaccine đúng cách
-            .FirstOrDefaultAsync(); // Lấy cuộc hẹn gần nhất
-
-        if (appointment == null)
+        catch (Exception ex)
         {
-            _logger.Warn($"No appointment found for child ID: {childId}");
-            return null;
+            _logger.Error($"Error retrieving appointment details for child ID {childId}: {ex.Message}");
+            throw;
         }
-
-        // Lấy thông tin vaccine từ AppointmentsVaccines
-        var vaccine = appointment.AppointmentsVaccines.FirstOrDefault()?.Vaccine;
-
-        _logger.Info($"Successfully retrieved appointment ID: {appointment.Id} for child ID: {childId}");
-
-        // Chuyển đổi sang DTO
-        var appointmentDto = new AppointmentDTO
-        {
-            AppointmentId = appointment.Id,
-            ChildId = appointment.ChildId.Value,
-            AppointmentDate = appointment.AppointmentDate.Value,
-            Status = appointment.Status.ToString(),
-            VaccineName = vaccine?.VaccineName ?? "Unknown", // ✅ Fix lỗi VaccineName
-            DoseNumber = appointment.AppointmentsVaccines.FirstOrDefault()?.DoseNumber ?? 0,
-            TotalPrice = appointment.AppointmentsVaccines.FirstOrDefault()?.TotalPrice ?? 0,
-            Notes = appointment.Notes
-        };
-
-        return appointmentDto;
     }
-    catch (Exception ex)
-    {
-        _logger.Error($"Error retrieving appointment details for child ID {childId}: {ex.Message}");
-        throw;
-    }
-}
-
 }
