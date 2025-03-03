@@ -317,7 +317,7 @@ namespace VaccinaCare.UnitTest
                 Price = 100,
                 IsDeleted = false,
                 RequiredDoses = 2,
-                ForBloodType = BloodType.O, // ✅ Sửa lỗi kiểu dữ liệu
+                ForBloodType = BloodType.O, 
                 AvoidChronic = true,
                 AvoidAllergy = false,
                 HasDrugInteraction = false,
@@ -339,7 +339,7 @@ namespace VaccinaCare.UnitTest
                 .GetAllAsync(It.IsAny<Expression<Func<VaccinePackageDetail, bool>>>()))
                 .ReturnsAsync(vaccinePackageDetails);
 
-            // ✅ Chuyển đổi IEnumerable thành List trước khi gọi SoftRemoveRange
+           
             _unitOfWorkMock.Setup(u => u.VaccinePackageDetailRepository
                 .SoftRemoveRange(It.IsAny<List<VaccinePackageDetail>>()))
                 .ReturnsAsync(true);

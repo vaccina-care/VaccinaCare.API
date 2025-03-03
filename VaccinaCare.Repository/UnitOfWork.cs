@@ -59,17 +59,11 @@ namespace VaccinaCare.Repository
         public IGenericRepository<Vaccine> VaccineRepository => _vaccineRepository;
         public IGenericRepository<Appointment> AppointmentRepository => _appointmentRepository;
         public IGenericRepository<VaccinePackage> VaccinePackageRepository => _vaccinePackageRepository;
-
-        public IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository =>
-            _vaccinePackageDetailRepository;
-
+        public IGenericRepository<VaccinePackageDetail> VaccinePackageDetailRepository => _vaccinePackageDetailRepository;
         public IGenericRepository<VaccineSuggestion> VaccineSuggestionRepository => _vaccineSuggestionRepository;
         public IGenericRepository<VaccinationRecord> VaccinationRecordRepository => _vaccinationRecordRepository;
         public IGenericRepository<VaccineIntervalRules> VaccineIntervalRulesRepository => _vaccineIntervalRules;
-
-        public IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository =>
-            _appointmentVaccineSuggestionsRepository;
-
+        public IGenericRepository<AppointmentVaccineSuggestions> AppointmentVaccineSuggestionsRepository => _appointmentVaccineSuggestionsRepository;
         public IGenericRepository<AppointmentsVaccine> AppointmentsVaccineRepository => _appointmentsVaccineRepository;
         public IGenericRepository<Feedback> FeedbackRepository => _feedbackRepository;
 
