@@ -74,16 +74,12 @@ public class VaccineController : ControllerBase
         try
         {
             if (page < 1 || pageSize < 1)
-            {
                 return BadRequest(ApiResult<object>.Error("400 - Invalid pagination parameters."));
-            }
 
             var result = await _vaccineService.GetVaccines(search, type, sortBy, isDescending, page, pageSize);
 
             if (result == null || !result.Items.Any())
-            {
                 return NotFound(ApiResult<object>.Error("404 - No vaccines found."));
-            }
 
             return Ok(ApiResult<object>.Success(new
             {
@@ -115,10 +111,7 @@ public class VaccineController : ControllerBase
         try
         {
             var vaccine = await _vaccineService.GetVaccineById(id);
-            if (vaccine == null)
-            {
-                return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
-            }
+            if (vaccine == null) return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
 
             return Ok(ApiResult<VaccineDTO>.Success(vaccine, "Get vaccine details successfully"));
         }
@@ -136,10 +129,7 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> Update(Guid id, [FromBody] VaccineDTO vaccineDTO)
     {
-        if (vaccineDTO == null)
-        {
-            return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
-        }
+        if (vaccineDTO == null) return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
 
         try
         {
@@ -169,9 +159,7 @@ public class VaccineController : ControllerBase
             var deletedVaccine = await _vaccineService.DeleteVaccine(id);
 
             if (deletedVaccine == null)
-            {
                 return BadRequest(ApiResult<object>.Error("400 - Vaccine deleting failed. Please check input data."));
-            }
 
             return Ok(ApiResult<VaccineDTO>.Success(deletedVaccine, "Vaccine deleted successfully."));
         }

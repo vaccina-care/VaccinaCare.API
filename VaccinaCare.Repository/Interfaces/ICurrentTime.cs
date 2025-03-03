@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VaccinaCare.Repository.Interfaces
+namespace VaccinaCare.Repository.Interfaces;
+
+public interface ICurrentTime
 {
-    public interface ICurrentTime
-    {
-        public DateTime GetCurrentTime();
-    }
+    public DateTime GetCurrentTime();
 }

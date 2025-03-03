@@ -4,7 +4,7 @@ namespace VaccinaCare.Domain.Entities;
 
 public partial class Child : BaseEntity
 {
-    public Guid? ParentId { get; set; } 
+    public Guid? ParentId { get; set; }
     public string? FullName { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public bool Gender { get; set; }
@@ -24,12 +24,10 @@ public partial class Child : BaseEntity
     public bool HasOtherSpecialCondition { get; set; } // Có triệu chứng đặc biệt không
     public string? OtherSpecialConditionDescription { get; set; } // Mô tả triệu chứng
 
-    public virtual User? Parent { get; set; } 
+    public virtual User? Parent { get; set; }
 
     public virtual ICollection<PackageProgress> PackageProgresses { get; set; } = new List<PackageProgress>();
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
     public virtual ICollection<VaccineSuggestion> VaccineSuggestions { get; set; } = new List<VaccineSuggestion>();
     public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; } = new List<VaccinationRecord>();
 }
-
-

@@ -37,7 +37,7 @@ public class ChildService : IChildService
         try
         {
             // Get ParentId from ClaimsService
-            Guid parentId = _claimsService.GetCurrentUserId;
+            var parentId = _claimsService.GetCurrentUserId;
 
             _loggerService.Info($"Starting child profile creation for parent {parentId}");
 
@@ -119,7 +119,7 @@ public class ChildService : IChildService
         try
         {
             // Lấy ParentId từ ClaimsService
-            Guid parentId = _claimsService.GetCurrentUserId;
+            var parentId = _claimsService.GetCurrentUserId;
             _loggerService.Info($"Fetching all children for parent {parentId}");
 
             // Truy vấn danh sách trẻ em thuộc về phụ huynh
@@ -173,12 +173,12 @@ public class ChildService : IChildService
         try
         {
             // Lấy ParentId
-            Guid parentId = _claimsService.GetCurrentUserId;
+            var parentId = _claimsService.GetCurrentUserId;
             _loggerService.Info($"Parent {parentId} requested to delete child {childId}");
 
             // Lấy thông tin trẻ em từ DB
             var child = await _unitOfWork.ChildRepository.GetByIdAsync(childId);
-        
+
             // Kiểm tra xem child có tồn tại và có thuộc về parent hay không
             if (child == null || child.ParentId != parentId)
             {
@@ -189,7 +189,7 @@ public class ChildService : IChildService
             // Thực hiện Soft Delete
             await _unitOfWork.ChildRepository.SoftRemove(child);
             await _unitOfWork.SaveChangesAsync();
-        
+
             _loggerService.Success($"Parent {parentId} successfully deleted child {childId}.");
         }
         catch (KeyNotFoundException ex)
@@ -217,7 +217,7 @@ public class ChildService : IChildService
     {
         try
         {
-            Guid parentId = _claimsService.GetCurrentUserId;
+            var parentId = _claimsService.GetCurrentUserId;
             _loggerService.Info($"Starting child profile update for parent {parentId}");
 
             var parent = await _unitOfWork.UserRepository.GetByIdAsync(parentId);

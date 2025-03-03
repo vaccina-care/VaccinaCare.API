@@ -66,7 +66,7 @@ public class AuthController : ControllerBase
                 Url = "/welcome",
                 UserId = user.Id
             };
-            
+
             if (!string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(user.Email))
             {
                 var emailRequest = new EmailRequestDTO(user.Email, user.FullName);
@@ -111,7 +111,7 @@ public class AuthController : ControllerBase
 
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
             var loginResponse = await _authService.LoginAsync(loginDTO, configuration);
@@ -135,7 +135,7 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during login."));
         }
     }
-    
+
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
@@ -145,7 +145,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            Guid currentUserId = _claimsService.GetCurrentUserId;
+            var currentUserId = _claimsService.GetCurrentUserId;
 
             _logger.Info($"Logout request initiated for user ID: {currentUserId}");
 
@@ -165,7 +165,4 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during logout."));
         }
     }
-
-    
-
 }

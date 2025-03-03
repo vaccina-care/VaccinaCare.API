@@ -2,7 +2,6 @@
 
 public partial class VaccineAvailability : BaseEntity
 {
-
     public Guid? AvailabilityId { get; set; }
 
     public DateOnly? Date { get; set; }

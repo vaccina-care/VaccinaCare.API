@@ -33,14 +33,14 @@ public class VaccineRecordService : IVaccineRecordService
             await _unitOfWork.VaccinationRecordRepository.AddAsync(vaccinationRecord);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"[Success] Vaccination record added for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}");
+            _logger.Info(
+                $"[Success] Vaccination record added for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}");
         }
         catch (Exception ex)
         {
-            _logger.Info($"[Error] Failed to add vaccination record for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}. Error: {ex.Message}");
+            _logger.Info(
+                $"[Error] Failed to add vaccination record for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}. Error: {ex.Message}");
             throw new Exception("Lỗi khi thêm hồ sơ tiêm chủng. Vui lòng thử lại sau.");
         }
     }
-
-
 }

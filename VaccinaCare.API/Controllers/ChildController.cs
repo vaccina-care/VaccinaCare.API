@@ -115,9 +115,7 @@ public class ChildController : ControllerBase
     public async Task<IActionResult> UpdateChild(Guid childId, [FromBody] UpdateChildDto updateChildDto)
     {
         if (updateChildDto == null)
-        {
             return BadRequest(new ApiResult<object> { IsSuccess = false, Message = "Invalid child data." });
-        }
 
         try
         {

@@ -27,10 +27,7 @@ public class VaccineService : IVaccineService
     /// </summary>
     public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
     {
-        if (vaccineIds == null || vaccineIds.Count == 0)
-        {
-            return false;
-        }
+        if (vaccineIds == null || vaccineIds.Count == 0) return false;
 
         try
         {
@@ -38,10 +35,7 @@ public class VaccineService : IVaccineService
             var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
                 .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
 
-            if (!packageDetails.Any())
-            {
-                return false;
-            }
+            if (!packageDetails.Any()) return false;
 
             // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
             var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
@@ -55,11 +49,9 @@ public class VaccineService : IVaccineService
                 var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
 
                 // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
-                if (packageVaccineList.All(v => vaccineIds.Contains(v)))
-                {
-                    return true;
-                }
+                if (packageVaccineList.All(v => vaccineIds.Contains(v))) return true;
             }
+
             return false;
         }
         catch (Exception ex)
@@ -131,8 +123,8 @@ public class VaccineService : IVaccineService
             return 1; // Nếu chưa có mũi nào, bắt đầu từ mũi 1
         }
 
-        int lastDoseNumber = records.Max(r => r.DoseNumber);
-        int nextDose = lastDoseNumber + 1;
+        var lastDoseNumber = records.Max(r => r.DoseNumber);
+        var nextDose = lastDoseNumber + 1;
 
         _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
 
@@ -221,18 +213,15 @@ public class VaccineService : IVaccineService
             // Filtering
             if (!string.IsNullOrWhiteSpace(search))
             {
-                string searchLower = search.Trim().ToLower();
+                var searchLower = search.Trim().ToLower();
                 queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
             }
 
             if (!string.IsNullOrWhiteSpace(type))
-            {
                 queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
-            }
             //Sorting
 
             if (!string.IsNullOrWhiteSpace(sortBy))
-            {
                 switch (sortBy.ToLower())
                 {
                     case "vaccinename":
@@ -255,7 +244,6 @@ public class VaccineService : IVaccineService
                         queryList = queryList.OrderBy(v => v.VaccineName).ToList();
                         break;
                 }
-            }
 
             // Pagination
             var totalItems = queryList.Count();
@@ -435,7 +423,7 @@ public class VaccineService : IVaccineService
                 _logger.Info(
                     $"Found {vaccinePackageDetails.Count} VaccinePackageDetails associated with Vaccine ID: {id}. Soft deleting...");
 
-                bool packageDetailDeleteResult =
+                var packageDetailDeleteResult =
                     await _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(vaccinePackageDetails);
                 if (!packageDetailDeleteResult)
                 {
@@ -444,7 +432,7 @@ public class VaccineService : IVaccineService
                 }
             }
 
-            bool deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
+            var deleteResult = await _unitOfWork.VaccineRepository.SoftRemove(vaccine);
             if (!deleteResult)
             {
                 _logger.Warn($"Vaccine with ID {id} could not be deleted.");

@@ -8,6 +8,7 @@ using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
+
 [ApiController]
 [Route("api/appointment")]
 public class AppointmentController : ControllerBase
@@ -33,16 +34,14 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            Guid parentId = _claimsService.GetCurrentUserId;
+            var parentId = _claimsService.GetCurrentUserId;
 
             if (request.VaccineIds == null || !request.VaccineIds.Any())
-            {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Danh sách vaccine không hợp lệ."
                 });
-            }
 
             var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 

@@ -6,7 +6,7 @@
     image: phuctran362003/vaccinacareapi:latest
     ports:
       - "5000:5000"
-    depends_on: 
+    depends_on:
       - vaccinacare-database
     environment:
       - ASPNETCORE_ENVIRONMENT=Development

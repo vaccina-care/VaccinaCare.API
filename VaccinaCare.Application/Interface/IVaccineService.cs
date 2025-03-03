@@ -10,6 +10,7 @@ public interface IVaccineService
 
     Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
         DateTime appointmentDate);
+
     //CRUD
     Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto vaccineDTO);
     Task<VaccineDTO> DeleteVaccine(Guid id);

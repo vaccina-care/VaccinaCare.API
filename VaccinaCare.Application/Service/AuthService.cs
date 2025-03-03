@@ -59,11 +59,11 @@ public class AuthService : IAuthService
             _logger.Info($"Role '{roleName}' identified for user with email: {loginDTO.Email}.");
 
             var accessToken = JwtUtils.GenerateJwtToken(
-                user.Id, 
+                user.Id,
                 user.Email,
                 roleName,
                 configuration,
-                TimeSpan.FromMinutes(30) 
+                TimeSpan.FromMinutes(30)
             );
 
             var refreshToken = Guid.NewGuid().ToString();
@@ -93,6 +93,7 @@ public class AuthService : IAuthService
             throw;
         }
     }
+
     public async Task<User?> RegisterAsync(RegisterRequestDTO registerRequest)
     {
         try
@@ -154,7 +155,7 @@ public class AuthService : IAuthService
             return null;
         }
     }
-    
+
     public async Task<bool> LogoutAsync(Guid userId)
     {
         _logger.Info($"Logout process initiated for user ID: {userId}");
@@ -187,13 +188,4 @@ public class AuthService : IAuthService
             throw;
         }
     }
-
-
-
-    
-    
-    
-
-    
-    
 }

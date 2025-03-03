@@ -1,12 +1,11 @@
 ﻿using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 
-namespace VaccinaCare.Application.Interface
+namespace VaccinaCare.Application.Interface;
+
+public interface IUserService
 {
-    public interface IUserService
-    {
-        Task<IEnumerable<User>> GetAllUsersAsync();
-        Task<CurrentUserDTO> GetUserDetails(Guid id);
-        Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto);
-    }
+    Task<IEnumerable<User>> GetAllUsersAsync();
+    Task<CurrentUserDTO> GetUserDetails(Guid id);
+    Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto);
 }

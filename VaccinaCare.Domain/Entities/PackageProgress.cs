@@ -20,4 +20,3 @@ public partial class PackageProgress : BaseEntity
 
     public virtual User? Parent { get; set; }
 }
-
