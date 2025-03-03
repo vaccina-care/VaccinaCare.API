@@ -66,8 +66,7 @@ public class AuthController : ControllerBase
                 Url = "/welcome",
                 UserId = user.Id
             };
-            await _notificationService.PushNotificationToUser(user.Id, notificationDTO);
-
+            
             if (!string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(user.Email))
             {
                 var emailRequest = new EmailRequestDTO(user.Email, user.FullName);
@@ -92,7 +91,6 @@ public class AuthController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during registration."));
         }
     }
-
 
     [HttpPost("login")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

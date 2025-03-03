@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain;
@@ -459,31 +457,37 @@ namespace VaccinaCare.API.Controllers
             {
                 _logger.Info("Bắt đầu xóa dữ liệu trong database...");
 
-                // Danh sách các bảng cần xóa (theo thứ tự quan hệ FK)
                 var tablesToDelete = new List<Func<Task>>
-                {
-                    () => context.Notifications.ExecuteDeleteAsync(),
-                    () => context.AppointmentsServices.ExecuteDeleteAsync(),
-                    () => context.Appointments.ExecuteDeleteAsync(),
-                    () => context.CancellationPolicies.ExecuteDeleteAsync(),
-                    () => context.Children.ExecuteDeleteAsync(),
-                    () => context.Feedbacks.ExecuteDeleteAsync(),
-                    () => context.Invoices.ExecuteDeleteAsync(),
-                    () => context.PackageProgresses.ExecuteDeleteAsync(),
-                    () => context.Payments.ExecuteDeleteAsync(),
-                    () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
-                    () => context.VaccinationRecords.ExecuteDeleteAsync(),
-                    () => context.VaccineSuggestions.ExecuteDeleteAsync(),
+{
+    () => context.Notifications.ExecuteDeleteAsync(),
+    () => context.AppointmentsServices.ExecuteDeleteAsync(),
+    () => context.Appointments.ExecuteDeleteAsync(),
+    () => context.CancellationPolicies.ExecuteDeleteAsync(),
+    () => context.Children.ExecuteDeleteAsync(),
+    () => context.Feedbacks.ExecuteDeleteAsync(),
+    () => context.Invoices.ExecuteDeleteAsync(),
+    () => context.PackageProgresses.ExecuteDeleteAsync(),
+    () => context.Payments.ExecuteDeleteAsync(),
+    () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
+    () => context.VaccinationRecords.ExecuteDeleteAsync(),
+    () => context.VaccineSuggestions.ExecuteDeleteAsync(),
 
-                    // Delete VaccinePackageDetail first, then VaccinePackage
-                    () => context.VaccinePackageDetails.ExecuteDeleteAsync(), // Child
-                    () => context.VaccinePackages.ExecuteDeleteAsync(), // Parent
+    // Xóa bảng VaccineIntervalRules trước khi xóa Vaccine
+    () => context.VaccineIntervalRules.ExecuteDeleteAsync(),
 
-                    () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
-                    () => context.Vaccines.ExecuteDeleteAsync(),
-                    () => context.Users.ExecuteDeleteAsync(),
-                    () => context.Roles.ExecuteDeleteAsync(),
-                };
+    // Xóa VaccinePackageDetail trước VaccinePackage
+    () => context.VaccinePackageDetails.ExecuteDeleteAsync(),
+    () => context.VaccinePackages.ExecuteDeleteAsync(),
+
+    () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
+
+    // Sau khi VaccineIntervalRules đã xóa, mới xóa Vaccine
+    () => context.Vaccines.ExecuteDeleteAsync(),
+
+    () => context.Users.ExecuteDeleteAsync(),
+    () => context.Roles.ExecuteDeleteAsync(),
+};
+
 
 
                 foreach (var deleteFunc in tablesToDelete)

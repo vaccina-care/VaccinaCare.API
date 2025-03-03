@@ -8,9 +8,6 @@ using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
-
-using VaccinaCare.Repository.Commons;
-
 [ApiController]
 [Route("api/appointment")]
 public class AppointmentController : ControllerBase
@@ -32,7 +29,7 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GenerateAppointments([FromBody] GenerateAppointmentsRequest request)
+    public async Task<IActionResult> GenerateAppointments([FromBody] CreateAppointmentDto request)
     {
         try
         {
@@ -46,8 +43,8 @@ public class AppointmentController : ControllerBase
                     Message = "Danh sách vaccine không hợp lệ."
                 });
             }
-            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(
-                request.VaccineIds, request.ChildId, parentId, request.StartDate);
+
+            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
             return Ok(new ApiResult<List<AppointmentDTO>>
             {
@@ -76,7 +73,8 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpGet("child/{childId}")]
+
+    [HttpGet("details/{childId}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<Appointment>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
