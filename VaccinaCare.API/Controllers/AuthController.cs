@@ -64,6 +64,7 @@ public class AuthController : ControllerBase
                 Title = "Welcome to VaccinaCare!",
                 Content = "Thank you for registering with VaccinaCare. We're excited to have you on board!",
                 Url = "/welcome",
+                
                 UserId = user.Id
             };
 

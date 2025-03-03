@@ -6,5 +6,6 @@ namespace VaccinaCare.Application.Interface;
 public interface IAppointmentService
 {
     Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(CreateAppointmentDto request, Guid parentId);
-    Task<Appointment?> GetAppointmentDetailsByChildIdAsync(Guid childId);
+    Task<List<AppointmentDTO>> GetAllAppointmentsByChildIdAsync(Guid childId);
+    Task<AppointmentDTO> GetAppointmentDetailsByChildIdAsync(Guid childId);
 }
