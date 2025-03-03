@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 
 namespace VaccinaCare.Application.Interface;
@@ -12,7 +13,7 @@ public interface IVaccineService
         DateTime appointmentDate);
 
     //CRUD
-    Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto vaccineDTO);
+    Task<CreateVaccineDto> CreateVaccine(CreateVaccineDto createVaccineDto, IFormFile vaccinePictureFile);
     Task<VaccineDTO> DeleteVaccine(Guid id);
 
     Task<VaccineDTO> UpdateVaccine(Guid id, VaccineDTO vaccineDTO);

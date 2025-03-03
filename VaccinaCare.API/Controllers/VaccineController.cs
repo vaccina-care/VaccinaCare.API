@@ -30,7 +30,7 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto)
+    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto, IFormFile? vaccinePictureFile)
     {
         _logger.Info("Create vaccine request received.");
 
@@ -40,11 +40,17 @@ public class VaccineController : ControllerBase
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
         }
 
+        if (vaccinePictureFile == null || vaccinePictureFile.Length == 0)
+        {
+            _logger.Warn("CreateVaccine: Vaccine picture is missing.");
+            return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
+        }
+
         try
         {
             _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {createVaccineDto.VaccineName}.");
 
-            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto);
+            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto, vaccinePictureFile);
 
             if (createdVaccine == null)
             {
@@ -61,6 +67,7 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
+
 
     [HttpGet]
     public async Task<IActionResult> Get(
