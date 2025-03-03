@@ -197,7 +197,8 @@ public partial class VaccinaCareDbContext : DbContext
                 .IsRequired();
 
             entity.Property(e => e.PenaltyFee)
-                .HasColumnType("decimal(18, 2)") // Giữ nguyên kiểu decimal, nhưng sửa thành 2 chữ số thập phân để chính xác hơn
+                .HasColumnType(
+                    "decimal(18, 2)") // Giữ nguyên kiểu decimal, nhưng sửa thành 2 chữ số thập phân để chính xác hơn
                 .IsRequired();
 
             entity.Property(e => e.PolicyName)

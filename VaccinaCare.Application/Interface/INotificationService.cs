@@ -7,4 +7,6 @@ public interface INotificationService
 {
     // Push notification to a specific user
     Task<Notification> PushNotificationToUser(Guid userId, NotificationDTO notificationDTO);
+    Task<Notification> PushNotificationWhenUserUseService(Guid userId, NotificationForUserDTO notificationDTO);
+    Task<Notification> PushNotificationAppointment(Guid userId, NotificationForAppointmentDTO notificationDTO);
 }

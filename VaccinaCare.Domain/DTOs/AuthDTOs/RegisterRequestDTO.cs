@@ -1,4 +1,8 @@
-﻿using System.ComponentModel; // Import thư viện để dùng [DefaultValue]
+﻿using System.ComponentModel;
+
+// Import thư viện để dùng [DefaultValue]
+
+namespace VaccinaCare.Domain.DTOs.AuthDTOs;
 
 public class RegisterRequestDTO
 {

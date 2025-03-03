@@ -134,7 +134,8 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineDto updateVaccineDto, IFormFile? vaccinePictureFile)
+    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineDto updateVaccineDto,
+        IFormFile? vaccinePictureFile)
     {
         if (updateVaccineDto == null)
             return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));

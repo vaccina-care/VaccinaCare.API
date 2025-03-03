@@ -1,11 +1,10 @@
 ﻿using Minio;
 using Minio.DataModel.Args;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Minio.Exceptions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+
+namespace VaccinaCare.Application.Service;
 
 public class BlobService : IBlobService
 {
