@@ -2,7 +2,6 @@
 
 public partial class VaccinePackageDetail : BaseEntity
 {
-
     public Guid? PackageId { get; set; }
 
     public Guid? VaccineId { get; set; }

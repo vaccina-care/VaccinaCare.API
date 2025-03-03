@@ -9,4 +9,3 @@ public class NotificationForUserDTO
     public string? Role { get; set; }
     public bool IsRead { get; set; } = false;
 }
-

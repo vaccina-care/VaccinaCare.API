@@ -18,7 +18,8 @@ public class NotificationService : INotificationService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<Notification> PushNotificationAppointment(Guid userId, NotificationForAppointmentDTO notificationDTO)
+    public async Task<Notification> PushNotificationAppointment(Guid userId,
+        NotificationForAppointmentDTO notificationDTO)
     {
         try
         {
@@ -86,7 +87,8 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<Notification> PushNotificationWhenUserUseService(Guid userId, NotificationForUserDTO notificationDTO)
+    public async Task<Notification> PushNotificationWhenUserUseService(Guid userId,
+        NotificationForUserDTO notificationDTO)
     {
         try
         {
@@ -119,5 +121,4 @@ public class NotificationService : INotificationService
             throw;
         }
     }
-
 }

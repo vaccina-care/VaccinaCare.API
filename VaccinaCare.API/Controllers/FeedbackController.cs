@@ -11,12 +11,13 @@ using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
-    [Route("api/feedback")]
-    [ApiController]
+[Route("api/feedback")]
+[ApiController]
 public class FeedbackController : ControllerBase
 {
     private readonly IFeedbackService _feedbackService;
     private readonly ILoggerService _logger;
+
     public FeedbackController(IFeedbackService feedbackService, ILoggerService logger)
     {
         _feedbackService = feedbackService;
@@ -37,14 +38,13 @@ public class FeedbackController : ControllerBase
         {
             _logger.Info("Received request to create feedback.");
 
-            if (feedbackDto == null || feedbackDto.AppointmentId == Guid.Empty || feedbackDto.Rating < 1 || feedbackDto.Rating > 5)
-            {
+            if (feedbackDto == null || feedbackDto.AppointmentId == Guid.Empty || feedbackDto.Rating < 1 ||
+                feedbackDto.Rating > 5)
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Invalid feedback data. Please provide a valid appointment ID and rating between 1 and 5."
                 });
-            }
 
             var feedback = await _feedbackService.CreateFeedbackAsync(feedbackDto);
             _logger.Success($"Feedback created successfully for Appointment {feedback.AppointmentId}.");
@@ -75,6 +75,7 @@ public class FeedbackController : ControllerBase
             });
         }
     }
+
     [HttpGet("paging")]
     [ProducesResponseType(typeof(ApiResult<Pagination<FeedbackDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -106,6 +107,7 @@ public class FeedbackController : ControllerBase
             });
         }
     }
+
     /// <summary>
     /// Get feedback by ID
     /// </summary>
@@ -145,6 +147,7 @@ public class FeedbackController : ControllerBase
             });
         }
     }
+
     /// <summary>
     /// User cập nhật feedback trong vòng 24h
     /// </summary>
@@ -156,13 +159,11 @@ public class FeedbackController : ControllerBase
             _logger.Info($"Received request to update feedback {feedbackId}.");
 
             if (feedbackDto == null || feedbackDto.Rating < 1 || feedbackDto.Rating > 5)
-            {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Invalid feedback data. Rating must be between 1 and 5."
                 });
-            }
 
             var updatedFeedback = await _feedbackService.UpdateFeedbackAsync(feedbackId, feedbackDto);
             _logger.Success($"Feedback {feedbackId} updated successfully.");
@@ -232,4 +233,3 @@ public class FeedbackController : ControllerBase
         }
     }
 }
-

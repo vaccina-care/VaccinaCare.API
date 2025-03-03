@@ -7,14 +7,13 @@ using VaccinaCare.Domain.DTOs.FeedbackDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Commons;
 
-namespace VaccinaCare.Application.Interface
+namespace VaccinaCare.Application.Interface;
+
+public interface IFeedbackService
 {
-    public interface IFeedbackService
-    {
-        Task<FeedbackDTO> CreateFeedbackAsync(FeedbackDTO feedbackDto);
-        Task<FeedbackDTO> UpdateFeedbackAsync(Guid feedbackId, FeedbackDTO feedbackDto);
-        Task DeleteFeedbackAsync(Guid feedbackId);
-        Task<FeedbackDTO> GetFeedbackByIdAsync(Guid feedbackId);
-        Task<Pagination<FeedbackDTO>> GetAllFeedbacksAsync(PaginationParameter pagination);
-    }
+    Task<FeedbackDTO> CreateFeedbackAsync(FeedbackDTO feedbackDto);
+    Task<FeedbackDTO> UpdateFeedbackAsync(Guid feedbackId, FeedbackDTO feedbackDto);
+    Task DeleteFeedbackAsync(Guid feedbackId);
+    Task<FeedbackDTO> GetFeedbackByIdAsync(Guid feedbackId);
+    Task<Pagination<FeedbackDTO>> GetAllFeedbacksAsync(PaginationParameter pagination);
 }

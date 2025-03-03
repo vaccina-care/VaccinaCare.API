@@ -30,7 +30,7 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto)
+    public async Task<IActionResult> Create([FromForm] CreateVaccineDto createVaccineDto, IFormFile? vaccinePictureFile)
     {
         _logger.Info("Create vaccine request received.");
 
@@ -40,11 +40,17 @@ public class VaccineController : ControllerBase
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
         }
 
+        if (vaccinePictureFile == null || vaccinePictureFile.Length == 0)
+        {
+            _logger.Warn("CreateVaccine: Vaccine picture is missing.");
+            return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
+        }
+
         try
         {
             _logger.Info($"CreateVaccine: Attempting to create a new vaccine - {createVaccineDto.VaccineName}.");
 
-            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto);
+            var createdVaccine = await _vaccineService.CreateVaccine(createVaccineDto, vaccinePictureFile);
 
             if (createdVaccine == null)
             {
@@ -53,7 +59,7 @@ public class VaccineController : ControllerBase
             }
 
             _logger.Success($"CreateVaccine: Vaccine '{createdVaccine.VaccineName}' created successfully.");
-            return Ok(ApiResult<CreateVaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
+            return Ok(ApiResult<VaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
         }
         catch (Exception ex)
         {
@@ -61,6 +67,7 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
+
 
     [HttpGet]
     public async Task<IActionResult> Get(
@@ -74,16 +81,12 @@ public class VaccineController : ControllerBase
         try
         {
             if (page < 1 || pageSize < 1)
-            {
                 return BadRequest(ApiResult<object>.Error("400 - Invalid pagination parameters."));
-            }
 
             var result = await _vaccineService.GetVaccines(search, type, sortBy, isDescending, page, pageSize);
 
             if (result == null || !result.Items.Any())
-            {
                 return NotFound(ApiResult<object>.Error("404 - No vaccines found."));
-            }
 
             return Ok(ApiResult<object>.Success(new
             {
@@ -107,7 +110,7 @@ public class VaccineController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResult<VaccineDTO>), 200)]
+    [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> GetVaccineById([FromRoute] Guid id)
@@ -115,12 +118,9 @@ public class VaccineController : ControllerBase
         try
         {
             var vaccine = await _vaccineService.GetVaccineById(id);
-            if (vaccine == null)
-            {
-                return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
-            }
+            if (vaccine == null) return NotFound(ApiResult<object>.Error("404 - Vaccine not found."));
 
-            return Ok(ApiResult<VaccineDTO>.Success(vaccine, "Get vaccine details successfully"));
+            return Ok(ApiResult<VaccineDto>.Success(vaccine, "Get vaccine details successfully"));
         }
         catch (Exception ex)
         {
@@ -129,22 +129,24 @@ public class VaccineController : ControllerBase
     }
 
 
-    [HttpPut("{id}")]
+    [HttpPut]
     [Authorize(Policy = "StaffPolicy")]
-    [ProducesResponseType(typeof(ApiResult<VaccineDTO>), 200)]
+    [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] VaccineDTO vaccineDTO)
+    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineDto updateVaccineDto,
+        IFormFile? vaccinePictureFile)
     {
-        if (vaccineDTO == null)
-        {
+        if (updateVaccineDto == null)
             return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
-        }
 
         try
         {
-            var updateVaccine = await _vaccineService.UpdateVaccine(id, vaccineDTO);
-            return Ok(ApiResult<VaccineDTO>.Success(updateVaccine, "Vaccine updated successfully."));
+            _logger.Info($"Received request to update vaccine: {updateVaccineDto.VaccineName}");
+
+            var updatedVaccine = await _vaccineService.UpdateVaccine(vaccineId, updateVaccineDto, vaccinePictureFile);
+
+            return Ok(ApiResult<VaccineDto>.Success(updatedVaccine, "Vaccine updated successfully."));
         }
         catch (KeyNotFoundException ex)
         {
@@ -153,9 +155,11 @@ public class VaccineController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.Error($"Error while updating vaccine: {ex.Message}");
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));
         }
     }
+
 
     [Authorize(Policy = "StaffPolicy")]
     [HttpDelete("{id}")]
@@ -169,11 +173,9 @@ public class VaccineController : ControllerBase
             var deletedVaccine = await _vaccineService.DeleteVaccine(id);
 
             if (deletedVaccine == null)
-            {
                 return BadRequest(ApiResult<object>.Error("400 - Vaccine deleting failed. Please check input data."));
-            }
 
-            return Ok(ApiResult<VaccineDTO>.Success(deletedVaccine, "Vaccine deleted successfully."));
+            return Ok(ApiResult<VaccineDto>.Success(deletedVaccine, "Vaccine deleted successfully."));
         }
         catch (ValidationException ex)
         {

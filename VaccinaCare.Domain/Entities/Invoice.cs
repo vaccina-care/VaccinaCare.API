@@ -2,7 +2,6 @@
 
 public partial class Invoice : BaseEntity
 {
-
     public Guid? UserId { get; set; }
 
     public Guid? PaymentId { get; set; }

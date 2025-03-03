@@ -46,7 +46,6 @@ public partial class VaccinaCareDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-        {
             if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType) && entityType.ClrType != typeof(BaseEntity))
             {
                 // Configure common properties for BaseEntity
@@ -77,7 +76,6 @@ public partial class VaccinaCareDbContext : DbContext
 
                 hasQueryFilterMethod.Invoke(entityBuilder, new object[] { lambda });
             }
-        }
 
         // Map tables to match entity names
 
@@ -151,7 +149,6 @@ public partial class VaccinaCareDbContext : DbContext
         });
 
 
-
         modelBuilder.Entity<Appointment>()
             .Property(a => a.Status)
             .HasConversion<string>()
@@ -161,7 +158,7 @@ public partial class VaccinaCareDbContext : DbContext
             .Property(a => a.VaccineType)
             .HasConversion<string>()
             .HasMaxLength(50);
-        
+
         modelBuilder.Entity<AppointmentVaccineSuggestions>()
             .HasKey(av => new { av.AppointmentId, av.VaccineSuggestionId });
 
@@ -174,7 +171,6 @@ public partial class VaccinaCareDbContext : DbContext
             .HasOne(av => av.VaccineSuggestion)
             .WithMany(vs => vs.AppointmentVaccineSuggestions)
             .HasForeignKey(av => av.VaccineSuggestionId);
-
 
 
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
@@ -195,10 +191,21 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<CancellationPolicy>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Cancella__2E1339442FD3D154");
-            entity.Property(e => e.Description).HasColumnType("text");
-            entity.Property(e => e.PenaltyFee).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.PolicyName).HasMaxLength(255);
+
+            entity.Property(e => e.Description)
+                .HasColumnType("nvarchar(max)") // Hỗ trợ Unicode cho mô tả
+                .IsRequired();
+
+            entity.Property(e => e.PenaltyFee)
+                .HasColumnType(
+                    "decimal(18, 2)") // Giữ nguyên kiểu decimal, nhưng sửa thành 2 chữ số thập phân để chính xác hơn
+                .IsRequired();
+
+            entity.Property(e => e.PolicyName)
+                .HasColumnType("nvarchar(255)") // Đảm bảo hỗ trợ tiếng Việt
+                .IsRequired();
         });
+
 
         modelBuilder.Entity<Child>(entity =>
         {

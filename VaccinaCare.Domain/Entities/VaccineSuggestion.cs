@@ -10,6 +10,7 @@ public partial class VaccineSuggestion : BaseEntity
     public virtual Child? Child { get; set; }
 
     public virtual Vaccine? Vaccine { get; set; }
-    public virtual ICollection<AppointmentVaccineSuggestions> AppointmentVaccineSuggestions { get; set; } = new List<AppointmentVaccineSuggestions>();
 
+    public virtual ICollection<AppointmentVaccineSuggestions> AppointmentVaccineSuggestions { get; set; } =
+        new List<AppointmentVaccineSuggestions>();
 }

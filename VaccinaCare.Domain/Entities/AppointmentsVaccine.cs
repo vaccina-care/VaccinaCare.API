@@ -2,10 +2,10 @@
 
 public partial class AppointmentsVaccine : BaseEntity
 {
-
     public Guid? AppointmentId { get; set; }
 
     public Guid? VaccineId { get; set; }
+
     /// <summary>
     /// Vì 1 loại Vaccine cần 1 hoặc nhiều lần đi tiêm nên anh đổi từ Quantity -> DoseNumber
     /// </summary>

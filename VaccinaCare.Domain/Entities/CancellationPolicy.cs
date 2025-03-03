@@ -9,4 +9,3 @@ public partial class CancellationPolicy : BaseEntity
 
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }
-

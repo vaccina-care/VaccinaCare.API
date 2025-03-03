@@ -1,11 +1,10 @@
 ﻿using Minio;
 using Minio.DataModel.Args;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Minio.Exceptions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+
+namespace VaccinaCare.Application.Service;
 
 public class BlobService : IBlobService
 {
@@ -48,7 +47,7 @@ public class BlobService : IBlobService
         try
         {
             var beArgs = new BucketExistsArgs().WithBucket(_bucketName);
-            bool found = await _minioClient.BucketExistsAsync(beArgs);
+            var found = await _minioClient.BucketExistsAsync(beArgs);
             _logger.Info($"Checking if bucket '{_bucketName}' exists: {found}");
 
             if (!found)
@@ -59,7 +58,7 @@ public class BlobService : IBlobService
                 _logger.Success($"Bucket '{_bucketName}' created successfully.");
             }
 
-            string contentType = GetContentType(fileName);
+            var contentType = GetContentType(fileName);
             var putObjectArgs = new PutObjectArgs()
                 .WithBucket(_bucketName)
                 .WithObject(fileName)
@@ -102,7 +101,7 @@ public class BlobService : IBlobService
         var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "https://minio.ae-tao-fullstack-api.site";
         _logger.Info($"Generating preview URL for file: {fileName}");
 
-        string previewUrl =
+        var previewUrl =
             $"{minioHost}/api/v1/buckets/{_bucketName}/objects/download?preview=true&prefix={fileName}&version_id=null";
         _logger.Info($"Preview URL generated: {previewUrl}");
 
@@ -119,7 +118,7 @@ public class BlobService : IBlobService
                 .WithObject(fileName)
                 .WithExpiry(7 * 24 * 60 * 60); // URL expires in 7 days
 
-            string fileUrl = await GetPreviewUrlAsync(fileName);
+            var fileUrl = await GetPreviewUrlAsync(fileName);
             _logger.Success($"Presigned file URL generated: {fileUrl}");
             return fileUrl;
         }
