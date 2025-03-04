@@ -22,6 +22,30 @@ public class FeedbackService : IFeedbackService
         _claimsService = claimsService;
     }
 
+    // public async Task<List<FeedbackDTO>> GetFeedbacksByUserId(Guid userId)
+    // {
+    //     try
+    //     {
+    //         var feedbacks = _unitOfWork.FeedbackRepository.GetQueryable().Where(u => u.UserId == userId).ToList();
+    //
+    //         foreach (var feedback in feedbacks)
+    //         {
+    //             return new List<FeedbackDTO>()
+    //             {
+    //                  = feedbacks.AppointmentId.GetValueOrDefault(),
+    //                 Rating = feedback.Rating.GetValueOrDefault(),
+    //                 Comments = feedback.Comments
+    //             };
+    //         }
+    //         
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         Console.WriteLine(e);
+    //         throw;
+    //     }
+    // }
+
     public async Task<FeedbackDTO> CreateFeedbackAsync(FeedbackDTO feedbackDto)
     {
         try
