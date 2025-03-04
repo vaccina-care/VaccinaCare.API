@@ -2,6 +2,7 @@
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
@@ -15,15 +16,17 @@ public class AppointmentService : IAppointmentService
     private readonly IVaccineService _vaccineService;
     private readonly IClaimsService _claimsService;
     private readonly IVaccineRecordService _vaccineRecordService;
+    private readonly INotificationService _notificationService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService,
-        IVaccineService vaccineService, IVaccineRecordService vaccineRecordService)
+        IVaccineService vaccineService, IVaccineRecordService vaccineRecordService, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
         _claimsService = claimsService;
         _vaccineService = vaccineService;
         _vaccineRecordService = vaccineRecordService;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -34,6 +37,7 @@ public class AppointmentService : IAppointmentService
         Guid parentId)
     {
         var appointments = new List<Appointment>();
+        var userId = _claimsService.GetCurrentUserId;
 
         if (await _vaccineService.IsVaccineInPackage(request.VaccineIds))
             throw new Exception("Tất cả vaccine này thuộc gói đã đăng ký. Vui lòng đặt theo gói để có giá ưu đãi hơn.");
@@ -92,6 +96,21 @@ public class AppointmentService : IAppointmentService
 
         await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
         await _unitOfWork.SaveChangesAsync();
+
+        var notificationDTOs = appointments.Select(a => new NotificationForAppointmentDTO
+        {
+            Title = "Appointment Booking Successful!",
+            Content = $"Your appointment for {a.AppointmentsVaccines.First().Vaccine?.VaccineName ?? "Unknown"} (Dose {a.AppointmentsVaccines.First().DoseNumber}) has been successfully booked.",
+            Url = "",
+            AppointmentId = a.Id,
+            UserId = userId,
+        }).ToList();
+
+        foreach (var notificationDTO in notificationDTOs)
+        {
+            await _notificationService.PushNotificationAppointment(userId, notificationDTO);
+        }
+
 
         var appointmentDTOs = appointments.Select(a => new AppointmentDTO
         {
