@@ -5,6 +5,7 @@ using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
@@ -24,6 +25,55 @@ public class AppointmentController : ControllerBase
         _logger = logger;
         _claimsService = claimsService;
     }
+    
+    [HttpPut("{appointmentId}/status")]
+    [Authorize(Roles = "Staff")]
+    [ProducesResponseType(typeof(ApiResult<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 403)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, [FromBody] UpdateAppointmentStatusRequest request)
+    {
+        try
+        {
+            if (!Enum.IsDefined(typeof(AppointmentStatus), request.NewStatus))
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Trạng thái cuộc hẹn không hợp lệ."
+                });
+            }
+
+            var result = await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
+
+            return Ok(new ApiResult<bool>
+            {
+                IsSuccess = true,
+                Message = "Cập nhật trạng thái cuộc hẹn thành công.",
+                Data = result
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.Error($"Unauthorized error: {ex.Message}");
+            return StatusCode(403, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Bạn không có quyền thực hiện hành động này."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error in UpdateAppointmentStatusByStaffAsync: {ex.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Lỗi hệ thống. Vui lòng thử lại sau."
+            });
+        }
+    }
+
 
     [HttpPost("booking/single-vaccines")]
     [Authorize]
@@ -71,7 +121,6 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-
 
     [HttpGet("details/{childId}")]
     [Authorize]
@@ -158,4 +207,6 @@ public class AppointmentController : ControllerBase
             });
         }
     }
+    
+    
 }
