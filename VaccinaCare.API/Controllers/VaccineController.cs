@@ -25,43 +25,6 @@ public class VaccineController : ControllerBase
         _vaccineSuggestionService = vaccineSuggestionService;
     }
 
-
-    [Authorize(Policy = "StaffPolicy")]
-    [HttpPost]
-    [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] CreateVaccineRequest request)
-    {
-
-        if (request.VaccineData == null)
-        {
-            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-        }
-
-        if (request.VaccinePictureFile == null || request.VaccinePictureFile.Length == 0)
-        {
-            return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
-        }
-
-        try
-        {
-            var createdVaccine = await _vaccineService.CreateVaccine(request.VaccineData, request.VaccinePictureFile);
-
-            if (createdVaccine == null)
-            {
-                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
-            }
-
-            return Ok(ApiResult<VaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
-        }
-    }
-
-
     [HttpGet]
     public async Task<IActionResult> Get(
         [FromQuery] string? search,
@@ -120,22 +83,55 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
         }
     }
+    
+    [Authorize(Policy = "StaffPolicy")]
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> Create([FromForm] CreateVaccineRequest request)
+    {
 
+        if (request.VaccineData == null)
+        {
+            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
+        }
 
-    [HttpPut]
+        if (request.VaccinePictureFile == null || request.VaccinePictureFile.Length == 0)
+        {
+            return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
+        }
+
+        try
+        {
+            var createdVaccine = await _vaccineService.CreateVaccine(request.VaccineData, request.VaccinePictureFile);
+
+            if (createdVaccine == null)
+            {
+                return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
+            }
+
+            return Ok(ApiResult<VaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
+        }
+    }
+
+    [HttpPut("{vaccineId}")]
     [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineDto updateVaccineDto,
-        IFormFile? vaccinePictureFile)
+    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineRequest request)
     {
-        if (updateVaccineDto == null)
+        if (request.VaccineData == null)
             return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
+
         try
         {
-            var updatedVaccine = await _vaccineService.UpdateVaccine(vaccineId, updateVaccineDto, vaccinePictureFile);
-
+            var updatedVaccine = await _vaccineService.UpdateVaccine(vaccineId, request.VaccineData, request.VaccinePictureFile);
             return Ok(ApiResult<VaccineDto>.Success(updatedVaccine, "Vaccine updated successfully."));
         }
         catch (KeyNotFoundException ex)
@@ -147,7 +143,6 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));
         }
     }
-
 
     [Authorize(Policy = "StaffPolicy")]
     [HttpDelete("{id}")]
