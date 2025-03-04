@@ -1,11 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualBasic;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
 using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Domain.Entities;
-using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -83,6 +81,7 @@ public class ChildService : IChildService
             {
                 Title = "Child Profile Created!",
                 Content = "Your child's profile has been successfully created.",
+
                 Url = "",
                 UserId = parentId
             };

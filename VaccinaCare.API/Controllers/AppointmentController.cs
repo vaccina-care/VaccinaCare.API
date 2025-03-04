@@ -41,7 +41,8 @@ public class AppointmentController : ControllerBase
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
-                    Message = "Trạng thái cuộc hẹn không hợp lệ."
+                    Message = "Trạng thái cuộc hẹn không hợp lệ.",
+                    Data = null
                 });
             }
 
