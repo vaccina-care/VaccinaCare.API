@@ -76,7 +76,7 @@ public class FeedbackController : ControllerBase
         }
     }
 
-    [HttpGet("paging")]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResult<Pagination<FeedbackDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -108,9 +108,7 @@ public class FeedbackController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Get feedback by ID
-    /// </summary>
+
     [HttpGet("{feedbackId}")]
     public async Task<IActionResult> GetFeedbackById(Guid feedbackId)
     {
@@ -148,9 +146,7 @@ public class FeedbackController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// User cập nhật feedback trong vòng 24h
-    /// </summary>
+
     [HttpPut("{feedbackId}")]
     public async Task<IActionResult> UpdateFeedback(Guid feedbackId, [FromBody] FeedbackDTO feedbackDto)
     {
@@ -199,6 +195,7 @@ public class FeedbackController : ControllerBase
     /// Xóa feedback (User & Admin đều có quyền xóa)
     /// </summary>
     [HttpDelete("{feedbackId}")]
+    [Authorize]
     public async Task<IActionResult> DeleteFeedback(Guid feedbackId)
     {
         try
