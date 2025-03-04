@@ -2,6 +2,7 @@
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
@@ -15,15 +16,70 @@ public class AppointmentService : IAppointmentService
     private readonly IVaccineService _vaccineService;
     private readonly IClaimsService _claimsService;
     private readonly IVaccineRecordService _vaccineRecordService;
+    private readonly INotificationService _notificationService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService,
-        IVaccineService vaccineService, IVaccineRecordService vaccineRecordService)
+        IVaccineService vaccineService, IVaccineRecordService vaccineRecordService, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
         _claimsService = claimsService;
         _vaccineService = vaccineService;
         _vaccineRecordService = vaccineRecordService;
+        _notificationService = notificationService;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public async Task<bool> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, AppointmentStatus newStatus)
+    {
+        var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(appointmentId);
+        if (appointment == null)
+            throw new Exception($"Không tìm thấy cuộc hẹn với ID {appointmentId}.");
+
+        // Kiểm tra quyền Staff
+        var currentUserId = _claimsService.GetCurrentUserId;
+        var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(currentUserId);
+        if (currentUser == null || currentUser.RoleName != RoleType.Staff)
+            throw new UnauthorizedAccessException("Bạn không có quyền cập nhật trạng thái cuộc hẹn.");
+
+        // Xử lý cập nhật trạng thái
+        switch (newStatus)
+        {
+            case AppointmentStatus.Confirmed:
+                if (appointment.Status != AppointmentStatus.Pending)
+                    throw new Exception("Chỉ có thể xác nhận cuộc hẹn khi đang ở trạng thái Pending.");
+                break;
+
+            case AppointmentStatus.Completed:
+                if (appointment.Status != AppointmentStatus.Confirmed)
+                    throw new Exception("Chỉ có thể hoàn thành cuộc hẹn khi đã được xác nhận.");
+
+                // Cập nhật vào bảng `VaccinationRecord`
+                var vaccineRecords = appointment.AppointmentsVaccines.Select(av => new VaccinationRecord
+                {
+                    ChildId = appointment.ChildId,
+                    VaccineId = av.VaccineId,
+                    VaccinationDate = appointment.AppointmentDate,
+                    DoseNumber = av.DoseNumber ?? 1
+                }).ToList();
+
+                await _unitOfWork.VaccinationRecordRepository.AddRangeAsync(vaccineRecords);
+                break;
+
+            case AppointmentStatus.Cancelled:
+                if (appointment.Status == AppointmentStatus.Completed)
+                    throw new Exception("Không thể hủy cuộc hẹn đã hoàn thành.");
+                break;
+
+            default:
+                throw new Exception("Trạng thái không hợp lệ.");
+        }
+
+        appointment.Status = newStatus;
+        await _unitOfWork.SaveChangesAsync();
+        return true;
     }
 
     /// <summary>
@@ -87,6 +143,7 @@ public class AppointmentService : IAppointmentService
         Guid parentId)
     {
         var appointments = new List<Appointment>();
+        var userId = _claimsService.GetCurrentUserId;
 
         if (await _vaccineService.IsVaccineInPackage(request.VaccineIds))
             throw new Exception("Tất cả vaccine này thuộc gói đã đăng ký. Vui lòng đặt theo gói để có giá ưu đãi hơn.");
@@ -145,6 +202,21 @@ public class AppointmentService : IAppointmentService
 
         await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
         await _unitOfWork.SaveChangesAsync();
+
+        var notificationDTOs = appointments.Select(a => new NotificationForAppointmentDTO
+        {
+            Title = "Appointment Booking Successful!",
+            Content = $"Your appointment for {a.AppointmentsVaccines.First().Vaccine?.VaccineName ?? "Unknown"} (Dose {a.AppointmentsVaccines.First().DoseNumber}) has been successfully booked.",
+            Url = "",
+            AppointmentId = a.Id,
+            UserId = userId,
+        }).ToList();
+
+        foreach (var notificationDTO in notificationDTOs)
+        {
+            await _notificationService.PushNotificationAppointment(userId, notificationDTO);
+        }
+
 
         var appointmentDTOs = appointments.Select(a => new AppointmentDTO
         {
