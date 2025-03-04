@@ -7,7 +7,8 @@ public class CreateVaccineDto
 {
     public string? VaccineName { get; set; }
     public string? Description { get; set; }
-    [JsonIgnore] public string? PicUrl { get; set; }
+    [JsonIgnore] 
+    public string? PicUrl { get; set; }
     public string? Type { get; set; }
     public decimal? Price { get; set; }
     public int RequiredDoses { get; set; }
