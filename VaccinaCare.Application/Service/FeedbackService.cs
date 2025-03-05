@@ -223,7 +223,7 @@ public class FeedbackService : IFeedbackService
 
             var appointment =
                 await _unitOfWork.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.GetValueOrDefault());
-
+            // Chỗ này nên xem lại admin có quyền xóa lịch sử lịch trình đã hoàn thành của khách hàng hay không
             if (appointment == null)
             {
                 _logger.Warn($"Appointment {feedback.AppointmentId} not found.");
