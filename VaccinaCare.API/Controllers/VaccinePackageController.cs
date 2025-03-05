@@ -156,5 +156,30 @@ public class VaccinePackageController : ControllerBase
         }
     }
 
-    
+    [HttpGet("all-pagings")]
+    public async Task<IActionResult> GetAllVaccinesAndPackages(
+  [FromQuery] string? searchName,
+  [FromQuery] string? searchDescription,
+  [FromQuery] int pageNumber = 1,
+  [FromQuery] int pageSize = 10)
+    {
+        _logger.Info("Fetching all vaccines and vaccine packages with filtering and pagination.");
+        try
+        {
+            var result = await _vaccinePackageService.GetAllVaccinesAndPackagesAsyncPaging(searchName, searchDescription, pageNumber, pageSize);
+            if (result.Items.Count == 0)
+            {
+                _logger.Warn("No vaccines or vaccine packages found.");
+                return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+            }
+
+            _logger.Success("Vaccines and vaccine packages retrieved successfully.");
+            return Ok(ApiResult<object>.Success(result, "Vaccines and vaccine packages retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while fetching vaccines and vaccine packages: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccines and vaccine packages."));
+        }
+    }
 }
