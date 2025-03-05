@@ -300,4 +300,95 @@ public class FeedbackServiceTest
         var exception = await Assert.ThrowsAsync<Exception>(() => _feedbackService.DeleteFeedbackAsync(feedbackId));
         Assert.Contains("SaveChanges failed", exception.Message);
     }
+    [Fact]
+    //Test case 15: Update feedback successfully
+    public async Task UpdateFeedbackAsync_Success()
+    {
+        //Arrange
+        var feedbackId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var appointmentId = Guid.NewGuid();
+        var feedbackDto = new FeedbackDTO { AppointmentId = appointmentId, Rating = 5, Comments = "Update feedback" };
+
+        var feedback = new Feedback
+        {
+            Id = feedbackId,
+            AppointmentId = appointmentId,
+            Rating = 4,
+            Comments = "Old feedback",
+            CreatedAt = DateTime.UtcNow.AddHours(-2)
+        };
+
+        var appointment = new Appointment
+        {
+            Id = appointmentId,
+            ParentId = userId,
+            Status = AppointmentStatus.Completed
+        };
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
+        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(appointmentId)).ReturnsAsync(appointment);
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.Update(It.IsAny<Feedback>())).ReturnsAsync(true);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        // Act
+        var result = await _feedbackService.UpdateFeedbackAsync(feedbackId, feedbackDto);
+
+        //Assert
+        Assert.NotNull(result);
+        Assert.Equal(5, result.Rating);
+        Assert.Equal("Update feedback", result.Comments);
+    }
+    [Fact]
+    //Test case 16: Update feedback not found
+    public async Task UpdateFeedbackAsync_FeedbackNotFound_ThrowsException()
+    {
+        //Arrange
+        var feedbackId = Guid.NewGuid();
+        var feedbackDto = new FeedbackDTO { Rating = 5, Comments = "Updated feedback" };
+
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync((Feedback)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, feedbackDto));
+    }
+    [Fact]
+    //Test case 17: Update feedback when user not owner
+    public async Task UpdateFeedbackAsync_UserNotOwner_ThrowsUnauthorizedAccessException()
+    {
+        // Arrange
+        var feedbackId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var feedback = new Feedback { AppointmentId = Guid.NewGuid() };
+        var appointment = new Appointment { ParentId = Guid.NewGuid() }; 
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
+        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value)).ReturnsAsync(appointment);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
+    }
+    [Fact]
+    //Test case 18: Update feedback after 24 hours
+    public async Task UpdateFeedbackAsync_UpdatedAfter24Hours_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var feedbackId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var feedback = new Feedback
+        {
+            AppointmentId = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow.AddHours(-25) 
+        };
+        var appointment = new Appointment { ParentId = userId };
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
+        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value)).ReturnsAsync(appointment);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
+    }
 }
