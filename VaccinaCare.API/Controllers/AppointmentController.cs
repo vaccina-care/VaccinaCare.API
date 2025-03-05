@@ -28,55 +28,55 @@ public class AppointmentController : ControllerBase
         _paymentService = paymentService;
     }
 
-    /// <summary>
-    /// Tạo thanh toán cọc 20% cho appointment gần nhất
-    /// </summary>
-    [HttpPost("deposit-payment")]
-    public async Task<IActionResult> CreateDepositPayment()
-    {
-        try
-        {
-            // 🔹 Lấy UserId từ Claims
-            var userId = _claimsService.GetCurrentUserId;
-            if (userId == Guid.Empty)
-                return Unauthorized("Không thể xác thực người dùng.");
-
-            // 🔹 Lấy địa chỉ IP của user
-            var userIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
-
-            // 🔹 Gọi service để tạo thanh toán cọc
-            var paymentUrl = await _paymentService.CreateDepositPayment(userId, userIp);
-            return Ok(new { paymentUrl });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Lỗi khi tạo thanh toán cọc: {ex.Message}");
-            return BadRequest(new { message = "Không thể tạo thanh toán cọc", error = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Xử lý kết quả thanh toán từ VNPay
-    /// </summary>
-    [HttpGet("payment-result")]
-    public async Task<IActionResult> HandlePaymentResult()
-    {
-        try
-        {
-            // 🔹 Lấy tham số từ query string (VNPay gửi về)
-            var paymentSuccess = await _paymentService.HandlePaymentResult(Request.Query);
-
-            if (paymentSuccess)
-                return Ok(new { message = "Thanh toán thành công" });
-
-            return BadRequest(new { message = "Thanh toán không thành công" });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Lỗi khi xử lý kết quả thanh toán: {ex.Message}");
-            return BadRequest(new { message = "Lỗi xử lý thanh toán", error = ex.Message });
-        }
-    }
+    // /// <summary>
+    // /// Tạo thanh toán cọc 20% cho appointment gần nhất
+    // /// </summary>
+    // [HttpPost("deposit-payment")]
+    // public async Task<IActionResult> CreateDepositPayment()
+    // {
+    //     try
+    //     {
+    //         // 🔹 Lấy UserId từ Claims
+    //         var userId = _claimsService.GetCurrentUserId;
+    //         if (userId == Guid.Empty)
+    //             return Unauthorized("Không thể xác thực người dùng.");
+    //
+    //         // 🔹 Lấy địa chỉ IP của user
+    //         var userIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+    //
+    //         // 🔹 Gọi service để tạo thanh toán cọc
+    //         var paymentUrl = await _paymentService.CreateDepositPayment(userId, userIp);
+    //         return Ok(new { paymentUrl });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Lỗi khi tạo thanh toán cọc: {ex.Message}");
+    //         return BadRequest(new { message = "Không thể tạo thanh toán cọc", error = ex.Message });
+    //     }
+    // }
+    //
+    // /// <summary>
+    // /// Xử lý kết quả thanh toán từ VNPay
+    // /// </summary>
+    // [HttpGet("payment-result")]
+    // public async Task<IActionResult> HandlePaymentResult()
+    // {
+    //     try
+    //     {
+    //         // 🔹 Lấy tham số từ query string (VNPay gửi về)
+    //         var paymentSuccess = await _paymentService.HandlePaymentResult(Request.Query);
+    //
+    //         if (paymentSuccess)
+    //             return Ok(new { message = "Thanh toán thành công" });
+    //
+    //         return BadRequest(new { message = "Thanh toán không thành công" });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Lỗi khi xử lý kết quả thanh toán: {ex.Message}");
+    //         return BadRequest(new { message = "Lỗi xử lý thanh toán", error = ex.Message });
+    //     }
+    // }
     
     [HttpPut("{appointmentId}/status")]
     [Authorize(Roles = "Staff")]
