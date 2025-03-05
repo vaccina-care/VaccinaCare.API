@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Repository.Commons;
 
@@ -16,4 +17,8 @@ public interface IVaccinePackageService
     Task<bool> DeleteVaccinePackageByIdAsync(Guid packageId);
     Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto);
     Task<Pagination<VaccinePackageDTO>> GetVaccinePackagesPaging(PaginationParameter pagination);
+    Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync();
+
+    Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+        string? searchDescription, int pageNumber, int pageSize);
 }

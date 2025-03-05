@@ -81,7 +81,6 @@ public class ChildService : IChildService
             {
                 Title = "Child Profile Created!",
                 Content = "Your child's profile has been successfully created.",
-
                 Url = "",
                 UserId = parentId
             };

@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.VisualBasic;
+using System.Reflection.PortableExecutable;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Commons;
@@ -167,6 +169,144 @@ public class VaccinePackageService : IVaccinePackageService
         catch (Exception ex)
         {
             _loggerService.Error($"Error fetching Vaccine Packages: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync()
+    {
+        try
+        {
+            _loggerService.Info("Fetching all Vaccines and Vaccine Packages...");
+
+            var activeVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
+            var vaccineList = activeVaccines.Select(vaccine => new VaccineDto
+            {
+                Id = vaccine.Id,
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
+                DoseIntervalDays = vaccine.DoseIntervalDays,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
+            }).ToList();
+
+            var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
+            var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
+
+            var vaccinePackageList = vaccinePackages.Select(vp => new VaccinePackageDTO
+            {
+                Id = vp.Id,
+                PackageName = vp.PackageName,
+                Description = vp.Description,
+                Price = vp.Price,
+                VaccineDetails = allPackageDetails
+                    .Where(vd => vd.PackageId == vp.Id && activeVaccines.Any(v => v.Id == vd.VaccineId))
+                    .Select(vd => new VaccinePackageDetailDTO
+                    {
+                        VaccineId = vd.VaccineId ?? Guid.Empty,
+                        DoseOrder = vd.DoseOrder ?? 0
+                    }).ToList()
+            }).ToList();
+
+            _loggerService.Info(
+                $"Fetched {vaccineList.Count} Vaccines and {vaccinePackageList.Count} Vaccine Packages successfully.");
+            return (vaccineList, vaccinePackageList);
+        }
+
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error fetching Vaccines and Vaccine Packages: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+        string? searchDescription, int pageNumber, int pageSize)
+    {
+        try
+        {
+            _loggerService.Info("Fetching all Vaccines and Vaccine Packages with filtering and pagination...");
+
+            var vaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
+            var packages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
+            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
+
+            // Backup original vaccine IDs for packageDetails
+            var allVaccineIds = new HashSet<Guid>(vaccines.Select(v => v.Id));
+
+            // Filtering
+            if (!string.IsNullOrWhiteSpace(searchName))
+            {
+                var searchNameLower = searchName.Trim().ToLower();
+                vaccines = vaccines.Where(v => v.VaccineName.ToLower().Contains(searchNameLower)).ToList();
+                packages = packages.Where(p => p.PackageName.ToLower().Contains(searchNameLower)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(searchDescription))
+            {
+                var searchDescriptionLower = searchDescription.Trim().ToLower();
+                vaccines = vaccines.Where(v => v.Description.ToLower().Contains(searchDescriptionLower)).ToList();
+                packages = packages.Where(p => p.Description.ToLower().Contains(searchDescriptionLower)).ToList();
+            }
+
+            // If vaccines are filtered to empty, revert to original vaccine list to preserve packageDetails
+            var filteredVaccineIds = vaccines.Any() ? new HashSet<Guid>(vaccines.Select(v => v.Id)) : allVaccineIds;
+
+            // Mapping to DTOs
+            var vaccineDTOs = vaccines.Select(vaccine => new VaccineDto
+            {
+                Id = vaccine.Id,
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
+                DoseIntervalDays = vaccine.DoseIntervalDays,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
+            }).ToList();
+
+            var packageDTOs = packages.Select(p => new VaccinePackageDTO
+            {
+                Id = p.Id,
+                PackageName = p.PackageName,
+                Description = p.Description,
+                Price = p.Price,
+                VaccineDetails = packageDetails
+                    .Where(d => d.PackageId == p.Id && filteredVaccineIds.Contains(d.VaccineId ?? Guid.Empty))
+                    .Select(d => new VaccinePackageDetailDTO
+                    {
+                        VaccineId = d.VaccineId ?? Guid.Empty,
+                        DoseOrder = d.DoseOrder ?? 0
+                    }).ToList()
+            }).ToList();
+
+            // Pagination
+            var totalItems = vaccineDTOs.Count + packageDTOs.Count;
+            vaccineDTOs = vaccineDTOs.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+            packageDTOs = packageDTOs.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+            _loggerService.Info(
+                $"Fetched {vaccineDTOs.Count} Vaccines and {packageDTOs.Count} Vaccine Packages successfully.");
+            return new PagedResult<VaccinePackageResultDTO>(new List<VaccinePackageResultDTO>
+            {
+                new() { Vaccines = vaccineDTOs, VaccinePackages = packageDTOs }
+            }, totalItems, pageNumber, pageSize);
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error fetching Vaccines and Vaccine Packages: {ex.Message}");
             throw;
         }
     }
