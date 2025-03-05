@@ -17,15 +17,67 @@ public class AppointmentController : ControllerBase
     private readonly IAppointmentService _appointmentService;
     private readonly ILoggerService _logger;
     private readonly IClaimsService _claimsService;
+    private readonly IPaymentService _paymentService;
 
     public AppointmentController(IAppointmentService appointmentService, ILoggerService logger,
-        IClaimsService claimsService)
+        IClaimsService claimsService, IPaymentService paymentService)
     {
         _appointmentService = appointmentService;
         _logger = logger;
         _claimsService = claimsService;
+        _paymentService = paymentService;
     }
 
+    // /// <summary>
+    // /// Tạo thanh toán cọc 20% cho appointment gần nhất
+    // /// </summary>
+    // [HttpPost("deposit-payment")]
+    // public async Task<IActionResult> CreateDepositPayment()
+    // {
+    //     try
+    //     {
+    //         // 🔹 Lấy UserId từ Claims
+    //         var userId = _claimsService.GetCurrentUserId;
+    //         if (userId == Guid.Empty)
+    //             return Unauthorized("Không thể xác thực người dùng.");
+    //
+    //         // 🔹 Lấy địa chỉ IP của user
+    //         var userIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1";
+    //
+    //         // 🔹 Gọi service để tạo thanh toán cọc
+    //         var paymentUrl = await _paymentService.CreateDepositPayment(userId, userIp);
+    //         return Ok(new { paymentUrl });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Lỗi khi tạo thanh toán cọc: {ex.Message}");
+    //         return BadRequest(new { message = "Không thể tạo thanh toán cọc", error = ex.Message });
+    //     }
+    // }
+    //
+    // /// <summary>
+    // /// Xử lý kết quả thanh toán từ VNPay
+    // /// </summary>
+    // [HttpGet("payment-result")]
+    // public async Task<IActionResult> HandlePaymentResult()
+    // {
+    //     try
+    //     {
+    //         // 🔹 Lấy tham số từ query string (VNPay gửi về)
+    //         var paymentSuccess = await _paymentService.HandlePaymentResult(Request.Query);
+    //
+    //         if (paymentSuccess)
+    //             return Ok(new { message = "Thanh toán thành công" });
+    //
+    //         return BadRequest(new { message = "Thanh toán không thành công" });
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         _logger.Error($"Lỗi khi xử lý kết quả thanh toán: {ex.Message}");
+    //         return BadRequest(new { message = "Lỗi xử lý thanh toán", error = ex.Message });
+    //     }
+    // }
+    
     [HttpPut("{appointmentId}/status")]
     [Authorize(Roles = "Staff")]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
@@ -87,42 +139,24 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
 
-            if (request.VaccineIds == null || !request.VaccineIds.Any())
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Danh sách vaccine không hợp lệ."
-                });
+            // Kiểm tra dữ liệu đầu vào
+            if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
+                return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
 
-            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
+            // Gọi service để tạo danh sách các cuộc hẹn
+            var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
-            return Ok(new ApiResult<List<AppointmentDTO>>
-            {
-                IsSuccess = true,
-                Message = "Appointments created successfully.",
-                Data = result
-            });
+            return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
         catch (ArgumentException ex)
         {
-            _logger.Error($"Validation error: {ex.Message}");
-            return BadRequest(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message // Trả lại thông điệp lỗi cụ thể từ Service
-            });
+            return BadRequest(ApiResult<object>.Error(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Internal server error. Please try again later."
-            });
+            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
-
 
     [HttpGet("details/{childId}")]
     [Authorize]

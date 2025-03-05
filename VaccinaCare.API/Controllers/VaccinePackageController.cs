@@ -137,9 +137,7 @@ public class VaccinePackageController : ControllerBase
                 await _vaccinePackageService.GetAllVaccinesAndPackagesAsync(searchName, searchDescription,
                     pageNumber, pageSize);
             if (result.Items.Count == 0)
-            {
                 return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
-            }
             return Ok(ApiResult<object>.Success(result, "Vaccines and vaccine packages retrieved successfully."));
         }
         catch (Exception ex)

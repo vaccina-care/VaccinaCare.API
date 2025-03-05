@@ -6,5 +6,4 @@ public enum AppointmentStatus
     Confirmed, // Đã xác nhận
     Completed, // Đã hoàn thành
     Cancelled, // Đã hủy
-    Rescheduled // Đã dời lịch
 }
