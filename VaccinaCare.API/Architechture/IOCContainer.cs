@@ -12,6 +12,7 @@ using VaccinaCare.Repository;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 using VaccinaCare.Repository.Repositories;
+using VNPAY.NET;
 
 namespace VaccinaCare.API.Architechture;
 
@@ -43,13 +44,33 @@ public static class IOCContainer
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", true, true)
-            .AddEnvironmentVariables()
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables() // Đọc biến môi trường từ Docker
             .Build();
 
-        //ĐỂ TRỐNG, SAU NÀY SẼ SETUP FIRE BASE, VNPAY, PAYOS SAU
-        return services;
+        // 🔹 Debug log để kiểm tra xem biến môi trường có được đọc đúng không
+        Console.WriteLine($"DEBUG: Payment:VnPay:TmnCode = {configuration["Payment:VnPay:TmnCode"]}");
+        Console.WriteLine($"DEBUG: Payment:VnPay:HashSecret = {configuration["Payment:VnPay:HashSecret"]}");
+        Console.WriteLine($"DEBUG: Payment:VnPay:PaymentUrl = {configuration["Payment:VnPay:PaymentUrl"]}");
+        Console.WriteLine($"DEBUG: Payment:VnPay:ReturnUrl = {configuration["Payment:VnPay:ReturnUrl"]}");
+
+        string _tmnCode = configuration["Payment:VnPay:TmnCode"];
+        string _hashSecret = configuration["Payment:VnPay:HashSecret"];
+        string _baseUrl = configuration["Payment:VnPay:PaymentUrl"];
+        string _callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
+
+        if (string.IsNullOrEmpty(_tmnCode) || string.IsNullOrEmpty(_hashSecret) ||
+            string.IsNullOrEmpty(_baseUrl) || string.IsNullOrEmpty(_callbackUrl))
+        {
+            throw new Exception("Không tìm thấy BaseUrl, TmnCode, HashSecret, hoặc CallbackUrl từ config.");
+        }
+
+        var vnpay = new Vnpay();
+        vnpay.Initialize(_tmnCode, _hashSecret, _baseUrl, _callbackUrl);
+        return services.AddSingleton<IVnpay>(vnpay);
     }
+
+
 
     public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
     {
@@ -73,6 +94,8 @@ public static class IOCContainer
         services.AddScoped<IVaccineIntervalRulesService, VaccineIntervalRulesService>();
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<IVnpay, Vnpay>();
         services.AddHttpContextAccessor();
 
         return services;

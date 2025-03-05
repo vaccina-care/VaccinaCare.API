@@ -147,7 +147,6 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-
     /// <summary>
     /// 
     /// </summary>

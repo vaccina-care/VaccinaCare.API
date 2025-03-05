@@ -8,7 +8,7 @@ public partial class Payment : BaseEntity
 
     public string? PaymentStatus { get; set; }
 
-    public virtual PaymentMethod PaymentMethod { get; set; }
+    public virtual PaymentMethod? PaymentMethod { get; set; }
 
     public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
 }
