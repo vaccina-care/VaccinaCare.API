@@ -63,10 +63,8 @@ public class AppointmentService : IAppointmentService
                                    a.AppointmentDate.Value.AddDays(vaccine.DoseIntervalDays) >= appointmentDate));
 
                 if (existingAppointments.Any())
-                {
                     throw new ArgumentException(
                         $"Đã có lịch hẹn cho vaccine {vaccine.VaccineName} trong khoảng thời gian yêu cầu.");
-                }
 
                 for (var dose = nextDose; dose <= vaccine.RequiredDoses; dose++)
                 {

@@ -493,7 +493,7 @@ public class VaccineService : IVaccineService
         {
             _logger.Warn(
                 $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
-            return 1; 
+            return 1;
         }
 
         var lastDoseNumber = records.Max(r => r.DoseNumber);
@@ -572,5 +572,4 @@ public class VaccineService : IVaccineService
         _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
         return true;
     }
-   
 }

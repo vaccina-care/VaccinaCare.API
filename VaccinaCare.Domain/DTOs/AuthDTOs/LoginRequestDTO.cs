@@ -4,8 +4,6 @@ namespace VaccinaCare.Domain.DTOs.AuthDTOs;
 
 public class LoginRequestDto
 {
-    [DefaultValue("a@gmail.com")]
-    public string? Email { get; set; }
-    [DefaultValue("1@")]
-    public string? Password { get; set; }
+    [DefaultValue("a@gmail.com")] public string? Email { get; set; }
+    [DefaultValue("1@")] public string? Password { get; set; }
 }
