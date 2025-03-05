@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Service;
 using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
@@ -176,6 +177,55 @@ public class VaccinePackageController : ControllerBase
                 IsSuccess = false,
                 Message = "An error occurred while retrieving the vaccine package list. Please try again later."
             });
+        }
+    }
+    [HttpGet("Getallvaccineandpackage")]
+    public async Task<IActionResult> GetAllVaccinesAndPackage()
+    {
+        _logger.Info("GetAllVaccinesAndPackages: Fetching all vaccines and vaccine packages.");
+
+        try
+        {
+            var result = await _vaccinePackageService.GetAllVaccinesAndPackagesAsync();
+            if ((result.Item1 == null || result.Item1.Count == 0) && (result.Item2 == null || result.Item2.Count == 0))
+            {
+                _logger.Warn("GetAllVaccinesAndPackages: No vaccines or vaccine packages found.");
+                return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+            }
+
+            _logger.Success($"GetAllVaccinesAndPackages: {result.Item1.Count} vaccines and {result.Item2.Count} vaccine packages retrieved successfully.");
+            return Ok(ApiResult<object>.Success(new { Vaccines = result.Item1, VaccinePackages = result.Item2 }, "Vaccines and vaccine packages retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while fetching vaccines and vaccine packages: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccines and vaccine packages."));
+        }
+    }
+    [HttpGet("Getallvaccinesandpackagespaging")]
+    public async Task<IActionResult> GetAllVaccinesAndPackages(
+    [FromQuery] string? searchName,
+    [FromQuery] string? searchDescription,
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 10)
+    {
+        _logger.Info("Fetching all vaccines and vaccine packages with filtering and pagination.");
+        try
+        {
+            var result = await _vaccinePackageService.GetAllVaccinesAndPackagesAsyncPaging(searchName, searchDescription, pageNumber, pageSize);
+            if (result.Items.Count == 0)
+            {
+                _logger.Warn("No vaccines or vaccine packages found.");
+                return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+            }
+
+            _logger.Success("Vaccines and vaccine packages retrieved successfully.");
+            return Ok(ApiResult<object>.Success(result, "Vaccines and vaccine packages retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error while fetching vaccines and vaccine packages: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred while retrieving vaccines and vaccine packages."));
         }
     }
 }
