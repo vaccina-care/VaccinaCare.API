@@ -8,8 +8,7 @@ public class UpdateVaccineDto
 {
     public string? VaccineName { get; set; }
     public string? Description { get; set; }
-    [SwaggerIgnore] 
-    public string? PicUrl { get; set; }
+    [SwaggerIgnore] public string? PicUrl { get; set; }
     public string? Type { get; set; }
     public decimal? Price { get; set; }
     public int? RequiredDoses { get; set; }
