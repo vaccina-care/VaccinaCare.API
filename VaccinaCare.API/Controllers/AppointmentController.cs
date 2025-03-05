@@ -25,28 +25,28 @@ public class AppointmentController : ControllerBase
         _logger = logger;
         _claimsService = claimsService;
     }
-    
+
     [HttpPut("{appointmentId}/status")]
     [Authorize(Roles = "Staff")]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 403)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, [FromBody] UpdateAppointmentStatusRequest request)
+    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId,
+        [FromBody] UpdateAppointmentStatusRequest request)
     {
         try
         {
             if (!Enum.IsDefined(typeof(AppointmentStatus), request.NewStatus))
-            {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Trạng thái cuộc hẹn không hợp lệ.",
                     Data = null
                 });
-            }
 
-            var result = await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
+            var result =
+                await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
 
             return Ok(new ApiResult<bool>
             {
@@ -109,7 +109,7 @@ public class AppointmentController : ControllerBase
             return BadRequest(new ApiResult<object>
             {
                 IsSuccess = false,
-                Message = ex.Message
+                Message = ex.Message // Trả lại thông điệp lỗi cụ thể từ Service
             });
         }
         catch (Exception ex)
@@ -122,6 +122,7 @@ public class AppointmentController : ControllerBase
             });
         }
     }
+
 
     [HttpGet("details/{childId}")]
     [Authorize]
@@ -208,6 +209,4 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-    
-    
 }

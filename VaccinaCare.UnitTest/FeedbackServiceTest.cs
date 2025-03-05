@@ -128,6 +128,7 @@ public class FeedbackServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => _feedbackService.CreateFeedbackAsync(feedbackDto));
     }
+
     [Fact]
     //Test case 7: Get feedback by id when feedback exists
     public async Task GetFeedbackByIdAsync_ShouldReturnFeedbackDTO_WhenFeedbackExists()
@@ -153,6 +154,7 @@ public class FeedbackServiceTest
         Assert.Equal(feedback.Rating, result.Rating);
         Assert.Equal(feedback.Comments, result.Comments);
     }
+
     [Fact]
     //Test case 8: Get feedback when feedback not found
     public async Task GetFeedbackByIdAsync_ShouldThrowKeyNotFoundException_WhenFeedbackDoesNotExist()
@@ -165,6 +167,7 @@ public class FeedbackServiceTest
         //Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _feedbackService.GetFeedbackByIdAsync(feedbackId));
     }
+
     [Fact]
     //Test case 9: Get feedback when database error
     public async Task GetFeedbackByIdAsync_ShouldThrowException_WhenRepositoryFails()
@@ -172,12 +175,14 @@ public class FeedbackServiceTest
         //Arrange
         var feedbackId = Guid.NewGuid();
 
-        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ThrowsAsync(new Exception("Database error"));
+        _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId))
+            .ThrowsAsync(new Exception("Database error"));
 
         //Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(()=> _feedbackService.GetFeedbackByIdAsync(feedbackId));
+        var exception = await Assert.ThrowsAsync<Exception>(() => _feedbackService.GetFeedbackByIdAsync(feedbackId));
         Assert.Equal("Database error", exception.Message);
     }
+
     [Fact]
     //Test case 10: Get feedback when feedback have null comments
     public async Task GetFeedbackByIdAsync_ShouldReturnFeedbackDTO_WhenCommentsAreNull()
@@ -187,9 +192,9 @@ public class FeedbackServiceTest
         var feedback = new Feedback
         {
             Id = feedbackId,
-            AppointmentId = Guid.NewGuid(),  
+            AppointmentId = Guid.NewGuid(),
             Rating = 4,
-            Comments = null  
+            Comments = null
         };
 
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
@@ -201,6 +206,7 @@ public class FeedbackServiceTest
         Assert.NotNull(result);
         Assert.Null(result.Comments);
     }
+
     [Fact]
     //Test case 11: Delete feedback successfully
     public async Task DeleteFeedbackAsync_ShouldDeleteFeedback_WhenFeedbackExists()
@@ -228,6 +234,7 @@ public class FeedbackServiceTest
         _unitOfWorkMock.Verify(u => u.FeedbackRepository.SoftRemove(feedback), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
     }
+
     [Fact]
     //Test case 12: Delete feedback not found
     public async Task DeleteFeedbackAsync_ShouldThrowKeyNotFoundException_WhenFeedbackDoesNotExist()
@@ -245,6 +252,7 @@ public class FeedbackServiceTest
         _unitOfWorkMock.Verify(u => u.FeedbackRepository.SoftRemove(It.IsAny<Feedback>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
+
     [Fact]
     //Test case 13: Delete feedback when soft remove fails
     public async Task DeleteFeedbackAsync_ShouldThrowException_WhenSoftRemoveFails()
@@ -267,6 +275,7 @@ public class FeedbackServiceTest
 
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
+
     [Fact]
     //Test case 14: Delete feedback when save changes fails
     public async Task DeleteFeedbackAsync_ShouldThrowException_WhenSaveChangesFails()
@@ -291,6 +300,7 @@ public class FeedbackServiceTest
         var exception = await Assert.ThrowsAsync<Exception>(() => _feedbackService.DeleteFeedbackAsync(feedbackId));
         Assert.Contains("SaveChanges failed", exception.Message);
     }
+
     [Fact]
     //Test case 15: Update feedback successfully
     public async Task UpdateFeedbackAsync_Success()
@@ -331,6 +341,7 @@ public class FeedbackServiceTest
         Assert.Equal(5, result.Rating);
         Assert.Equal("Update feedback", result.Comments);
     }
+
     [Fact]
     //Test case 16: Update feedback not found
     public async Task UpdateFeedbackAsync_FeedbackNotFound_ThrowsException()
@@ -342,8 +353,10 @@ public class FeedbackServiceTest
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync((Feedback)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, feedbackDto));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            _feedbackService.UpdateFeedbackAsync(feedbackId, feedbackDto));
     }
+
     [Fact]
     //Test case 17: Update feedback when user not owner
     public async Task UpdateFeedbackAsync_UserNotOwner_ThrowsUnauthorizedAccessException()
@@ -352,15 +365,18 @@ public class FeedbackServiceTest
         var feedbackId = Guid.NewGuid();
         var userId = Guid.NewGuid();
         var feedback = new Feedback { AppointmentId = Guid.NewGuid() };
-        var appointment = new Appointment { ParentId = Guid.NewGuid() }; 
+        var appointment = new Appointment { ParentId = Guid.NewGuid() };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
-        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value)).ReturnsAsync(appointment);
+        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value))
+            .ReturnsAsync(appointment);
 
         // Act & Assert
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
     }
+
     [Fact]
     //Test case 18: Update feedback after 24 hours
     public async Task UpdateFeedbackAsync_UpdatedAfter24Hours_ThrowsInvalidOperationException()
@@ -371,15 +387,17 @@ public class FeedbackServiceTest
         var feedback = new Feedback
         {
             AppointmentId = Guid.NewGuid(),
-            CreatedAt = DateTime.UtcNow.AddHours(-25) 
+            CreatedAt = DateTime.UtcNow.AddHours(-25)
         };
         var appointment = new Appointment { ParentId = userId };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetByIdAsync(feedbackId)).ReturnsAsync(feedback);
-        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value)).ReturnsAsync(appointment);
+        _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(feedback.AppointmentId.Value))
+            .ReturnsAsync(appointment);
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _feedbackService.UpdateFeedbackAsync(feedbackId, new FeedbackDTO()));
     }
 }

@@ -37,8 +37,9 @@ public class UpdateVaccinePackageDTO
     public decimal? Price { get; set; }
     public List<VaccinePackageDetailDTO>? VaccineDetails { get; set; }
 }
+
 public class VaccinePackageResultDTO
 {
-    public List<VaccineDto> Vaccines { get; set; } = new List<VaccineDto>();
-    public List<VaccinePackageDTO> VaccinePackages { get; set; } = new List<VaccinePackageDTO>();
+    public List<VaccineDto> Vaccines { get; set; } = new();
+    public List<VaccinePackageDTO> VaccinePackages { get; set; } = new();
 }

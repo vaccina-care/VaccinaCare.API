@@ -18,6 +18,7 @@ public interface IVaccinePackageService
     Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto);
     Task<Pagination<VaccinePackageDTO>> GetVaccinePackagesPaging(PaginationParameter pagination);
     Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync();
-    Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName, string? searchDescription, int pageNumber, int pageSize);
 
+    Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+        string? searchDescription, int pageNumber, int pageSize);
 }

@@ -83,7 +83,7 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during vaccine retrieval."));
         }
     }
-    
+
     [Authorize(Policy = "StaffPolicy")]
     [HttpPost]
     [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
@@ -91,25 +91,17 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> Create([FromForm] CreateVaccineRequest request)
     {
-
-        if (request.VaccineData == null)
-        {
-            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-        }
+        if (request.VaccineData == null) return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
 
         if (request.VaccinePictureFile == null || request.VaccinePictureFile.Length == 0)
-        {
             return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
-        }
 
         try
         {
             var createdVaccine = await _vaccineService.CreateVaccine(request.VaccineData, request.VaccinePictureFile);
 
             if (createdVaccine == null)
-            {
                 return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
-            }
 
             return Ok(ApiResult<VaccineDto>.Success(createdVaccine, "Vaccine created successfully."));
         }
@@ -131,7 +123,8 @@ public class VaccineController : ControllerBase
 
         try
         {
-            var updatedVaccine = await _vaccineService.UpdateVaccine(vaccineId, request.VaccineData, request.VaccinePictureFile);
+            var updatedVaccine =
+                await _vaccineService.UpdateVaccine(vaccineId, request.VaccineData, request.VaccinePictureFile);
             return Ok(ApiResult<VaccineDto>.Success(updatedVaccine, "Vaccine updated successfully."));
         }
         catch (KeyNotFoundException ex)
@@ -169,7 +162,4 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during deletion."));
         }
     }
-    
- 
-
 }

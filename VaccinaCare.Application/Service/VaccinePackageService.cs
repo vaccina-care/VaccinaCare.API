@@ -175,49 +175,49 @@ public class VaccinePackageService : IVaccinePackageService
 
     public async Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync()
     {
-        try 
+        try
         {
+            _loggerService.Info("Fetching all Vaccines and Vaccine Packages...");
 
-        _loggerService.Info("Fetching all Vaccines and Vaccine Packages...");
+            var activeVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
+            var vaccineList = activeVaccines.Select(vaccine => new VaccineDto
+            {
+                Id = vaccine.Id,
+                VaccineName = vaccine.VaccineName,
+                Description = vaccine.Description,
+                PicUrl = vaccine.PicUrl,
+                Type = vaccine.Type,
+                Price = vaccine.Price,
+                RequiredDoses = vaccine.RequiredDoses,
+                DoseIntervalDays = vaccine.DoseIntervalDays,
+                ForBloodType = vaccine.ForBloodType,
+                AvoidChronic = vaccine.AvoidChronic,
+                AvoidAllergy = vaccine.AvoidAllergy,
+                HasDrugInteraction = vaccine.HasDrugInteraction,
+                HasSpecialWarning = vaccine.HasSpecialWarning
+            }).ToList();
 
-        var activeVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
-        var vaccineList = activeVaccines.Select(vaccine => new VaccineDto
-        {
-            Id = vaccine.Id,
-            VaccineName = vaccine.VaccineName,
-            Description = vaccine.Description,
-            PicUrl = vaccine.PicUrl,
-            Type = vaccine.Type,
-            Price = vaccine.Price,
-            RequiredDoses = vaccine.RequiredDoses,
-            DoseIntervalDays = vaccine.DoseIntervalDays,
-            ForBloodType = vaccine.ForBloodType,
-            AvoidChronic = vaccine.AvoidChronic,
-            AvoidAllergy = vaccine.AvoidAllergy,
-            HasDrugInteraction = vaccine.HasDrugInteraction,
-            HasSpecialWarning = vaccine.HasSpecialWarning
-        }).ToList();
+            var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
+            var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
 
-        var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
-        var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
+            var vaccinePackageList = vaccinePackages.Select(vp => new VaccinePackageDTO
+            {
+                Id = vp.Id,
+                PackageName = vp.PackageName,
+                Description = vp.Description,
+                Price = vp.Price,
+                VaccineDetails = allPackageDetails
+                    .Where(vd => vd.PackageId == vp.Id && activeVaccines.Any(v => v.Id == vd.VaccineId))
+                    .Select(vd => new VaccinePackageDetailDTO
+                    {
+                        VaccineId = vd.VaccineId ?? Guid.Empty,
+                        DoseOrder = vd.DoseOrder ?? 0
+                    }).ToList()
+            }).ToList();
 
-        var vaccinePackageList = vaccinePackages.Select(vp => new VaccinePackageDTO
-        {
-            Id = vp.Id,
-            PackageName = vp.PackageName,
-            Description = vp.Description,
-            Price = vp.Price,
-            VaccineDetails = allPackageDetails
-                .Where(vd => vd.PackageId == vp.Id && activeVaccines.Any(v => v.Id == vd.VaccineId))
-                .Select(vd => new VaccinePackageDetailDTO
-                {
-                    VaccineId = vd.VaccineId ?? Guid.Empty,
-                    DoseOrder = vd.DoseOrder ?? 0
-                }).ToList()
-        }).ToList();
-
-        _loggerService.Info($"Fetched {vaccineList.Count} Vaccines and {vaccinePackageList.Count} Vaccine Packages successfully.");
-        return (vaccineList, vaccinePackageList);
+            _loggerService.Info(
+                $"Fetched {vaccineList.Count} Vaccines and {vaccinePackageList.Count} Vaccine Packages successfully.");
+            return (vaccineList, vaccinePackageList);
         }
 
         catch (Exception ex)
@@ -227,7 +227,8 @@ public class VaccinePackageService : IVaccinePackageService
         }
     }
 
-    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName, string? searchDescription, int pageNumber, int pageSize)
+    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+        string? searchDescription, int pageNumber, int pageSize)
     {
         try
         {
@@ -296,11 +297,12 @@ public class VaccinePackageService : IVaccinePackageService
             vaccineDTOs = vaccineDTOs.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
             packageDTOs = packageDTOs.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
 
-            _loggerService.Info($"Fetched {vaccineDTOs.Count} Vaccines and {packageDTOs.Count} Vaccine Packages successfully.");
+            _loggerService.Info(
+                $"Fetched {vaccineDTOs.Count} Vaccines and {packageDTOs.Count} Vaccine Packages successfully.");
             return new PagedResult<VaccinePackageResultDTO>(new List<VaccinePackageResultDTO>
-        {
-            new VaccinePackageResultDTO { Vaccines = vaccineDTOs, VaccinePackages = packageDTOs }
-        }, totalItems, pageNumber, pageSize);
+            {
+                new() { Vaccines = vaccineDTOs, VaccinePackages = packageDTOs }
+            }, totalItems, pageNumber, pageSize);
         }
         catch (Exception ex)
         {
