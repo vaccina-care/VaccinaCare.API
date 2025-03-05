@@ -5,7 +5,6 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.DTOs.VaccineDTOs.Request;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -89,16 +88,16 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Create([FromForm] CreateVaccineRequest request)
+    public async Task<IActionResult> Create([FromForm] CreateVaccineDto request, IFormFile vaccinePictureFile)
     {
-        if (request.VaccineData == null) return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
+        if (request == null) return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
 
-        if (request.VaccinePictureFile == null || request.VaccinePictureFile.Length == 0)
+        if (vaccinePictureFile == null || vaccinePictureFile.Length == 0)
             return BadRequest(ApiResult<object>.Error("400 - Vaccine picture is required."));
 
         try
         {
-            var createdVaccine = await _vaccineService.CreateVaccine(request.VaccineData, request.VaccinePictureFile);
+            var createdVaccine = await _vaccineService.CreateVaccine(request, vaccinePictureFile);
 
             if (createdVaccine == null)
                 return BadRequest(ApiResult<object>.Error("400 - Vaccine creation failed. Please check input data."));
@@ -116,15 +115,16 @@ public class VaccineController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<VaccineDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineRequest request)
+    public async Task<IActionResult> Update(Guid vaccineId, [FromForm] UpdateVaccineDto request,
+        IFormFile vaccinePictureFile)
     {
-        if (request.VaccineData == null)
+        if (request == null)
             return BadRequest(ApiResult<object>.Error("400 - Vaccine data cannot be null."));
 
         try
         {
             var updatedVaccine =
-                await _vaccineService.UpdateVaccine(vaccineId, request.VaccineData, request.VaccinePictureFile);
+                await _vaccineService.UpdateVaccine(vaccineId, request, vaccinePictureFile);
             return Ok(ApiResult<VaccineDto>.Success(updatedVaccine, "Vaccine updated successfully."));
         }
         catch (KeyNotFoundException ex)
