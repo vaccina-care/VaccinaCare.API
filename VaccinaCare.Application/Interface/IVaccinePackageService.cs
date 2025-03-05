@@ -12,13 +12,11 @@ namespace VaccinaCare.Application.Interface;
 public interface IVaccinePackageService
 {
     Task<VaccinePackageDTO> CreateVaccinePackageAsync(CreateVaccinePackageDTO dto);
-    Task<List<VaccinePackageDTO>> GetAllVaccinePackagesAsync();
     Task<VaccinePackageDTO> GetVaccinePackageByIdAsync(Guid packageId);
     Task<bool> DeleteVaccinePackageByIdAsync(Guid packageId);
     Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto);
-    Task<Pagination<VaccinePackageDTO>> GetVaccinePackagesPaging(PaginationParameter pagination);
-    Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync();
-
-    Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+    Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsync(string? searchName,
         string? searchDescription, int pageNumber, int pageSize);
+    Task<List<VaccinePackageDTO>> GetAllVaccinePackagesAsync();
+    
 }

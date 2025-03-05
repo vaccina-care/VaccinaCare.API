@@ -125,36 +125,28 @@ public class VaccinePackageController : ControllerBase
     }
 
     [HttpGet("all-types")]
-    [ProducesResponseType(typeof(ApiResult<Pagination<VaccinePackageDTO>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetVaccinePackagePaging([FromQuery] PaginationParameter pagination)
+    public async Task<IActionResult> GetAllVaccinesAndPackages(
+        [FromQuery] string? searchName,
+        [FromQuery] string? searchDescription,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
         try
         {
-            _logger.Info("Received request to get vaccine package list.");
-
-            var vaccinePackages = await _vaccinePackageService.GetVaccinePackagesPaging(pagination);
-
-            _logger.Success($"Fetched {vaccinePackages.Count} vaccine packages successfully.");
-
-            return Ok(new ApiResult<Pagination<VaccinePackageDTO>>
+            var result =
+                await _vaccinePackageService.GetAllVaccinesAndPackagesAsync(searchName, searchDescription,
+                    pageNumber, pageSize);
+            if (result.Items.Count == 0)
             {
-                IsSuccess = true,
-                Message = "Vaccine package list retrieved successfully.",
-                Data = vaccinePackages
-            });
+                return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+            }
+            return Ok(ApiResult<object>.Success(result, "Vaccines and vaccine packages retrieved successfully."));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while fetching vaccine packages: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while retrieving the vaccine package list. Please try again later."
-            });
+            return StatusCode(500,
+                ApiResult<object>.Error(
+                    "An unexpected error occurred while retrieving vaccines and vaccine packages."));
         }
     }
-
-    
 }

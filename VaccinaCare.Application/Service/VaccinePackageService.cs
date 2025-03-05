@@ -227,7 +227,7 @@ public class VaccinePackageService : IVaccinePackageService
         }
     }
 
-    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsync(string? searchName,
         string? searchDescription, int pageNumber, int pageSize)
     {
         try
