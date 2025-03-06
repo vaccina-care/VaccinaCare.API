@@ -47,19 +47,7 @@ public static class IOCContainer
             .AddJsonFile("appsettings.json", true, true)
             .AddEnvironmentVariables() // Đọc biến môi trường từ Docker
             .Build();
-
-        var _tmnCode = configuration["Payment:VnPay:TmnCode"];
-        var _hashSecret = configuration["Payment:VnPay:HashSecret"];
-        var _baseUrl = configuration["Payment:VnPay:PaymentUrl"];
-        var _callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
-
-        if (string.IsNullOrEmpty(_tmnCode) || string.IsNullOrEmpty(_hashSecret) ||
-            string.IsNullOrEmpty(_baseUrl) || string.IsNullOrEmpty(_callbackUrl))
-            throw new Exception("Không tìm thấy BaseUrl, TmnCode, HashSecret, hoặc CallbackUrl từ config.");
-
-        var vnpay = new Vnpay();
-        vnpay.Initialize(_tmnCode, _hashSecret, _baseUrl, _callbackUrl);
-        return services.AddSingleton<IVnpay>(vnpay);
+        return services;
     }
 
 
