@@ -49,8 +49,7 @@ public class PaymentService : IPaymentService
         double totalPrice = (double)(appointmentVaccine.TotalPrice ?? 0); // Convert từ decimal sang double
         double totalDeposit = totalPrice * 0.20; // Tính 20% số tiền cọc
 
-        HttpContext httpContext = new DefaultHttpContext();
-        var ipAddress = NetworkHelper.GetIpAddress(httpContext); // Lấy địa chỉ IP của thiết bị thực hiện giao dịch
+        var ipAddress = "14.191.94.144"; 
 
         var request = new PaymentRequest
         {
@@ -67,6 +66,65 @@ public class PaymentService : IPaymentService
         var paymentUrl = _vnpay.GetPaymentUrl(request);
         return paymentUrl;
     }
-    
-    
+
+    public async Task HandleIpnNotification(IQueryCollection parameters)
+    {
+        try
+        {
+            // Call VNPay's GetPaymentResult to validate the transaction
+            var paymentResult = _vnpay.GetPaymentResult(parameters);
+
+            if (paymentResult == null)
+            {
+                _loggerService.Error("Không tìm thấy kết quả thanh toán từ VNPay");
+                return;
+            }
+
+            // Check if the payment was successful (based on ResponseCode and TransactionStatus)
+            if (!paymentResult.IsSuccess)
+            {
+                _loggerService.Error($"Thanh toán không thành công: {paymentResult.Description}");
+                return;
+            }
+
+            // Create a GUID from the long value (if conversion is possible)
+            var paymentIdGuid = new Guid(paymentResult.PaymentId.ToString().PadLeft(32, '0'));
+
+            var payment = await _unitOfWork.PaymentRepository
+                .FirstOrDefaultAsync(p => p.Id == paymentIdGuid);
+
+
+            if (payment == null)
+            {
+                _loggerService.Error($"Không tìm thấy Payment với PaymentId: {paymentResult.PaymentId}");
+                return;
+            }
+
+            // Create PaymentTransaction record with the details received from VNPay
+            var paymentTransaction = new PaymentTransaction
+            {
+                PaymentId = payment.Id,
+                TransactionId = paymentResult.VnpayTransactionId.ToString(),
+                ResponseCode = paymentResult.PaymentResponse.Code.ToString(),
+                CreatedAt = paymentResult.Timestamp
+            };
+
+            // Save PaymentTransaction record
+            await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
+
+            // Update payment status to 'Paid' if the transaction is successful
+            if (paymentResult.PaymentResponse.Code == ResponseCode.Code_00)
+            {
+                payment.PaymentStatus = PaymentStatus.Success;
+                await _unitOfWork.PaymentRepository.Update(payment);
+            }
+
+            // Commit changes to the database
+            await _unitOfWork.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Lỗi trong xử lý IPN: {ex.Message}");
+        }
+    }
 }

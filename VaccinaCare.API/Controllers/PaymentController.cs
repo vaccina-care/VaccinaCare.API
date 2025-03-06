@@ -6,7 +6,7 @@ using VaccinaCare.Repository.Interfaces;
 namespace VaccinaCare.API.Controllers;
 
 [ApiController]
-[Route("api/VnPay")]
+[Route("api/Vnpay")]
 public class PaymentController : ControllerBase
 {
     private readonly ILoggerService _logger;
@@ -37,6 +37,30 @@ public class PaymentController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    
+    [HttpGet("IpnAction")]
+    public async Task<IActionResult> IpnAction([FromQuery] IQueryCollection parameters)
+    {
+        try
+        {
+            if (parameters == null || !parameters.Any())
+            {
+                return BadRequest("Invalid IPN request.");
+            }
+
+            // Call the PaymentService to handle the IPN data
+            await _paymentService.HandleIpnNotification(parameters);
+        
+            return Ok("IPN handled successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error processing IPN request: {ex.Message}");
+            return BadRequest("Error processing IPN request.");
+        }
+    }
+
+    
 }
     
     
