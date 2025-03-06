@@ -34,9 +34,6 @@ public class PaymentService : IPaymentService
             _configuration["Payment:VnPay:BaseUrl"], _configuration["Payment:VnPay:CallbackUrl"]);
     }
 
-// Dictionary ánh xạ `long` PaymentId của VNPay → `Guid` của hệ thống
-    private static readonly ConcurrentDictionary<long, Guid> _paymentMapping = new();
-
     public async Task<string> CreatePaymentUrl(Guid appointmentId)
     {
         try
@@ -55,27 +52,37 @@ public class PaymentService : IPaymentService
             if (totalDeposit <= 0)
                 throw new ArgumentException("Số tiền thanh toán không hợp lệ.");
 
-            var ipAddress = _claimsService.IpAddress ?? "127.0.0.1";
+            var ipAddress = _claimsService.IpAddress;
 
-            // 🔹 Tạo `PaymentId` dạng `long` dựa trên timestamp để gửi đến VNPay
+            //  Tạo `PaymentId` dạng `long` dựa trên timestamp để gửi đến VNPay
             var vnpayPaymentId = DateTime.UtcNow.Ticks;
 
-            // 🔹 Tạo `Payment` trong hệ thống với `Guid`
+            //  insert data vào bảng `Payment` trong hệ thống với `Guid`
             var payment = new Payment
             {
                 Id = Guid.NewGuid(), // Payment ID là Guid
                 AppointmentId = appointmentId,
                 Amount = totalDeposit,
-                PaymentStatus = PaymentStatus.Pending
+                PaymentStatus = PaymentStatus.Pending,
+                PaymentType = PaymentType.Deposit, // Xác định là thanh toán cọc
+                PaymentDate = null // Chưa thanh toán
             };
-
-            // Ánh xạ `long` ID của VNPay → `Guid` của hệ thống
-            _paymentMapping[vnpayPaymentId] = payment.Id;
 
             await _unitOfWork.PaymentRepository.AddAsync(payment);
             await _unitOfWork.SaveChangesAsync();
 
-            // 🔹 Tạo request thanh toán đến VNPay
+            //  Tạo một bản ghi Invoice liên kết với Payment
+            var invoice = new Invoice
+            {
+                UserId = appointment.Child.ParentId, // Lấy ParentId của Child liên kết với User
+                PaymentId = payment.Id,
+                TotalAmount = totalDeposit
+            };
+
+            await _unitOfWork.InvoiceRepository.AddAsync(invoice);
+            await _unitOfWork.SaveChangesAsync();
+
+            //  Tạo request thanh toán đến VNPay
             var request = new PaymentRequest
             {
                 PaymentId = vnpayPaymentId, // Sử dụng `long` ID gửi đến VNPay
@@ -88,88 +95,32 @@ public class PaymentService : IPaymentService
                 Language = DisplayLanguage.Vietnamese
             };
 
+            //  Tạo PaymentTransaction để theo dõi giao dịch
+            var paymentTransaction = new PaymentTransaction
+            {
+                PaymentId = payment.Id,
+                TransactionId = vnpayPaymentId.ToString(),
+                Amount = totalDeposit,
+                TransactionDate = DateTime.UtcNow,
+                ResponseCode = "00", // Mã trả về từ VNPay, giả sử ban đầu là thành công
+                ResponseMessage = "Giao dịch thành công",
+                Status = PaymentTransactionStatus.Pending
+            };
+
+            await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
+            await _unitOfWork.SaveChangesAsync();
+
+            //  Lấy URL thanh toán từ VNPay
             var paymentUrl = _vnPay.GetPaymentUrl(request);
 
             _loggerService.Info(
-                $"Tạo thanh toán thành công cho Appointment {appointmentId}, PaymentId: {vnpayPaymentId}, Số tiền: {totalDeposit} VND.");
+                $"Tạo thanh toán thành công cho Appointment {appointmentId}, PaymentId: {payment.Id}, Số tiền: {totalDeposit} VND.");
 
             return paymentUrl;
         }
         catch (Exception e)
         {
             _loggerService.Error($"Lỗi khi tạo thanh toán: {e.Message}");
-            throw;
-        }
-    }
-
-
-    public async Task<PaymentResult> IpnAction(IQueryCollection parameters)
-    {
-        try
-        {
-            _loggerService.Info("Nhận phản hồi từ VNPay...");
-
-            // 🔹 Nhận và xử lý phản hồi từ VNPay
-            var paymentResult = _vnPay.GetPaymentResult(parameters);
-
-            _loggerService.Info($"VNPay Response: {JsonConvert.SerializeObject(paymentResult)}");
-
-            // 🔹 Lấy `Guid` của Payment từ Dictionary
-            if (!_paymentMapping.TryGetValue(paymentResult.PaymentId, out var paymentGuid))
-            {
-                _loggerService.Error($"Không tìm thấy ánh xạ `PaymentId` {paymentResult.PaymentId} từ VNPay.");
-                throw new ArgumentException("Không tìm thấy Payment.");
-            }
-
-            // 🔹 Xác định `Payment` trong hệ thống
-            var payment = await _unitOfWork.PaymentRepository.FirstOrDefaultAsync(p => p.Id == paymentGuid);
-
-            if (payment == null)
-            {
-                _loggerService.Error($"Không tìm thấy Payment với ID {paymentGuid}.");
-                throw new ArgumentException("Thanh toán không hợp lệ.");
-            }
-
-            // 🔹 Xác định Appointment dựa trên Payment
-            var appointment =
-                await _unitOfWork.AppointmentRepository.FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
-
-            if (appointment == null)
-            {
-                _loggerService.Error($"Không tìm thấy Appointment liên kết với Payment {paymentGuid}.");
-                throw new ArgumentException("Lịch hẹn không hợp lệ.");
-            }
-
-            // 🔹 Cập nhật trạng thái Payment và Appointment dựa trên kết quả VNPay
-            if (paymentResult.IsSuccess)
-            {
-                _loggerService.Success(
-                    $"Thanh toán thành công cho Appointment {appointment.Id} với số tiền {payment.Amount} VND.");
-
-                payment.PaymentStatus = PaymentStatus.Success;
-                appointment.Status = AppointmentStatus.Confirmed;
-            }
-            else
-            {
-                _loggerService.Warn($"Thanh toán thất bại cho Appointment {appointment.Id}. Hủy giao dịch.");
-
-                payment.PaymentStatus = PaymentStatus.Failed;
-                appointment.Status = AppointmentStatus.Pending; // Hoặc có thể để Cancelled tùy vào chính sách
-            }
-
-            // 🔹 Lưu thay đổi vào database
-            await _unitOfWork.PaymentRepository.Update(payment);
-            await _unitOfWork.AppointmentRepository.Update(appointment);
-            await _unitOfWork.SaveChangesAsync();
-
-            // 🔹 Xóa ánh xạ `PaymentId` sau khi xử lý xong để tránh lưu trữ lâu dài
-            _paymentMapping.TryRemove(paymentResult.PaymentId, out _);
-
-            return paymentResult;
-        }
-        catch (Exception e)
-        {
-            _loggerService.Error($"Lỗi khi xử lý phản hồi VNPay: {e.Message}");
             throw;
         }
     }

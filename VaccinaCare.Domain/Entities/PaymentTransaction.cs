@@ -16,5 +16,3 @@ public partial class PaymentTransaction : BaseEntity
     // Navigation properties
     public virtual Payment Payment { get; set; }
 }
-
-
