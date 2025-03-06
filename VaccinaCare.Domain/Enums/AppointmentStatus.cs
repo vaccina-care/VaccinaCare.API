@@ -5,5 +5,5 @@ public enum AppointmentStatus
     Pending, // Chờ xác nhận
     Confirmed, // Đã xác nhận
     Completed, // Đã hoàn thành
-    Cancelled, // Đã hủy
+    Cancelled // Đã hủy
 }

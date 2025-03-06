@@ -692,7 +692,6 @@ public class SystemController : ControllerBase
                 // Xóa VaccinePackageDetail trước VaccinePackage
                 () => context.VaccinePackageDetails.ExecuteDeleteAsync(),
                 () => context.VaccinePackages.ExecuteDeleteAsync(),
-                () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                 // Sau khi VaccineIntervalRules đã xóa, mới xóa Vaccine
                 () => context.Vaccines.ExecuteDeleteAsync(),
                 () => context.Users.ExecuteDeleteAsync(),

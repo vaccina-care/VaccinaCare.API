@@ -29,9 +29,6 @@ public partial class Vaccine : BaseEntity
 
     public virtual ICollection<VaccinationRecord> VaccinationRecords { get; set; } = new List<VaccinationRecord>();
 
-    public virtual ICollection<VaccineAvailability> VaccineAvailabilities { get; set; } =
-        new List<VaccineAvailability>();
-
     public virtual ICollection<UsersVaccination> UsersVaccinations { get; set; } = new List<UsersVaccination>();
 
     public virtual ICollection<VaccinePackageDetail> VaccinePackageDetails { get; set; } =
