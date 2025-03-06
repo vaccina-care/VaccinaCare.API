@@ -11,7 +11,6 @@ public class UserUpdateDto
     public DateTime? DateOfBirth { get; set; }
     public string? Address { get; set; }
     public IFormFile? ImageFile { get; set; }
-    [SwaggerIgnore]
-    public string? ImageUrl { get; set; }
+    [SwaggerIgnore] public string? ImageUrl { get; set; }
     public string? PhoneNumber { get; set; }
 }
