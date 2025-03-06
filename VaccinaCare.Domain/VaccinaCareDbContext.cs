@@ -32,7 +32,6 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Vaccine> Vaccines { get; set; }
-    public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
     public virtual DbSet<VaccinationRecord> VaccinationRecords { get; set; }
@@ -92,7 +91,6 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<Payment>().ToTable(nameof(Payment));
         modelBuilder.Entity<Role>().ToTable(nameof(Role));
         modelBuilder.Entity<Vaccine>().ToTable(nameof(Vaccine));
-        modelBuilder.Entity<VaccineAvailability>().ToTable(nameof(VaccineAvailability));
         modelBuilder.Entity<User>().ToTable(nameof(User));
         modelBuilder.Entity<UsersVaccination>().ToTable(nameof(UsersVaccination));
         modelBuilder.Entity<VaccinationRecord>().ToTable(nameof(VaccinationRecord));
