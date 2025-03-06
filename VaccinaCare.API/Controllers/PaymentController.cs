@@ -30,17 +30,14 @@ public class PaymentController : ControllerBase
 
             var paymentUrl = await _paymentService.CreatePaymentUrl(appointmentId);
 
-            return Ok(new { url = paymentUrl });
-        }
-        catch (ArgumentException ex)
-        {
-            _logger.Error($"Lỗi khi tạo URL thanh toán: {ex.Message}");
-            return BadRequest(new { error = ex.Message });
+            return Created(paymentUrl, paymentUrl);
         }
         catch (Exception ex)
         {
-            _logger.Error($"Lỗi server khi tạo URL thanh toán: {ex.Message}");
-            return StatusCode(500, new { error = "Đã xảy ra lỗi khi xử lý thanh toán." });
+            return BadRequest(ex.Message);
         }
     }
 }
+    
+    
+   
