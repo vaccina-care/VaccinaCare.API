@@ -66,7 +66,7 @@ public class PaymentService : IPaymentService
                 Id = Guid.NewGuid(), // Payment ID là Guid
                 AppointmentId = appointmentId,
                 Amount = totalDeposit,
-                PaymentStatus = "Pending"
+                PaymentStatus = PaymentStatus.Pending
             };
 
             // Ánh xạ `long` ID của VNPay → `Guid` của hệ thống
@@ -146,14 +146,14 @@ public class PaymentService : IPaymentService
                 _loggerService.Success(
                     $"Thanh toán thành công cho Appointment {appointment.Id} với số tiền {payment.Amount} VND.");
 
-                payment.PaymentStatus = "Success";
+                payment.PaymentStatus = PaymentStatus.Success;
                 appointment.Status = AppointmentStatus.Confirmed;
             }
             else
             {
                 _loggerService.Warn($"Thanh toán thất bại cho Appointment {appointment.Id}. Hủy giao dịch.");
 
-                payment.PaymentStatus = "Failed";
+                payment.PaymentStatus = PaymentStatus.Failed;
                 appointment.Status = AppointmentStatus.Pending; // Hoặc có thể để Cancelled tùy vào chính sách
             }
 

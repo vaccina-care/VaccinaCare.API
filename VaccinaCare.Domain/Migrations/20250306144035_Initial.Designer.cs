@@ -12,8 +12,8 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250223182422_fix-vaccine")]
-    partial class fixvaccine
+    [Migration("20250306144035_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -222,7 +222,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -230,10 +231,11 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<decimal?>("PenaltyFee")
-                        .HasColumnType("decimal(18, 0)");
+                        .IsRequired()
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<string>("PolicyName")
-                        .HasMaxLength(255)
+                        .IsRequired()
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -371,10 +373,15 @@ namespace VaccinaCare.Domain.Migrations
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id")
                         .HasName("PK__Feedback__6A4BEDF6E20C695E");
 
                     b.HasIndex("AppointmentId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Feedback", (string)null);
                 });
@@ -584,12 +591,20 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<Guid>("PaymentMethodId")
+                    b.Property<DateTime?>("PaymentDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<Guid?>("PaymentMethodId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PaymentStatus")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PaymentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -598,7 +613,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id")
-                        .HasName("PK__Payments__9B556A587D9A7EB1");
+                        .HasName("PK_Payments");
 
                     b.HasIndex("AppointmentId");
 
@@ -650,6 +665,75 @@ namespace VaccinaCare.Domain.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PaymentMethod");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("decimal(18, 0)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResponseCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ResponseMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("TransactionDate")
+                        .HasColumnType("datetime");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id")
+                        .HasName("PK_PaymentTransactions");
+
+                    b.HasIndex("PaymentId");
+
+                    b.ToTable("PaymentTransaction", (string)null);
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>
@@ -946,62 +1030,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.ToTable("Vaccine", (string)null);
                 });
 
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("AvailabilityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int?>("Booked")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Capacity")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateOnly?>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("TimeSlot")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("VaccineId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VaccineId");
-
-                    b.ToTable("VaccineAvailability", (string)null);
-                });
-
             modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineIntervalRules", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1279,7 +1307,13 @@ namespace VaccinaCare.Domain.Migrations
                         .HasForeignKey("AppointmentId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("VaccinaCare.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
                     b.Navigation("Appointment");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Invoice", b =>
@@ -1340,11 +1374,20 @@ namespace VaccinaCare.Domain.Migrations
 
                     b.HasOne("VaccinaCare.Domain.Entities.PaymentMethod", "PaymentMethod")
                         .WithMany("Payments")
-                        .HasForeignKey("PaymentMethodId")
+                        .HasForeignKey("PaymentMethodId");
+
+                    b.Navigation("PaymentMethod");
+                });
+
+            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentTransaction", b =>
+                {
+                    b.HasOne("VaccinaCare.Domain.Entities.Payment", "Payment")
+                        .WithMany("PaymentTransactions")
+                        .HasForeignKey("PaymentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("PaymentMethod");
+                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.User", b =>
@@ -1384,15 +1427,6 @@ namespace VaccinaCare.Domain.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Child");
-
-                    b.Navigation("Vaccine");
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.VaccineAvailability", b =>
-                {
-                    b.HasOne("VaccinaCare.Domain.Entities.Vaccine", "Vaccine")
-                        .WithMany("VaccineAvailabilities")
-                        .HasForeignKey("VaccineId");
 
                     b.Navigation("Vaccine");
                 });
@@ -1479,6 +1513,8 @@ namespace VaccinaCare.Domain.Migrations
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
                     b.Navigation("Invoices");
+
+                    b.Navigation("PaymentTransactions");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
@@ -1509,8 +1545,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("UsersVaccinations");
 
                     b.Navigation("VaccinationRecords");
-
-                    b.Navigation("VaccineAvailabilities");
 
                     b.Navigation("VaccinePackageDetails");
 

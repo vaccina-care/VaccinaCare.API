@@ -684,6 +684,7 @@ public class SystemController : ControllerBase
                 () => context.Invoices.ExecuteDeleteAsync(),
                 () => context.PackageProgresses.ExecuteDeleteAsync(),
                 () => context.Payments.ExecuteDeleteAsync(),
+                () => context.PaymentTransactions.ExecuteDeleteAsync(),
                 () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
                 () => context.VaccinationRecords.ExecuteDeleteAsync(),
                 () => context.VaccineSuggestions.ExecuteDeleteAsync(),
