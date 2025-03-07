@@ -440,7 +440,7 @@ public class VaccinePackageService : IVaccinePackageService
             foreach (var vaccineToRemove in vaccinesToRemove)
             {
                 _loggerService.Info($"Removing Vaccine {vaccineToRemove.VaccineId} from Package {packageId}");
-                await _unitOfWork.VaccinePackageDetailRepository.SoftRemove(vaccineToRemove);
+                await _unitOfWork.VaccinePackageDetailRepository.HardRemove(v => v.Id == vaccineToRemove.Id);
             }
 
             // Thêm hoặc cập nhật vaccine
