@@ -1,45 +1,25 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Net.payOS.Types;
-using VaccinaCare.Application.Interface.Common;
+using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface.PaymentService;
-using VaccinaCare.Application.Ultils;
-using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
 
-[ApiController]
-[Route("api/payments")]
 public class PaymentController : ControllerBase
 {
-    private readonly ILoggerService _logger;
-    private readonly IPayOsService _paymentService;
-
-    public PaymentController(ILoggerService logger, IPayOsService paymentService)
+	
+    private readonly IVnPayService _vnPayService;
+    
+    public PaymentController(IVnPayService vnPayService)
     {
-        _logger = logger;
-        _paymentService = paymentService;
+		
+	    _vnPayService = vnPayService;
     }
 
-    [HttpPost("checkout")]
-    [ProducesResponseType(typeof(ApiResult<string>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> Checkout(Guid appointmentId)
+    [HttpGet]
+    public IActionResult PaymentCallbackVnpay()
     {
-        try
-        {
-            var paymentUrl = await _paymentService.ProcessPayment(appointmentId);
-            return Ok(new { success = true, url = paymentUrl });
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { success = false, message = ex.Message });
-        }
+	    var response = _vnPayService.PaymentExecute(Request.Query);
+	    return Ok(response);
     }
 
-    [HttpPost("webhook")]
-    public async Task<IActionResult> Webhook([FromBody] WebhookData webhookData)
-    {
-        return await _paymentService.PaymentWebhook(webhookData);
-    }
+
 }

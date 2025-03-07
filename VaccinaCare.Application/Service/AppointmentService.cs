@@ -61,10 +61,8 @@ public class AppointmentService : IAppointmentService
             var appointmentDate = request.StartDate;
 
             for (var dose = nextDose; dose <= vaccine.RequiredDoses; dose++)
-            {
                 appointmentDate =
                     await GenerateAppointmentForDose(appointments, request, parentId, vaccine, dose, appointmentDate);
-            }
 
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();

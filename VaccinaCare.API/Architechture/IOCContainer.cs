@@ -148,8 +148,7 @@ public static class IOCContainer
         services.AddScoped<IVaccineIntervalRulesService, VaccineIntervalRulesService>();
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
-        services.AddSingleton<IVnpay, Vnpay>();
-        services.AddScoped<IPayOsService, PayOsService>();
+        services.AddScoped<IVnPayService, VnPayService>();
 
         services.AddHttpContextAccessor();
 

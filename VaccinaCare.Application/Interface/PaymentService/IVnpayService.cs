@@ -1,6 +1,10 @@
-﻿namespace VaccinaCare.Application.Interface.PaymentService;
+﻿using Microsoft.AspNetCore.Http;
+using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
-public class IVnpayService
+namespace VaccinaCare.Application.Interface.PaymentService;
+
+public interface IVnPayService
 {
-    
+    string CreatePaymentUrl(PaymentInformationModel model, HttpContext context);
+    PaymentResponseModel PaymentExecute(IQueryCollection collections);
 }
