@@ -4,7 +4,6 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
-using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
@@ -17,15 +16,13 @@ public class AppointmentController : ControllerBase
     private readonly IAppointmentService _appointmentService;
     private readonly ILoggerService _logger;
     private readonly IClaimsService _claimsService;
-    private readonly IPaymentService _paymentService;
 
     public AppointmentController(IAppointmentService appointmentService, ILoggerService logger,
-        IClaimsService claimsService, IPaymentService paymentService)
+        IClaimsService claimsService)
     {
         _appointmentService = appointmentService;
         _logger = logger;
         _claimsService = claimsService;
-        _paymentService = paymentService;
     }
 
     [HttpPut("{appointmentId}/status")]

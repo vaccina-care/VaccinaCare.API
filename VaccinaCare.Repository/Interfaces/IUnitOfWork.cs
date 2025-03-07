@@ -19,6 +19,7 @@ public interface IUnitOfWork
     IGenericRepository<AppointmentsVaccine> AppointmentsVaccineRepository { get; }
     IGenericRepository<Feedback> FeedbackRepository { get; }
     IGenericRepository<Payment> PaymentRepository { get; }
+    IGenericRepository<PaymentTransaction> PaymentTransactionRepository { get; }
     IGenericRepository<Invoice> InvoiceRepository { get; }
     Task<int> SaveChangesAsync();
 }

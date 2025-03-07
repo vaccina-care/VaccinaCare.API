@@ -676,7 +676,7 @@ public class SystemController : ControllerBase
             var tablesToDelete = new List<Func<Task>>
             {
                 () => context.Notifications.ExecuteDeleteAsync(),
-                () => context.AppointmentsServices.ExecuteDeleteAsync(),
+                () => context.AppointmentsVaccines.ExecuteDeleteAsync(),
                 () => context.Appointments.ExecuteDeleteAsync(),
                 () => context.CancellationPolicies.ExecuteDeleteAsync(),
                 () => context.Children.ExecuteDeleteAsync(),
