@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.VisualBasic;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -406,68 +407,95 @@ public class VaccinePackageService : IVaccinePackageService
 
     public async Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto)
     {
-        _loggerService.Info($"Updating Vaccine Package with ID: {packageId}");
-
-
-        var vaccinePackage =
-            await _unitOfWork.VaccinePackageRepository.GetByIdAsync(packageId, vp => vp.VaccinePackageDetails);
-        if (vaccinePackage == null)
+        try
         {
-            _loggerService.Warn($"Vaccine Package with ID {packageId} not found.");
-            return null;
-        }
+            _loggerService.Info($"Updating Vaccine Package with ID: {packageId}");
 
-
-        if (!string.IsNullOrWhiteSpace(dto.PackageName) && dto.PackageName != vaccinePackage.PackageName)
-            vaccinePackage.PackageName = dto.PackageName;
-
-        if (!string.IsNullOrWhiteSpace(dto.Description) && dto.Description != vaccinePackage.Description)
-            vaccinePackage.Description = dto.Description;
-
-        if (dto.Price.HasValue && dto.Price.Value != vaccinePackage.Price)
-            vaccinePackage.Price = dto.Price.Value;
-
-
-        var existingVaccineDetails = vaccinePackage.VaccinePackageDetails.ToList();
-
-        if (dto.VaccineDetails != null && dto.VaccineDetails.Any())
-            foreach (var newVaccine in dto.VaccineDetails)
+            var vaccinePackage =
+                await _unitOfWork.VaccinePackageRepository.GetByIdAsync(packageId, vp => vp.VaccinePackageDetails);
+            if (vaccinePackage == null)
             {
-                var existingVaccine = existingVaccineDetails.FirstOrDefault(v => v.VaccineId == newVaccine.VaccineId);
+                _loggerService.Warn($"Vaccine Package with ID {packageId} not found.");
+                return null;
+            }
 
-                if (existingVaccine != null)
+            // Cập nhật thông tin cơ bản của package
+            if (!string.IsNullOrWhiteSpace(dto.PackageName) && dto.PackageName != vaccinePackage.PackageName)
+                vaccinePackage.PackageName = dto.PackageName;
+
+            if (!string.IsNullOrWhiteSpace(dto.Description) && dto.Description != vaccinePackage.Description)
+                vaccinePackage.Description = dto.Description;
+
+            if (dto.Price.HasValue && dto.Price.Value != vaccinePackage.Price)
+                vaccinePackage.Price = dto.Price.Value;
+
+            var existingVaccineDetails = vaccinePackage.VaccinePackageDetails.ToList();
+            var newVaccineIds = dto.VaccineDetails?.Select(v => v.VaccineId).ToList() ?? new List<Guid>();
+
+            //Loại bỏ vaccine khỏi package nếu không có trong danh sách mới
+            var vaccinesToRemove = existingVaccineDetails
+                .Where(v => !newVaccineIds.Contains(v.VaccineId.GetValueOrDefault()))
+                .ToList();
+
+            foreach (var vaccineToRemove in vaccinesToRemove)
+            {
+                _loggerService.Info($"Removing Vaccine {vaccineToRemove.VaccineId} from Package {packageId}");
+                await _unitOfWork.VaccinePackageDetailRepository.SoftRemove(vaccineToRemove);
+            }
+
+            // Thêm hoặc cập nhật vaccine
+            if (dto.VaccineDetails != null && dto.VaccineDetails.Any())
+            {
+                foreach (var newVaccine in dto.VaccineDetails)
                 {
-                    if (existingVaccine.DoseOrder != newVaccine.DoseOrder)
-                        existingVaccine.DoseOrder = newVaccine.DoseOrder;
-                }
-                else
-                {
-                    vaccinePackage.VaccinePackageDetails.Add(new VaccinePackageDetail
+                    var existingVaccine = existingVaccineDetails.FirstOrDefault(v => v.VaccineId == newVaccine.VaccineId);
+
+                    if (existingVaccine != null)
                     {
-                        PackageId = packageId,
-                        VaccineId = newVaccine.VaccineId,
-                        DoseOrder = newVaccine.DoseOrder
-                    });
+                        //Cập nhật thứ tự liều nếu có thay đổi
+                        if (existingVaccine.DoseOrder != newVaccine.DoseOrder)
+                        {
+                            _loggerService.Info($"Updating DoseOrder for Vaccine {newVaccine.VaccineId} to {newVaccine.DoseOrder}");
+                            existingVaccine.DoseOrder = newVaccine.DoseOrder;
+                        }
+                    }
+                    else
+                    {
+                        //Thêm vaccine vào package
+                        _loggerService.Info($"Adding new Vaccine {newVaccine.VaccineId} to Package {packageId}");
+                        vaccinePackage.VaccinePackageDetails.Add(new VaccinePackageDetail
+                        {
+                            PackageId = packageId,
+                            VaccineId = newVaccine.VaccineId,
+                            DoseOrder = newVaccine.DoseOrder
+                        });
+                    }
                 }
             }
 
-        _unitOfWork.VaccinePackageRepository.Update(vaccinePackage);
-        await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.VaccinePackageRepository.Update(vaccinePackage);
+            await _unitOfWork.SaveChangesAsync();
 
-        _loggerService.Success($"Vaccine Package {packageId} updated successfully.");
+            _loggerService.Success($"Vaccine Package {packageId} updated successfully.");
 
-        return new VaccinePackageDTO
+            return new VaccinePackageDTO
+            {
+                Id = vaccinePackage.Id,
+                PackageName = vaccinePackage.PackageName,
+                Description = vaccinePackage.Description,
+                Price = vaccinePackage.Price,
+                VaccineDetails = vaccinePackage.VaccinePackageDetails
+                    .Select(vd => new VaccinePackageDetailDTO
+                    {
+                        VaccineId = vd.VaccineId ?? Guid.Empty,
+                        DoseOrder = vd.DoseOrder ?? 0
+                    }).ToList()
+            };
+        }
+        catch (Exception ex)
         {
-            Id = vaccinePackage.Id,
-            PackageName = vaccinePackage.PackageName,
-            Description = vaccinePackage.Description,
-            Price = vaccinePackage.Price,
-            VaccineDetails = vaccinePackage.VaccinePackageDetails
-                .Select(vd => new VaccinePackageDetailDTO
-                {
-                    VaccineId = vd.VaccineId ?? Guid.Empty,
-                    DoseOrder = vd.DoseOrder ?? 0
-                }).ToList()
-        };
+            _loggerService.Error($"{ex.Message}");
+            throw;
+        }
     }
 }

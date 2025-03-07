@@ -9,6 +9,9 @@ namespace VaccinaCare.Application.Interface;
 
 public interface IVaccineIntervalRulesService
 {
-    Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(Guid vaccineId, Guid? realatedVaccineId,
-        int minIntervalDays, bool canBeGivenTogether);
+    Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(VaccineIntervalRulesDTO vaccineIntervalRulesDTO);
+    Task<List<VaccineIntervalRulesDTO>> GetAllVaccineIntervalRulesAsync();
+    Task<bool> DeleteVaccineIntervalRuleAsync(Guid id);
+    Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id, VaccineIntervalRulesDTO updateDto);
+
 }
