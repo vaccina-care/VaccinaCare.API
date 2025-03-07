@@ -6,7 +6,7 @@ using VaccinaCare.API.Architechture;
 var builder = WebApplication.CreateBuilder(args);
 // Load cấu hình từ appsettings.json và environment variables
 builder.Configuration.AddEnvironmentVariables(); // Đọc từ biến môi trường
-builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true); // Đọc từ appsettings.json nếu có
+builder.Configuration.AddJsonFile("appsettings.json", true, true); // Đọc từ appsettings.json nếu có
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

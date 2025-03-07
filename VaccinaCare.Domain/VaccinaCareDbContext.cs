@@ -19,7 +19,7 @@ public partial class VaccinaCareDbContext : DbContext
     #region DbSet
 
     public virtual DbSet<Appointment> Appointments { get; set; }
-    public virtual DbSet<AppointmentsVaccine> AppointmentsServices { get; set; }
+    public virtual DbSet<AppointmentsVaccine> AppointmentsVaccines { get; set; }
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
     public virtual DbSet<Child> Children { get; set; }
     public virtual DbSet<Feedback> Feedbacks { get; set; }

@@ -6,8 +6,10 @@ using Net.payOS;
 using System.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Interface.PaymentService;
 using VaccinaCare.Application.Service;
 using VaccinaCare.Application.Service.Common;
+using VaccinaCare.Application.Service.PaymentService;
 using VaccinaCare.Domain;
 using VaccinaCare.Repository;
 using VaccinaCare.Repository.Commons;
@@ -45,10 +47,10 @@ public static class IOCContainer
     public static IServiceCollection SetupPayOs(this IServiceCollection services)
     {
         IConfiguration configuration = new ConfigurationBuilder()
-           .SetBasePath(Directory.GetCurrentDirectory())
-           .AddJsonFile("appsettings.json", true, true)
-           .AddEnvironmentVariables()
-           .Build();
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", true, true)
+            .AddEnvironmentVariables()
+            .Build();
 
         //PayOS
         services.AddSingleton<PayOS>(provider =>
@@ -63,40 +65,36 @@ public static class IOCContainer
         });
         return services;
     }
+
     public static IServiceCollection SetupVnpay(this IServiceCollection services)
     {
         // Xây dựng IConfiguration từ các nguồn cấu hình
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory()) // Lấy thư mục hiện tại
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true) // Đọc appsettings.json
+            .AddJsonFile("appsettings.json", true, true) // Đọc appsettings.json
             .AddEnvironmentVariables() // Đọc biến môi trường từ Docker
             .Build();
 
         // Kiểm tra các tham số cấu hình cần thiết có tồn tại hay không
-        string tmnCode = configuration["Payment:VnPay:TmnCode"];
-        string hashSecret = configuration["Payment:VnPay:HashSecret"];
-        string baseUrl = configuration["Payment:VnPay:PaymentUrl"];
-        string callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
+        var tmnCode = configuration["Payment:VnPay:TmnCode"];
+        var hashSecret = configuration["Payment:VnPay:HashSecret"];
+        var baseUrl = configuration["Payment:VnPay:PaymentUrl"];
+        var callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
 
         if (string.IsNullOrEmpty(tmnCode))
-        {
             throw new ArgumentNullException("Payment:VnPay:TmnCode", "VnPay TmnCode is missing in the configuration.");
-        }
 
         if (string.IsNullOrEmpty(hashSecret))
-        {
-            throw new ArgumentNullException("Payment:VnPay:HashSecret", "VnPay HashSecret is missing in the configuration.");
-        }
+            throw new ArgumentNullException("Payment:VnPay:HashSecret",
+                "VnPay HashSecret is missing in the configuration.");
 
         if (string.IsNullOrEmpty(baseUrl))
-        {
-            throw new ArgumentNullException("Payment:VnPay:PaymentUrl", "VnPay PaymentUrl is missing in the configuration.");
-        }
+            throw new ArgumentNullException("Payment:VnPay:PaymentUrl",
+                "VnPay PaymentUrl is missing in the configuration.");
 
         if (string.IsNullOrEmpty(callbackUrl))
-        {
-            throw new ArgumentNullException("Payment:VnPay:ReturnUrl", "VnPay ReturnUrl is missing in the configuration.");
-        }
+            throw new ArgumentNullException("Payment:VnPay:ReturnUrl",
+                "VnPay ReturnUrl is missing in the configuration.");
 
         // Khởi tạo IVnpay
         IVnpay _vnpay = new Vnpay();
@@ -151,12 +149,12 @@ public static class IOCContainer
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddSingleton<IVnpay, Vnpay>();
+        services.AddScoped<IPayOsService, PayOsService>();
+
         services.AddHttpContextAccessor();
 
         return services;
     }
-
-
 
 
     private static IServiceCollection SetupCORS(this IServiceCollection services)

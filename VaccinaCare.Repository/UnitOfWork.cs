@@ -22,7 +22,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IGenericRepository<AppointmentsVaccine> _appointmentsVaccineRepository;
     private readonly IGenericRepository<Feedback> _feedbackRepository;
     private readonly IGenericRepository<Payment> _paymentRepository;
-    private readonly IGenericRepository<PaymentTransaction> _paymentTransactionRepository ;
+    private readonly IGenericRepository<PaymentTransaction> _paymentTransactionRepository;
     private readonly IGenericRepository<Invoice> _invoiceRepository;
 
     public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
@@ -37,7 +37,8 @@ public class UnitOfWork : IUnitOfWork
         IGenericRepository<VaccinationRecord> vaccinationRecordRepository,
         IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository,
         IGenericRepository<Feedback> feedbackRepository, IGenericRepository<Payment> paymentRepository,
-        IGenericRepository<Invoice> invoiceRepository, IGenericRepository<PaymentTransaction> paymentTransactionRepository)
+        IGenericRepository<Invoice> invoiceRepository,
+        IGenericRepository<PaymentTransaction> paymentTransactionRepository)
     {
         _dbContext = dbContext;
         _notificationRepository = notificationRepository;

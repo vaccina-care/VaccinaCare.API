@@ -12,13 +12,11 @@ namespace VaccinaCare.API.Controllers;
 public class PaymentController : ControllerBase
 {
     private readonly ILoggerService _logger;
-    private readonly IClaimsService _claimsService;
     private readonly IPayOsService _paymentService;
 
-    public PaymentController(ILoggerService logger, IClaimsService claimsService, IPayOsService paymentService)
+    public PaymentController(ILoggerService logger, IPayOsService paymentService)
     {
         _logger = logger;
-        _claimsService = claimsService;
         _paymentService = paymentService;
     }
 
@@ -44,8 +42,4 @@ public class PaymentController : ControllerBase
     {
         return await _paymentService.PaymentWebhook(webhookData);
     }
-
-
 }
-
-

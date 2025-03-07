@@ -1,9 +1,6 @@
-﻿namespace VaccinaCare.Domain.DTOs.PaymentDTOs
+﻿namespace VaccinaCare.Domain.DTOs.PaymentDTOs;
+
+public class CreatePaymentResponse
 {
-    public class CreatePaymentResponse
-    {
-        public string PaymentUrl { get; set; }
-    }
-
-
+    public string PaymentUrl { get; set; }
 }

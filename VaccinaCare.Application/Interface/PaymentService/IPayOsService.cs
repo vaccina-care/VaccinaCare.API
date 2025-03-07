@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Net.payOS.Types;
 
-namespace VaccinaCare.Application.Interface.PaymentService
+namespace VaccinaCare.Application.Interface.PaymentService;
+
+public interface IPayOsService
 {
-    public interface IPayOsService
-    {
-        Task<string> ProcessPayment(Guid appointmentId);
-        Task<IActionResult> PaymentWebhook([FromBody] WebhookData webhookData);
-    }
+    Task<string> ProcessPayment(Guid appointmentId);
+    Task<IActionResult> PaymentWebhook([FromBody] WebhookData webhookData);
 }
