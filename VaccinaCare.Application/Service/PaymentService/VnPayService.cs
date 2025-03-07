@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface.PaymentService;
-using VaccinaCare.Application.Library;
+using VaccinaCare.Application.Libraries;
 using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
 namespace VaccinaCare.Application.Service.PaymentService;

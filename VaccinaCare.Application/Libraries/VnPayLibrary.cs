@@ -6,7 +6,7 @@ using System.Text;
 using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
-namespace VaccinaCare.Application.Library;
+namespace VaccinaCare.Application.Libraries;
 
 public class VnPayLibrary
 {
