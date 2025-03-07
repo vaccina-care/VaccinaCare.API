@@ -1,5 +1,4 @@
-﻿using System.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -78,7 +77,7 @@ public static class IOCContainer
 
         // Khởi tạo IVnpay
         IVnpay _vnpay = new Vnpay();
-    
+
         services.AddSingleton<IVnpay>(p =>
         {
             // Khởi tạo Vnpay với các giá trị cấu hình
@@ -105,7 +104,7 @@ public static class IOCContainer
 
         return services;
     }
-    
+
     public static IServiceCollection SetupBusinessServicesLayer(this IServiceCollection services)
     {
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
@@ -128,7 +127,6 @@ public static class IOCContainer
         services.AddScoped<IVaccineIntervalRulesService, VaccineIntervalRulesService>();
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
-        services.AddScoped<IPaymentService, PaymentService>();
         services.AddSingleton<IVnpay, Vnpay>();
         services.AddHttpContextAccessor();
 
@@ -136,7 +134,7 @@ public static class IOCContainer
     }
 
 
-    
+
 
     private static IServiceCollection SetupCORS(this IServiceCollection services)
     {
