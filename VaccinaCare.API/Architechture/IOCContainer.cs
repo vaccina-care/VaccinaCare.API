@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Net.payOS;
 using System.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -36,10 +37,32 @@ public static class IOCContainer
         services.SetupJWT();
 
         services.SetupVnpay();
+        services.SetupPayOs();
         return services;
     }
 
 
+    public static IServiceCollection SetupPayOs(this IServiceCollection services)
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+           .SetBasePath(Directory.GetCurrentDirectory())
+           .AddJsonFile("appsettings.json", true, true)
+           .AddEnvironmentVariables()
+           .Build();
+
+        //PayOS
+        services.AddSingleton<PayOS>(provider =>
+        {
+            var clientId = configuration["Payment:PayOS:ClientId"] ??
+                           throw new Exception("Cannot find PAYOS_CLIENT_ID");
+            var apiKey = configuration["Payment:PayOS:ApiKey"] ?? throw new Exception("Cannot find PAYOS_API_KEY");
+            var checksumKey = configuration["Payment:PayOS:ChecksumKey"] ??
+                              throw new Exception("Cannot find PAYOS_CHECKSUM_KEY");
+
+            return new PayOS(clientId, apiKey, checksumKey);
+        });
+        return services;
+    }
     public static IServiceCollection SetupVnpay(this IServiceCollection services)
     {
         // Xây dựng IConfiguration từ các nguồn cấu hình
