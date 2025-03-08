@@ -53,7 +53,7 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<NotificationForAppointmentDTO> PushNotificationAppointmentSuccess(Guid userId,Guid appointmentId)
+    public async Task<NotificationForAppointmentDTO> PushNotificationAppointmentSuccess(Guid userId, Guid appointmentId)
     {
         try
         {
@@ -78,7 +78,7 @@ public class NotificationService : INotificationService
                 Title = notification.Title,
                 Content = notification.Content,
                 IsRead = notification.IsRead,
-                AppointmentId = notification.AppointmentId.GetValueOrDefault() 
+                AppointmentId = notification.AppointmentId.GetValueOrDefault()
             };
         }
         catch (Exception ex)
@@ -121,7 +121,8 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<Notification> PushNotificationWhenUserUseService(Guid userId,NotificationForUserDTO notificationDTO)
+    public async Task<Notification> PushNotificationWhenUserUseService(Guid userId,
+        NotificationForUserDTO notificationDTO)
     {
         try
         {
@@ -185,5 +186,5 @@ public class NotificationService : INotificationService
             _logger.Error($"Error pushing payment success notification to user {userId}: {ex.Message}");
             throw;
         }
-     }
+    }
 }

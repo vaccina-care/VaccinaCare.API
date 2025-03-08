@@ -2,16 +2,20 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Net.payOS;
 using System.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Interface.PaymentService;
 using VaccinaCare.Application.Service;
 using VaccinaCare.Application.Service.Common;
+using VaccinaCare.Application.Service.PaymentService;
 using VaccinaCare.Domain;
 using VaccinaCare.Repository;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 using VaccinaCare.Repository.Repositories;
+using VNPAY.NET;
 
 namespace VaccinaCare.API.Architechture;
 
@@ -34,12 +38,13 @@ public static class IOCContainer
         services.SetupCORS();
         services.SetupJWT();
 
-        services.SetupThirdParty();
+        services.SetupVnpay();
+        services.SetupPayOs();
         return services;
     }
 
 
-    public static IServiceCollection SetupThirdParty(this IServiceCollection services)
+    public static IServiceCollection SetupPayOs(this IServiceCollection services)
     {
         IConfiguration configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -47,7 +52,77 @@ public static class IOCContainer
             .AddEnvironmentVariables()
             .Build();
 
-        //ĐỂ TRỐNG, SAU NÀY SẼ SETUP FIRE BASE, VNPAY, PAYOS SAU
+        //PayOS
+        services.AddSingleton<PayOS>(provider =>
+        {
+            var clientId = configuration["Payment:PayOS:ClientId"] ??
+                           throw new Exception("Cannot find PAYOS_CLIENT_ID");
+            var apiKey = configuration["Payment:PayOS:ApiKey"] ?? throw new Exception("Cannot find PAYOS_API_KEY");
+            var checksumKey = configuration["Payment:PayOS:ChecksumKey"] ??
+                              throw new Exception("Cannot find PAYOS_CHECKSUM_KEY");
+
+            return new PayOS(clientId, apiKey, checksumKey);
+        });
+        return services;
+    }
+
+    public static IServiceCollection SetupVnpay(this IServiceCollection services)
+    {
+        // Xây dựng IConfiguration từ các nguồn cấu hình
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory()) // Lấy thư mục hiện tại
+            .AddJsonFile("appsettings.json", true, true) // Đọc appsettings.json
+            .AddEnvironmentVariables() // Đọc biến môi trường từ Docker
+            .Build();
+
+        // Kiểm tra các tham số cấu hình cần thiết có tồn tại hay không
+        var tmnCode = configuration["Payment:VnPay:TmnCode"];
+        var hashSecret = configuration["Payment:VnPay:HashSecret"];
+        var baseUrl = configuration["Payment:VnPay:PaymentUrl"];
+        var callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
+
+        if (string.IsNullOrEmpty(tmnCode))
+            throw new ArgumentNullException("Payment:VnPay:TmnCode", "VnPay TmnCode is missing in the configuration.");
+
+        if (string.IsNullOrEmpty(hashSecret))
+            throw new ArgumentNullException("Payment:VnPay:HashSecret",
+                "VnPay HashSecret is missing in the configuration.");
+
+        if (string.IsNullOrEmpty(baseUrl))
+            throw new ArgumentNullException("Payment:VnPay:PaymentUrl",
+                "VnPay PaymentUrl is missing in the configuration.");
+
+        if (string.IsNullOrEmpty(callbackUrl))
+            throw new ArgumentNullException("Payment:VnPay:ReturnUrl",
+                "VnPay ReturnUrl is missing in the configuration.");
+
+        // Khởi tạo IVnpay
+        IVnpay _vnpay = new Vnpay();
+
+        services.AddSingleton<IVnpay>(p =>
+        {
+            // Khởi tạo Vnpay với các giá trị cấu hình
+            _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
+            return _vnpay;
+        });
+
+        return services;
+    }
+
+
+    private static IServiceCollection SetupDBContext(this IServiceCollection services)
+    {
+        IConfiguration configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", true, true)
+            .AddEnvironmentVariables()
+            .Build();
+
+        services.AddDbContext<VaccinaCareDbContext>(options =>
+        {
+            options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]);
+        });
+
         return services;
     }
 
@@ -73,27 +148,13 @@ public static class IOCContainer
         services.AddScoped<IVaccineIntervalRulesService, VaccineIntervalRulesService>();
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
+        services.AddScoped<IVnPayService, VnPayService>();
+
         services.AddHttpContextAccessor();
 
         return services;
     }
 
-
-    private static IServiceCollection SetupDBContext(this IServiceCollection services)
-    {
-        IConfiguration configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", true, true)
-            .AddEnvironmentVariables()
-            .Build();
-
-        services.AddDbContext<VaccinaCareDbContext>(options =>
-        {
-            options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]);
-        });
-
-        return services;
-    }
 
     private static IServiceCollection SetupCORS(this IServiceCollection services)
     {

@@ -7,7 +7,7 @@ namespace VaccinaCare.API.Controllers;
 using Humanizer;
 using Application.Interface.Common;
 using Application.Ultils;
-using VaccinaCare.Application.Service;
+using Application.Service;
 using System.Diagnostics.Contracts;
 
 [ApiController]
@@ -56,6 +56,7 @@ public class VaccineIntervalRulesController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
+
     [HttpGet]
     public async Task<IActionResult> GetAllVaccineIntervalRule()
     {
@@ -65,13 +66,16 @@ public class VaccineIntervalRulesController : ControllerBase
             if (vaccineIntervalRules == null || vaccineIntervalRules.Count == 0)
                 return NotFound(ApiResult<object>.Error("404 - No vaccine interval rules available."));
 
-            return Ok((ApiResult<List<VaccineIntervalRulesDTO>>.Success(vaccineIntervalRules, "Vaccine interval rules retrieved successfully.")));
+            return Ok(ApiResult<List<VaccineIntervalRulesDTO>>.Success(vaccineIntervalRules,
+                "Vaccine interval rules retrieved successfully."));
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("An unexepected error occurred while retrieving vaccine interval rules."));
+            return StatusCode(500,
+                ApiResult<object>.Error("An unexepected error occurred while retrieving vaccine interval rules."));
         }
     }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateVacicneIntervalRule(Guid id, [FromBody] VaccineIntervalRulesDTO updateDto)
     {
@@ -87,6 +91,7 @@ public class VaccineIntervalRulesController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
         }
     }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteVaccineIntervalRule(Guid id)
     {

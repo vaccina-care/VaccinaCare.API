@@ -31,7 +31,15 @@ public class AppointmentService : IAppointmentService
         _notificationService = notificationService;
     }
 
-
+    /// <summary>
+    /// Tạo danh sách các cuộc hẹn cho một loại vaccine duy nhất, bao gồm tất cả các mũi tiêm cần thiết.
+    /// Kiểm tra các điều kiện trước khi đặt lịch, bao gồm:
+    /// - Trẻ có đủ điều kiện để tiêm vaccine không.
+    /// - Trẻ đã tiêm đủ số mũi chưa.
+    /// - Vaccine có gây xung đột với các vaccine đã đặt trước không.
+    /// - Ngăn chặn spam đặt cùng một loại vaccine trong khoảng thời gian `DoseIntervalDays`.
+    /// Nếu mọi điều kiện hợp lệ, hệ thống sẽ tự động tạo danh sách các cuộc hẹn theo khoảng cách mũi.
+    /// </summary>
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(CreateAppointmentDto request,
         Guid parentId)
     {
@@ -39,64 +47,22 @@ public class AppointmentService : IAppointmentService
         {
             var appointments = new List<Appointment>();
 
-            foreach (var vaccineId in request.VaccineIds)
-            {
-                var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
-                if (vaccine == null)
-                    throw new ArgumentException($"Vaccine với ID {vaccineId} không tồn tại.");
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(request.VaccineId);
+            if (vaccine == null)
+                throw new ArgumentException($"Vaccine with ID {request.VaccineId} does not exist.");
 
-                var (isEligible, message) = await _vaccineService.CanChildReceiveVaccine(request.ChildId, vaccineId);
-                if (!isEligible)
-                    throw new ArgumentException(
-                        $"Trẻ không đủ điều kiện tiêm vaccine {vaccine.VaccineName}: {message}");
+            await CheckVaccineEligibilityAndCompatibility(request, vaccine, parentId);
 
-                var nextDose = await _vaccineService.GetNextDoseNumber(request.ChildId, vaccineId);
-                if (nextDose > vaccine.RequiredDoses)
-                    throw new ArgumentException($"Trẻ đã tiêm đủ số mũi của vaccine {vaccine.VaccineName}.");
+            var nextDose = await _vaccineService.GetNextDoseNumber(request.ChildId, request.VaccineId);
+            if (nextDose > vaccine.RequiredDoses)
+                throw new ArgumentException(
+                    $"Child has already received all required doses for vaccine {vaccine.VaccineName}.");
 
-                var appointmentDate = request.StartDate;
+            var appointmentDate = request.StartDate;
 
-                // Kiểm tra xem có lịch hẹn nào đã tồn tại trong khoảng thời gian của các mũi vaccine
-                var existingAppointments = await _unitOfWork.AppointmentRepository
-                    .GetAllAsync(a => a.ChildId == request.ChildId && a.AppointmentsVaccines
-                        .Any(av => av.VaccineId == vaccineId &&
-                                   a.AppointmentDate.Value.AddDays(vaccine.DoseIntervalDays) >= appointmentDate));
-
-                if (existingAppointments.Any())
-                    throw new ArgumentException(
-                        $"Đã có lịch hẹn cho vaccine {vaccine.VaccineName} trong khoảng thời gian yêu cầu.");
-
-                for (var dose = nextDose; dose <= vaccine.RequiredDoses; dose++)
-                {
-                    var bookedVaccineIds = appointments
-                        .SelectMany(a => a.AppointmentsVaccines.Select(av => av.VaccineId)).ToList();
-                    if (!await _vaccineService.CheckVaccineCompatibility(vaccineId, bookedVaccineIds, appointmentDate))
-                        throw new ArgumentException(
-                            $"Vaccine {vaccine.VaccineName} không thể tiêm cùng các loại vaccine đã đặt trước.");
-
-                    var appointment = new Appointment
-                    {
-                        ParentId = parentId,
-                        ChildId = request.ChildId,
-                        AppointmentDate = appointmentDate,
-                        Status = AppointmentStatus.Pending,
-                        VaccineType = VaccineType.SingleDose,
-                        Notes = $"Mũi {dose}/{vaccine.RequiredDoses} của {vaccine.VaccineName}",
-                        AppointmentsVaccines = new List<AppointmentsVaccine>
-                        {
-                            new()
-                            {
-                                VaccineId = vaccineId,
-                                DoseNumber = dose,
-                                TotalPrice = vaccine.Price
-                            }
-                        }
-                    };
-
-                    appointments.Add(appointment);
-                    appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
-                }
-            }
+            for (var dose = nextDose; dose <= vaccine.RequiredDoses; dose++)
+                appointmentDate =
+                    await GenerateAppointmentForDose(appointments, request, parentId, vaccine, dose, appointmentDate);
 
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
@@ -122,14 +88,78 @@ public class AppointmentService : IAppointmentService
         catch (Exception ex)
         {
             _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
-            throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
+            throw new Exception("An unexpected error occurred. Please try again later.");
         }
     }
 
+    private async Task CheckVaccineEligibilityAndCompatibility(CreateAppointmentDto request, Vaccine vaccine,
+        Guid parentId)
+    {
+        var (isEligible, message) = await _vaccineService.CanChildReceiveVaccine(request.ChildId, request.VaccineId);
+        if (!isEligible)
+            throw new ArgumentException($"Child is not eligible for vaccine {vaccine.VaccineName}: {message}");
 
-    /// <summary>
-    /// 
-    /// </summary>
+        var appointmentDate = request.StartDate;
+
+        // Check for recent appointments for the same vaccine
+        var recentAppointments = await _unitOfWork.AppointmentRepository
+            .GetAllAsync(a => a.ChildId == request.ChildId &&
+                              a.AppointmentsVaccines.Any(av => av.VaccineId == request.VaccineId) &&
+                              a.AppointmentDate >= appointmentDate.AddDays(-vaccine.DoseIntervalDays));
+
+        if (recentAppointments.Any())
+            throw new ArgumentException(
+                $"Child already has an appointment for {vaccine.VaccineName} recently. Please select a different date.");
+
+        // Check for conflicts with previously booked vaccines
+        var existingAppointments = await _unitOfWork.AppointmentRepository
+            .GetAllAsync(a => a.ChildId == request.ChildId && a.AppointmentsVaccines.Any());
+        var bookedVaccineIds = existingAppointments
+            .SelectMany(a => a.AppointmentsVaccines.Select(av => av.VaccineId))
+            .Distinct()
+            .ToList();
+
+        if (!await _vaccineService.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds, appointmentDate))
+            throw new ArgumentException($"Vaccine {vaccine.VaccineName} conflicts with previously booked vaccines.");
+    }
+
+    private async Task<DateTime> GenerateAppointmentForDose(List<Appointment> appointments,
+        CreateAppointmentDto request,
+        Guid parentId, Vaccine vaccine, int dose, DateTime appointmentDate)
+    {
+        // Ensure vaccine compatibility for the current dose
+        var currentBookedVaccineIds = appointments
+            .SelectMany(a => a.AppointmentsVaccines.Select(av => av.VaccineId)).ToList();
+
+        if (!await _vaccineService.CheckVaccineCompatibility(request.VaccineId, currentBookedVaccineIds,
+                appointmentDate))
+            throw new ArgumentException(
+                $"Vaccine {vaccine.VaccineName} cannot be taken with previously booked vaccines.");
+
+        // Create appointment for this dose
+        var appointment = new Appointment
+        {
+            ParentId = parentId,
+            ChildId = request.ChildId,
+            AppointmentDate = appointmentDate,
+            Status = AppointmentStatus.Pending,
+            VaccineType = VaccineType.SingleDose,
+            Notes = $"Dose {dose}/{vaccine.RequiredDoses} of {vaccine.VaccineName}",
+            AppointmentsVaccines = new List<AppointmentsVaccine>
+            {
+                new()
+                {
+                    VaccineId = request.VaccineId,
+                    DoseNumber = dose,
+                    TotalPrice = vaccine.Price
+                }
+            }
+        };
+
+        appointments.Add(appointment);
+        return appointmentDate.AddDays(vaccine.DoseIntervalDays); // Return the updated appointmentDate
+    }
+
     public async Task<bool> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, AppointmentStatus newStatus)
     {
         var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(appointmentId);
@@ -229,13 +259,6 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-
-    /// <summary>
-    /// Lấy chi tiết cuộc hẹn gần nhất dựa trên ID của trẻ
-    /// </summary>
-    /// <param name="childId"></param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
     public async Task<AppointmentDTO> GetAppointmentDetailsByChildIdAsync(Guid childId)
     {
         try

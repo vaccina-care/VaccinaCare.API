@@ -19,7 +19,7 @@ public partial class VaccinaCareDbContext : DbContext
     #region DbSet
 
     public virtual DbSet<Appointment> Appointments { get; set; }
-    public virtual DbSet<AppointmentsVaccine> AppointmentsServices { get; set; }
+    public virtual DbSet<AppointmentsVaccine> AppointmentsVaccines { get; set; }
     public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
     public virtual DbSet<Child> Children { get; set; }
     public virtual DbSet<Feedback> Feedbacks { get; set; }
@@ -29,10 +29,11 @@ public partial class VaccinaCareDbContext : DbContext
     public virtual DbSet<Notification> Notifications { get; set; }
     public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
+
+    public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<Vaccine> Vaccines { get; set; }
-    public virtual DbSet<VaccineAvailability> ServiceAvailabilities { get; set; }
     public virtual DbSet<User> Users { get; set; }
     public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
     public virtual DbSet<VaccinationRecord> VaccinationRecords { get; set; }
@@ -90,9 +91,9 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<Notification>().ToTable(nameof(Notification));
         modelBuilder.Entity<PackageProgress>().ToTable(nameof(PackageProgress));
         modelBuilder.Entity<Payment>().ToTable(nameof(Payment));
+        modelBuilder.Entity<PaymentTransaction>().ToTable(nameof(PaymentTransaction));
         modelBuilder.Entity<Role>().ToTable(nameof(Role));
         modelBuilder.Entity<Vaccine>().ToTable(nameof(Vaccine));
-        modelBuilder.Entity<VaccineAvailability>().ToTable(nameof(VaccineAvailability));
         modelBuilder.Entity<User>().ToTable(nameof(User));
         modelBuilder.Entity<UsersVaccination>().ToTable(nameof(UsersVaccination));
         modelBuilder.Entity<VaccinationRecord>().ToTable(nameof(VaccinationRecord));
@@ -301,11 +302,54 @@ public partial class VaccinaCareDbContext : DbContext
         });
 
 
+        // Cấu hình cho bảng Payment
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__Payments__9B556A587D9A7EB1");
+            entity.HasKey(e => e.Id).HasName("PK_Payments");
+
             entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.PaymentStatus).HasMaxLength(255);
+
+            // Enum PaymentStatus -> string
+            entity.Property(e => e.PaymentStatus)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired(false);
+
+            // Enum PaymentType -> string
+            entity.Property(e => e.PaymentType)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.Property(e => e.PaymentDate).HasColumnType("datetime");
+
+            entity.HasOne(e => e.PaymentMethod)
+                .WithMany(pm => pm.Payments)
+                .HasForeignKey(e => e.PaymentMethodId);
+        });
+
+        // Cấu hình cho bảng PaymentTransaction
+        modelBuilder.Entity<PaymentTransaction>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK_PaymentTransactions");
+
+            entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.TransactionId).HasMaxLength(255);
+            entity.Property(e => e.TransactionDate).HasColumnType("datetime");
+            entity.Property(e => e.ResponseCode).HasMaxLength(50);
+            entity.Property(e => e.ResponseMessage).HasMaxLength(500);
+            entity.Property(e => e.Note).HasMaxLength(500);
+
+            // Enum PaymentTransactionStatus -> string
+            entity.Property(e => e.Status)
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            entity.HasOne(pt => pt.Payment)
+                .WithMany(p => p.PaymentTransactions)
+                .HasForeignKey(pt => pt.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Vaccine>()

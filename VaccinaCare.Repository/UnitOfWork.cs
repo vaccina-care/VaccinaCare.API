@@ -21,6 +21,9 @@ public class UnitOfWork : IUnitOfWork
     private readonly IGenericRepository<AppointmentVaccineSuggestions> _appointmentVaccineSuggestionsRepository;
     private readonly IGenericRepository<AppointmentsVaccine> _appointmentsVaccineRepository;
     private readonly IGenericRepository<Feedback> _feedbackRepository;
+    private readonly IGenericRepository<Payment> _paymentRepository;
+    private readonly IGenericRepository<PaymentTransaction> _paymentTransactionRepository;
+    private readonly IGenericRepository<Invoice> _invoiceRepository;
 
     public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
         IGenericRepository<User> userRepository, IGenericRepository<Role> roleRepository,
@@ -33,7 +36,9 @@ public class UnitOfWork : IUnitOfWork
         IGenericRepository<AppointmentVaccineSuggestions> appointmentVaccineSuggestionsRepository,
         IGenericRepository<VaccinationRecord> vaccinationRecordRepository,
         IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository,
-        IGenericRepository<Feedback> feedbackRepository)
+        IGenericRepository<Feedback> feedbackRepository, IGenericRepository<Payment> paymentRepository,
+        IGenericRepository<Invoice> invoiceRepository,
+        IGenericRepository<PaymentTransaction> paymentTransactionRepository)
     {
         _dbContext = dbContext;
         _notificationRepository = notificationRepository;
@@ -48,6 +53,9 @@ public class UnitOfWork : IUnitOfWork
         _vaccineIntervalRules = vaccineIntervalRules;
         _appointmentVaccineSuggestionsRepository = appointmentVaccineSuggestionsRepository;
         _appointmentsVaccineRepository = appointmentsVaccineRepository;
+        _paymentRepository = paymentRepository;
+        _invoiceRepository = invoiceRepository;
+        _paymentTransactionRepository = paymentTransactionRepository;
         _vaccinationRecordRepository = vaccinationRecordRepository;
         _feedbackRepository = feedbackRepository;
     }
@@ -72,6 +80,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IGenericRepository<AppointmentsVaccine> AppointmentsVaccineRepository => _appointmentsVaccineRepository;
     public IGenericRepository<Feedback> FeedbackRepository => _feedbackRepository;
+    public IGenericRepository<Payment> PaymentRepository => _paymentRepository;
+    public IGenericRepository<PaymentTransaction> PaymentTransactionRepository => _paymentTransactionRepository;
+    public IGenericRepository<Invoice> InvoiceRepository => _invoiceRepository;
 
     public Task<int> SaveChangesAsync()
     {

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace VaccinaCare.Domain.DTOs.UserDTOs;
 
@@ -10,6 +11,6 @@ public class UserUpdateDto
     public DateTime? DateOfBirth { get; set; }
     public string? Address { get; set; }
     public IFormFile? ImageFile { get; set; }
-    public string? ImageUrl { get; set; } // Add this to return the stored image URL
+    [SwaggerIgnore] public string? ImageUrl { get; set; }
     public string? PhoneNumber { get; set; }
 }

@@ -13,5 +13,4 @@ public interface IVaccineIntervalRulesService
     Task<List<VaccineIntervalRulesDTO>> GetAllVaccineIntervalRulesAsync();
     Task<bool> DeleteVaccineIntervalRuleAsync(Guid id);
     Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id, VaccineIntervalRulesDTO updateDto);
-
 }

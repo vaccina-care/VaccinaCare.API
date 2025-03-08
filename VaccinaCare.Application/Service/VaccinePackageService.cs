@@ -228,7 +228,7 @@ public class VaccinePackageService : IVaccinePackageService
         }
     }
 
-    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsyncPaging(string? searchName,
+    public async Task<PagedResult<VaccinePackageResultDTO>> GetAllVaccinesAndPackagesAsync(string? searchName,
         string? searchDescription, int pageNumber, int pageSize)
     {
         try
@@ -445,17 +445,18 @@ public class VaccinePackageService : IVaccinePackageService
 
             // Thêm hoặc cập nhật vaccine
             if (dto.VaccineDetails != null && dto.VaccineDetails.Any())
-            {
                 foreach (var newVaccine in dto.VaccineDetails)
                 {
-                    var existingVaccine = existingVaccineDetails.FirstOrDefault(v => v.VaccineId == newVaccine.VaccineId);
+                    var existingVaccine =
+                        existingVaccineDetails.FirstOrDefault(v => v.VaccineId == newVaccine.VaccineId);
 
                     if (existingVaccine != null)
                     {
                         //Cập nhật thứ tự liều nếu có thay đổi
                         if (existingVaccine.DoseOrder != newVaccine.DoseOrder)
                         {
-                            _loggerService.Info($"Updating DoseOrder for Vaccine {newVaccine.VaccineId} to {newVaccine.DoseOrder}");
+                            _loggerService.Info(
+                                $"Updating DoseOrder for Vaccine {newVaccine.VaccineId} to {newVaccine.DoseOrder}");
                             existingVaccine.DoseOrder = newVaccine.DoseOrder;
                         }
                     }
@@ -471,7 +472,6 @@ public class VaccinePackageService : IVaccinePackageService
                         });
                     }
                 }
-            }
 
             await _unitOfWork.VaccinePackageRepository.Update(vaccinePackage);
             await _unitOfWork.SaveChangesAsync();

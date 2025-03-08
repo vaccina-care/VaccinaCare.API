@@ -143,7 +143,7 @@ public class SystemController : ControllerBase
                 PasswordHash = passwordHasher.HashPassword("1@"),
                 RoleName = RoleType.Staff,
                 ImageUrl =
-                    "https://scontent-sin2-3.xx.fbcdn.net/v/t1.15752-9/481474056_1667641234157664_9167150937112353323_n.png?_nc_cat=107&ccb=1-7&_nc_sid=0024fc&_nc_eui2=AeGvzaqDrcjnTsoE9MbSrajihVrT8PqCP9iFWtPw-oI_2I0hgHzLzvNOWnlFrl13YSWDx1z5f4GrIsxGN877b8Tw&_nc_ohc=wcAEghNiHSkQ7kNvgGnPOID&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent-sin2-3.xx&oh=03_Q7cD1gHKym3dI9Od2i7_0zgaLQdDrl3i2G-e8OsZhI7nWWI5GA&oe=67EE88A6"
+                    "https://scontent-hkg4-1.xx.fbcdn.net/v/t1.15752-9/475528128_1134900321451127_3323942936519002305_n.png?_nc_cat=108&ccb=1-7&_nc_sid=9f807c&_nc_eui2=AeGc9uwG_xXuF9RJoF7bI17SeurTYb30fQh66tNhvfR9CKznXnCZn4dU5Bc59_JA3_eYgxJX5aKpI0iFLjxy86bK&_nc_ohc=7CpLZ9FbsmgQ7kNvgGSiMCT&_nc_oc=Adi_PRwfWJIV7gbsWdbStchrmVdAHsHWGFV_1nNFo5X716uaWl7yNxMqHEJLoZtyE4_nijOpXbFJrFCXfwWdjZWF&_nc_zt=23&_nc_ht=scontent-hkg4-1.xx&oh=03_Q7cD1gE_4j4t6T7fbVLzoUGvojV-dXqkEzD-KVSHY0aHx9PdgA&oe=67EFCCED"
             }
         };
 
@@ -676,7 +676,7 @@ public class SystemController : ControllerBase
             var tablesToDelete = new List<Func<Task>>
             {
                 () => context.Notifications.ExecuteDeleteAsync(),
-                () => context.AppointmentsServices.ExecuteDeleteAsync(),
+                () => context.AppointmentsVaccines.ExecuteDeleteAsync(),
                 () => context.Appointments.ExecuteDeleteAsync(),
                 () => context.CancellationPolicies.ExecuteDeleteAsync(),
                 () => context.Children.ExecuteDeleteAsync(),
@@ -684,6 +684,7 @@ public class SystemController : ControllerBase
                 () => context.Invoices.ExecuteDeleteAsync(),
                 () => context.PackageProgresses.ExecuteDeleteAsync(),
                 () => context.Payments.ExecuteDeleteAsync(),
+                () => context.PaymentTransactions.ExecuteDeleteAsync(),
                 () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
                 () => context.VaccinationRecords.ExecuteDeleteAsync(),
                 () => context.VaccineSuggestions.ExecuteDeleteAsync(),
@@ -692,7 +693,6 @@ public class SystemController : ControllerBase
                 // Xóa VaccinePackageDetail trước VaccinePackage
                 () => context.VaccinePackageDetails.ExecuteDeleteAsync(),
                 () => context.VaccinePackages.ExecuteDeleteAsync(),
-                () => context.ServiceAvailabilities.ExecuteDeleteAsync(),
                 // Sau khi VaccineIntervalRules đã xóa, mới xóa Vaccine
                 () => context.Vaccines.ExecuteDeleteAsync(),
                 () => context.Users.ExecuteDeleteAsync(),

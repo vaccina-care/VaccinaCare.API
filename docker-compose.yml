@@ -14,10 +14,13 @@
       - "JWT__SecretKey=VaccinaCare_SECRETKEY_SIEUCAPBAOMAT_VAYMACHUADU16KYTU"
       - "JWT__Issuer=VaccinaCare_Issuer"
       - "JWT__Audience=VaccinaCare_Audience"
-      - "Payment__VnPay__ReturnUrl="
+      - "Payment__VnPay__ReturnUrl=https://vaccina-care-fe.vercel.app/payment-success"
       - "Payment__VnPay__PaymentUrl=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
-      - "Payment__VnPay__TmnCode=O7RXN745"
-      - "Payment__VnPay__HashSecret=CTSEWKH8ZGNRYE8GYH9H4UW3H5W097HB"
+      - "Payment__VnPay__TmnCode=G0RKSB25"
+      - "Payment__VnPay__HashSecret=6D7RDBZYP0EDFZQWN8JK3AYQT35Q5QOV"
+      - "Payment__PayOS__ClientId=fe05682b-bfb9-47ce-bd7b-3efaec0e15d1"
+      - "Payment__PayOS__ApiKey=3cdc9096-55ef-4d45-8c36-9b7f4578c368"
+      - "Payment__PayOS__ChecksumKey=31bcc1b2d62c1782fa8f67cf192effe917fd3dedb6b9f18e5279485f87fde9d6"
       - EMAIL_USERNAME=trangiaphuc362003181@gmail.com
       - EMAIL_PASSWORD=hygd bzzo brzp knfm
       - EMAIL_HOST=smtp.gmail.com

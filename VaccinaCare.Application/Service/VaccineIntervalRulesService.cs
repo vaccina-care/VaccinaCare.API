@@ -28,7 +28,8 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         _claimsService = claimsService;
     }
 
-    public async Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(VaccineIntervalRulesDTO vaccineIntervalRulesDTO)
+    public async Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(
+        VaccineIntervalRulesDTO vaccineIntervalRulesDTO)
     {
         _logerService.Info($"Creating Vaccine Interval Rules: ");
 
@@ -64,7 +65,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
     }
 
-    public  async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
+    public async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
     {
         _logerService.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");
         try
@@ -103,7 +104,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
                 VaccineId = v.Id,
                 RelatedVaccineId = v.Id,
                 CanBeGivenTogether = true,
-                MinIntervalDays = v.MinIntervalDays,
+                MinIntervalDays = v.MinIntervalDays
             }).ToList();
 
             _logerService.Info($"Fetched {result.Count} Vaccine Interval Rules successfully.");
@@ -115,14 +116,16 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
             throw;
         }
     }
+
     //hàm update có thể xem lại tùy theo FE yêu cầu flow như nào
-    public async Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id, VaccineIntervalRulesDTO updateDto)
+    public async Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id,
+        VaccineIntervalRulesDTO updateDto)
     {
         try
         {
             _logerService.Info($"Updating Vaccine Interval Rule with ID: {id}");
 
-            if(updateDto == null)
+            if (updateDto == null)
             {
                 _logerService.Warn("Update data is null.");
                 throw new ArgumentNullException(nameof(updateDto), "Update data can be null.");
@@ -131,24 +134,28 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
             var vaccineIntervalRule = await _unitOfWork.VaccineIntervalRulesRepository.GetByIdAsync(id);
             if (vaccineIntervalRule == null)
             {
-                _logerService.Warn($"Vaccine Interval Rule with ID { id } not found.");
+                _logerService.Warn($"Vaccine Interval Rule with ID {id} not found.");
                 return null;
             }
+
             if (updateDto.VaccineId == Guid.Empty || updateDto.RelatedVaccineId == Guid.Empty)
             {
                 _logerService.Warn("VaccineId or RelatedVaccineId is empty.");
                 throw new ArgumentException("VaccineId and RelatedVaccineId cannot be empty.");
             }
-            if(updateDto.VaccineId == updateDto.RelatedVaccineId)
+
+            if (updateDto.VaccineId == updateDto.RelatedVaccineId)
             {
                 _logerService.Warn("VaccineId and RelatedVaccineId cannot be the same.");
                 throw new ArgumentException("A vaccine cannot have an interval rule wiht itseft.");
             }
+
             if (updateDto.MinIntervalDays < 0)
             {
                 _logerService.Info("MinIntervalDay cannot be neagative.");
                 throw new ArgumentException("MinIntervalDay must be a non-negative.");
             }
+
             if (updateDto.CanBeGivenTogether && updateDto.MinIntervalDays > 0)
             {
                 _logerService.Warn("If vaccines can be give together, MinIntervalDays should be 0.");
@@ -172,7 +179,8 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
                 MinIntervalDays = vaccineIntervalRule.MinIntervalDays,
                 CanBeGivenTogether = vaccineIntervalRule.CanBeGivenTogether
             };
-        }catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             _logerService.Error($"Error updating vaccine interval rule: {ex.Message}");
             throw;

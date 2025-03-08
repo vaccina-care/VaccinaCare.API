@@ -52,7 +52,6 @@ public class CustomerController : ControllerBase
         }
     }
 
-
     [HttpPut("me")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

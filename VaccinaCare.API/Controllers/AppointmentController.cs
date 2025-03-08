@@ -4,7 +4,6 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
-using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
@@ -87,42 +86,24 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
 
-            if (request.VaccineIds == null || !request.VaccineIds.Any())
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Danh sách vaccine không hợp lệ."
-                });
+            // Kiểm tra dữ liệu đầu vào
+            if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
+                return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
 
-            var result = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
+            // Gọi service để tạo danh sách các cuộc hẹn
+            var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
-            return Ok(new ApiResult<List<AppointmentDTO>>
-            {
-                IsSuccess = true,
-                Message = "Appointments created successfully.",
-                Data = result
-            });
+            return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
         catch (ArgumentException ex)
         {
-            _logger.Error($"Validation error: {ex.Message}");
-            return BadRequest(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message // Trả lại thông điệp lỗi cụ thể từ Service
-            });
+            return BadRequest(ApiResult<object>.Error(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error in GenerateAppointments: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Internal server error. Please try again later."
-            });
+            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
-
 
     [HttpGet("details/{childId}")]
     [Authorize]
