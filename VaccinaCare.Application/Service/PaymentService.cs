@@ -7,68 +7,53 @@ using VaccinaCare.Domain;
 using VaccinaCare.Domain.DTOs.PaymentDTOs;
 using VaccinaCare.Repository.Interfaces;
 
-namespace VaccinaCare.Application.Service
+namespace VaccinaCare.Application.Service;
+
+public class PaymentService : IPaymentService
 {
-    public class PaymentService : IPaymentService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILoggerService _logger;
+    private readonly IEmailService _emailService;
+    private readonly IVnPayService _vnPayService;
+
+    public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
+        IVnPayService vnPayService, VaccinaCareDbContext dbContext)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly VaccinaCareDbContext _dbContext;
-        private readonly ILoggerService _logger;
-        private readonly IEmailService _emailService;
-        private readonly IVnPayService _vnPayService;
+        _unitOfWork = unitOfWork;
+        _logger = loggerService;
+        _emailService = emailService;
+        _vnPayService = vnPayService;
+    }
 
-        public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
-            IVnPayService vnPayService, VaccinaCareDbContext dbContext)
+    public async Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context)
+    {
+        try
         {
-            _unitOfWork = unitOfWork;
-            _logger = loggerService;
-            _emailService = emailService;
-            _vnPayService = vnPayService;
-            _dbContext = dbContext;
-        }
+            if (_vnPayService == null) throw new InvalidOperationException("VNPay service is not initialized.");
 
-        public async Task<string> GetPaymentUrl(Guid appointmentVaccineId, HttpContext context)
+            // Lấy danh sách các vaccine của cuộc hẹn dựa trên appointmentId
+            var appointmentVaccine = await _unitOfWork.AppointmentsVaccineRepository
+                .FirstOrDefaultAsync(av => av.AppointmentId == appointmentId);
+
+            if (appointmentVaccine == null) return null;
+
+            var totalAmount = appointmentVaccine.TotalPrice ?? 0m;
+
+            var paymentInfo = new PaymentInformationModel
+            {
+                Amount = (long)(totalAmount * 100),
+                OrderType = "other",
+                OrderDescription = "Payment for vaccination",
+                Name = "VaccinePayment"
+            };
+
+            var paymentUrl = _vnPayService.CreatePaymentUrl(paymentInfo, context);
+
+            return paymentUrl;
+        }
+        catch (Exception ex)
         {
-            try
-            {
-
-                if (_dbContext == null)
-                {
-                    throw new InvalidOperationException("Database context is not initialized.");
-                }
-
-                if (_vnPayService == null)
-                {
-                    throw new InvalidOperationException("VNPay service is not initialized.");
-                }
-
-                var appointmentVaccine = await _dbContext.AppointmentsVaccines
-                    .FirstOrDefaultAsync(av => av.Id == appointmentVaccineId);
-
-                if (appointmentVaccine == null)
-                {
-                    return null;
-                }
-
-                decimal totalAmount = appointmentVaccine.TotalPrice ?? 0m;
-
-                var paymentInfo = new PaymentInformationModel
-                {
-                    Amount = (long)(totalAmount * 100),
-                    OrderType = "other",
-                    OrderDescription = "Payment for vaccination",
-                    Name = "VaccinePayment"
-                };
-
-                var paymentUrl = _vnPayService.CreatePaymentUrl(paymentInfo, context);
-
-                return paymentUrl;
-            }
-            catch (Exception ex)
-            {
-                throw;
-            }
+            throw;
         }
-
     }
 }

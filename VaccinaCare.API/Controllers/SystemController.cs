@@ -697,10 +697,7 @@ public class SystemController : ControllerBase
                 () => context.Roles.ExecuteDeleteAsync()
             };
 
-            foreach (var deleteFunc in tablesToDelete)
-            {
-                await deleteFunc();
-            }
+            foreach (var deleteFunc in tablesToDelete) await deleteFunc();
 
             await transaction.CommitAsync();
             _logger.Success("Xóa sạch dữ liệu trong database thành công.");

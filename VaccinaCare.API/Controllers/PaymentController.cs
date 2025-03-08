@@ -21,6 +21,4 @@ public class PaymentController : ControllerBase
         var response = _vnPayService.PaymentExecute(Request.Query);
         return Ok(response);
     }
-
-
 }

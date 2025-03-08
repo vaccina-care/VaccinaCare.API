@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace VaccinaCare.Application.Interface
+namespace VaccinaCare.Application.Interface;
+
+public interface IPaymentService
 {
-    public interface IPaymentService
-    {
-        Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context);
-    }
+    Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context);
 }

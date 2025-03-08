@@ -10,7 +10,6 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/vaccines")]
-
 public class VaccineController : ControllerBase
 {
     private readonly IVaccineService _vaccineService;

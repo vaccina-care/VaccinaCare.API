@@ -27,7 +27,6 @@ public class AppointmentController : ControllerBase
         _paymentService = paymentService;
     }
 
-
     [HttpPost("booking/single-vaccines")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
@@ -39,11 +38,9 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
 
-            // Kiểm tra dữ liệu đầu vào
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
                 return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
 
-            // Gọi service để tạo danh sách các cuộc hẹn
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
@@ -58,50 +55,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpGet("checkout/{appointmentId}")]
-    [ProducesResponseType(typeof(ApiResult<string>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> CheckoutPayment(Guid appointmentId)
-    {
-        _logger?.Info($"[CheckoutPayment] Received request for appointmentId: {appointmentId}");
-
-        try
-        {
-            var paymentUrl = await _paymentService.GetPaymentUrl(appointmentId, HttpContext);
-
-            if (string.IsNullOrEmpty(paymentUrl))
-            {
-                _logger?.Error($"[CheckoutPayment] Unable to generate payment URL for appointment: {appointmentId}");
-
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Unable to create payment URL, please check the appointment details and try again."
-                });
-            }
-
-            _logger?.Info($"[CheckoutPayment] Successfully generated payment URL for appointment: {appointmentId}");
-
-            return Ok(new ApiResult<string>
-            {
-                IsSuccess = true,
-                Data = paymentUrl,
-                Message = "Payment URL created successfully."
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger?.Error($"[CheckoutPayment] Error processing request: {ex}");
-
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = $"An error occurred while processing your request: {ex.Message}"
-            });
-        }
-    }
-
+    
 
     [HttpGet("details/{childId}")]
     [Authorize]
@@ -112,21 +66,14 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            _logger.Info($"Received request to get appointment details for child ID: {childId}");
-
             var appointment = await _appointmentService.GetAppointmentDetailsByChildIdAsync(childId);
 
             if (appointment == null)
-            {
-                _logger.Warn($"No appointment found for child ID: {childId}");
                 return NotFound(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "No appointment found for the specified child."
                 });
-            }
-
-            _logger.Success($"Successfully retrieved appointment details for child ID: {childId}");
 
             return Ok(new ApiResult<AppointmentDTO>
             {
@@ -137,7 +84,6 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error fetching appointment details for child ID {childId}: {ex.Message}");
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
@@ -162,7 +108,7 @@ public class AppointmentController : ControllerBase
                     Message = "Child ID không hợp lệ."
                 });
 
-            var appointments = await _appointmentService.GetAllAppointmentsByChildIdAsync(childId);
+            var appointments = await _appointmentService.GetListlAppointmentsByChildIdAsync(childId);
 
             if (appointments == null || !appointments.Any())
                 return NotFound(new ApiResult<object>
@@ -180,7 +126,6 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception e)
         {
-            _logger.Error($"Lỗi khi lấy lịch hẹn cho child ID {childId}: {e.Message}");
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
@@ -229,11 +174,43 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error in UpdateAppointmentStatusByStaffAsync: {ex.Message}");
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = "Lỗi hệ thống. Vui lòng thử lại sau."
+            });
+        }
+    }
+    
+    [HttpGet("checkout/{appointmentId}")]
+    [ProducesResponseType(typeof(ApiResult<string>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> CheckoutPayment(Guid appointmentId)
+    {
+        try
+        {
+            var paymentUrl = await _paymentService.GetPaymentUrl(appointmentId, HttpContext);
+
+            if (string.IsNullOrEmpty(paymentUrl))
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Unable to create payment URL, please check the appointment details and try again."
+                });
+            return Ok(new ApiResult<string>
+            {
+                IsSuccess = true,
+                Data = paymentUrl,
+                Message = "Payment URL created successfully."
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = $"An error occurred while processing your request: {ex.Message}"
             });
         }
     }

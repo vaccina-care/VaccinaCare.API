@@ -399,6 +399,6 @@ public partial class VaccinaCareDbContext : DbContext
             .HasOne(vpd => vpd.Package)
             .WithMany(vp => vp.VaccinePackageDetails)
             .HasForeignKey(vpd => vpd.PackageId)
-            .OnDelete(DeleteBehavior.Cascade);  // Enable cascading delete here
+            .OnDelete(DeleteBehavior.Cascade); // Enable cascading delete here
     }
 }
