@@ -177,7 +177,10 @@ public partial class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<AppointmentsVaccine>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__3B38F27673DFA862");
-            entity.Property(e => e.TotalPrice).HasColumnType("decimal(18, 0)");
+
+            entity.Property(e => e.TotalPrice)
+                .HasColumnType("decimal(18, 2)"); // Đảm bảo lưu 2 số thập phân
+
             entity.HasOne(d => d.Appointment)
                 .WithMany(p => p.AppointmentsVaccines)
                 .HasForeignKey(d => d.AppointmentId)
@@ -188,6 +191,7 @@ public partial class VaccinaCareDbContext : DbContext
                 .HasForeignKey(d => d.VaccineId)
                 .HasConstraintName("FK__Appointme__Servi__5CD6CB2B");
         });
+
 
         modelBuilder.Entity<CancellationPolicy>(entity =>
         {
@@ -395,6 +399,6 @@ public partial class VaccinaCareDbContext : DbContext
             .HasOne(vpd => vpd.Package)
             .WithMany(vp => vp.VaccinePackageDetails)
             .HasForeignKey(vpd => vpd.PackageId)
-            .OnDelete(DeleteBehavior.Cascade); // Enable cascading delete
+            .OnDelete(DeleteBehavior.Cascade);  // Enable cascading delete here
     }
 }

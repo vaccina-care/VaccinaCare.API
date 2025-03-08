@@ -4,6 +4,8 @@ using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
+[ApiController]
+[Route("api/payments")]
 public class PaymentController : ControllerBase
 {
     private readonly IVnPayService _vnPayService;
@@ -12,15 +14,6 @@ public class PaymentController : ControllerBase
     {
         _vnPayService = vnPayService;
     }
-
-    public IActionResult CreatePaymentUrlVnpay(PaymentInformationModel model)
-    {
-        var url = _vnPayService.CreatePaymentUrl(model, HttpContext);
-
-        return Redirect(url);
-    }
-
-
 
     [HttpGet]
     public IActionResult PaymentCallbackVnpay()

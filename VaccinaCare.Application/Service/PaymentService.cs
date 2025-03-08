@@ -17,7 +17,8 @@ namespace VaccinaCare.Application.Service
         private readonly IEmailService _emailService;
         private readonly IVnPayService _vnPayService;
 
-        public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService, IVnPayService vnPayService, VaccinaCareDbContext dbContext)
+        public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
+            IVnPayService vnPayService, VaccinaCareDbContext dbContext)
         {
             _unitOfWork = unitOfWork;
             _logger = loggerService;
@@ -26,10 +27,11 @@ namespace VaccinaCare.Application.Service
             _dbContext = dbContext;
         }
 
-        public async Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context)
+        public async Task<string> GetPaymentUrl(Guid appointmentVaccineId, HttpContext context)
         {
             try
             {
+
                 if (_dbContext == null)
                 {
                     throw new InvalidOperationException("Database context is not initialized.");
@@ -40,44 +42,33 @@ namespace VaccinaCare.Application.Service
                     throw new InvalidOperationException("VNPay service is not initialized.");
                 }
 
-                var appointment = await _dbContext.Appointments
-                                                  .Include(a => a.AppointmentsVaccines)
-                                                  .FirstOrDefaultAsync(a => a.Id == appointmentId);
+                var appointmentVaccine = await _dbContext.AppointmentsVaccines
+                    .FirstOrDefaultAsync(av => av.Id == appointmentVaccineId);
 
-                if (appointment == null)
+                if (appointmentVaccine == null)
                 {
-                    _logger?.Error("Appointment not found.");  // Using null-conditional operator to avoid null reference on logger
                     return null;
                 }
 
-                if (appointment.AppointmentsVaccines == null || !appointment.AppointmentsVaccines.Any())
-                {
-                    _logger?.Error("No vaccine details found for the appointment.");
-                    return null;
-                }
-
-                double totalAmount = appointment.AppointmentsVaccines.Sum(av => (double)(av.TotalPrice ?? 0));
+                decimal totalAmount = appointmentVaccine.TotalPrice ?? 0m;
 
                 var paymentInfo = new PaymentInformationModel
                 {
-                    Amount = totalAmount,
+                    Amount = (long)(totalAmount * 100),
                     OrderType = "other",
                     OrderDescription = "Payment for vaccination",
-                    Name = "Vaccine Payment"
+                    Name = "VaccinePayment"
                 };
 
                 var paymentUrl = _vnPayService.CreatePaymentUrl(paymentInfo, context);
+
                 return paymentUrl;
             }
             catch (Exception ex)
             {
-                _logger?.Error($"Failed to create payment URL: {ex.Message}");  // Using null-conditional operator to avoid null reference on logger
-                throw;  // Re-throwing to maintain stack trace
+                throw;
             }
         }
-
-
-
 
     }
 }

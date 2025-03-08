@@ -21,12 +21,12 @@ public class VnPayService : IVnPayService
         var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneById);
         var tick = DateTime.Now.Ticks.ToString();
         var pay = new VnPayLibrary();
-        var urlCallBack = _configuration["PaymentCallBack:ReturnUrl"];
+        var urlCallBack = _configuration["Vnpay:PaymentBackReturnUrl"];
 
         pay.AddRequestData("vnp_Version", _configuration["Vnpay:Version"]);
         pay.AddRequestData("vnp_Command", _configuration["Vnpay:Command"]);
         pay.AddRequestData("vnp_TmnCode", _configuration["Vnpay:TmnCode"]);
-        pay.AddRequestData("vnp_Amount", ((int)model.Amount * 100).ToString());
+        pay.AddRequestData("vnp_Amount", model.Amount.ToString());
         pay.AddRequestData("vnp_CreateDate", timeNow.ToString("yyyyMMddHHmmss"));
         pay.AddRequestData("vnp_CurrCode", _configuration["Vnpay:CurrCode"]);
         pay.AddRequestData("vnp_IpAddr", pay.GetIpAddress(context));

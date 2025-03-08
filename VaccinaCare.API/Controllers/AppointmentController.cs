@@ -19,14 +19,13 @@ public class AppointmentController : ControllerBase
     private readonly IPaymentService _paymentService;
 
     public AppointmentController(IAppointmentService appointmentService, ILoggerService logger,
-        IClaimsService claimsService)
+        IClaimsService claimsService, IPaymentService paymentService)
     {
         _appointmentService = appointmentService;
         _logger = logger;
         _claimsService = claimsService;
+        _paymentService = paymentService;
     }
-
-
 
 
     [HttpPost("booking/single-vaccines")]
@@ -65,18 +64,24 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> CheckoutPayment(Guid appointmentId)
     {
+        _logger?.Info($"[CheckoutPayment] Received request for appointmentId: {appointmentId}");
+
         try
         {
             var paymentUrl = await _paymentService.GetPaymentUrl(appointmentId, HttpContext);
 
             if (string.IsNullOrEmpty(paymentUrl))
             {
+                _logger?.Error($"[CheckoutPayment] Unable to generate payment URL for appointment: {appointmentId}");
+
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Unable to create payment URL, please check the appointment details and try again."
                 });
             }
+
+            _logger?.Info($"[CheckoutPayment] Successfully generated payment URL for appointment: {appointmentId}");
 
             return Ok(new ApiResult<string>
             {
@@ -87,6 +92,8 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger?.Error($"[CheckoutPayment] Error processing request: {ex}");
+
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
@@ -181,6 +188,7 @@ public class AppointmentController : ControllerBase
             });
         }
     }
+
     [HttpPut("{appointmentId}/status")]
     [Authorize(Roles = "Staff")]
     [ProducesResponseType(typeof(ApiResult<bool>), 200)]
