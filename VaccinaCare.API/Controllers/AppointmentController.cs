@@ -182,36 +182,5 @@ public class AppointmentController : ControllerBase
         }
     }
     
-    [HttpGet("checkout/{appointmentId}")]
-    [ProducesResponseType(typeof(ApiResult<string>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> CheckoutPayment(Guid appointmentId)
-    {
-        try
-        {
-            var paymentUrl = await _paymentService.GetPaymentUrl(appointmentId, HttpContext);
-
-            if (string.IsNullOrEmpty(paymentUrl))
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Unable to create payment URL, please check the appointment details and try again."
-                });
-            return Ok(new ApiResult<string>
-            {
-                IsSuccess = true,
-                Data = paymentUrl,
-                Message = "Payment URL created successfully."
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = $"An error occurred while processing your request: {ex.Message}"
-            });
-        }
-    }
+    
 }

@@ -305,32 +305,44 @@ public partial class VaccinaCareDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict); // Không tự động xóa PackageProgress khi xóa User
         });
 
-
-        // Cấu hình cho bảng Payment
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK_Payments");
 
-            entity.Property(e => e.Amount).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.OrderDescription)
+                .IsRequired()
+                .HasColumnType("nvarchar(max)");
 
-            // Enum PaymentStatus -> string
-            entity.Property(e => e.PaymentStatus)
-                .HasConversion<string>()
+            entity.Property(e => e.TransactionId)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+
+            entity.Property(e => e.OrderId)
+                .IsRequired()
                 .HasMaxLength(50)
-                .IsRequired(false);
+                .IsUnicode(false);
 
-            // Enum PaymentType -> string
-            entity.Property(e => e.PaymentType)
-                .HasConversion<string>()
-                .HasMaxLength(50)
-                .IsRequired();
+            entity.Property(e => e.PaymentMethod)
+                .IsRequired()
+                .HasMaxLength(50);
 
-            entity.Property(e => e.PaymentDate).HasColumnType("datetime");
+            entity.Property(e => e.VnpayPaymentId)
+                .HasMaxLength(100)
+                .IsUnicode(false);
 
-            entity.HasOne(e => e.PaymentMethod)
-                .WithMany(pm => pm.Payments)
-                .HasForeignKey(e => e.PaymentMethodId);
+            // Quan hệ với Invoice (1 Payment có nhiều Invoice)
+            entity.HasMany(e => e.Invoices)
+                .WithOne(i => i.Payment)
+                .HasForeignKey(i => i.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Quan hệ với PaymentTransaction (1 Payment có nhiều PaymentTransaction)
+            entity.HasMany(e => e.PaymentTransactions)
+                .WithOne(pt => pt.Payment)
+                .HasForeignKey(pt => pt.PaymentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
+
 
         // Cấu hình cho bảng PaymentTransaction
         modelBuilder.Entity<PaymentTransaction>(entity =>
