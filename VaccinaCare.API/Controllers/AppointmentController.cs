@@ -10,12 +10,13 @@ using VaccinaCare.Repository.Interfaces;
 namespace VaccinaCare.API.Controllers;
 
 [ApiController]
-[Route("api/appointment")]
+[Route("api/appointments")]
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
     private readonly ILoggerService _logger;
     private readonly IClaimsService _claimsService;
+    private readonly IPaymentService _paymentService;
 
     public AppointmentController(IAppointmentService appointmentService, ILoggerService logger,
         IClaimsService claimsService)
@@ -25,54 +26,7 @@ public class AppointmentController : ControllerBase
         _claimsService = claimsService;
     }
 
-    [HttpPut("{appointmentId}/status")]
-    [Authorize(Roles = "Staff")]
-    [ProducesResponseType(typeof(ApiResult<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 403)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId,
-        [FromBody] UpdateAppointmentStatusRequest request)
-    {
-        try
-        {
-            if (!Enum.IsDefined(typeof(AppointmentStatus), request.NewStatus))
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Trạng thái cuộc hẹn không hợp lệ.",
-                    Data = null
-                });
 
-            var result =
-                await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
-
-            return Ok(new ApiResult<bool>
-            {
-                IsSuccess = true,
-                Message = "Cập nhật trạng thái cuộc hẹn thành công.",
-                Data = result
-            });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.Error($"Unauthorized error: {ex.Message}");
-            return StatusCode(403, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Bạn không có quyền thực hiện hành động này."
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Unexpected error in UpdateAppointmentStatusByStaffAsync: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Lỗi hệ thống. Vui lòng thử lại sau."
-            });
-        }
-    }
 
 
     [HttpPost("booking/single-vaccines")]
@@ -104,6 +58,43 @@ public class AppointmentController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
+
+    [HttpGet("checkout/{appointmentId}")]
+    [ProducesResponseType(typeof(ApiResult<string>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> CheckoutPayment(Guid appointmentId)
+    {
+        try
+        {
+            var paymentUrl = await _paymentService.GetPaymentUrl(appointmentId, HttpContext);
+
+            if (string.IsNullOrEmpty(paymentUrl))
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Unable to create payment URL, please check the appointment details and try again."
+                });
+            }
+
+            return Ok(new ApiResult<string>
+            {
+                IsSuccess = true,
+                Data = paymentUrl,
+                Message = "Payment URL created successfully."
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = $"An error occurred while processing your request: {ex.Message}"
+            });
+        }
+    }
+
 
     [HttpGet("details/{childId}")]
     [Authorize]
@@ -183,6 +174,54 @@ public class AppointmentController : ControllerBase
         catch (Exception e)
         {
             _logger.Error($"Lỗi khi lấy lịch hẹn cho child ID {childId}: {e.Message}");
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Lỗi hệ thống. Vui lòng thử lại sau."
+            });
+        }
+    }
+    [HttpPut("{appointmentId}/status")]
+    [Authorize(Roles = "Staff")]
+    [ProducesResponseType(typeof(ApiResult<bool>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 403)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId,
+        [FromBody] UpdateAppointmentStatusRequest request)
+    {
+        try
+        {
+            if (!Enum.IsDefined(typeof(AppointmentStatus), request.NewStatus))
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = "Trạng thái cuộc hẹn không hợp lệ.",
+                    Data = null
+                });
+
+            var result =
+                await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
+
+            return Ok(new ApiResult<bool>
+            {
+                IsSuccess = true,
+                Message = "Cập nhật trạng thái cuộc hẹn thành công.",
+                Data = result
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.Error($"Unauthorized error: {ex.Message}");
+            return StatusCode(403, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = "Bạn không có quyền thực hiện hành động này."
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Unexpected error in UpdateAppointmentStatusByStaffAsync: {ex.Message}");
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,

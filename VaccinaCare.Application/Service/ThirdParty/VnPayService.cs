@@ -4,7 +4,7 @@ using VaccinaCare.Application.Interface.PaymentService;
 using VaccinaCare.Application.Libraries;
 using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
-namespace VaccinaCare.Application.Service.PaymentService;
+namespace VaccinaCare.Application.Service.ThirdParty;
 
 public class VnPayService : IVnPayService
 {
