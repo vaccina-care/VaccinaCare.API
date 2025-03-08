@@ -35,10 +35,15 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
         if (vaccineIntervalRulesDTO.VaccineId == Guid.Empty)
             throw new ArgumentException("VaccineId cannot be empty.");
-        if (vaccineIntervalRulesDTO.MinIntervalDays <= 0)
+        if (vaccineIntervalRulesDTO.MinIntervalDays < 0)
             throw new ArgumentException("MinIntervalDays cannot be negative.");
         try
         {
+            if (vaccineIntervalRulesDTO.CanBeGivenTogether)
+            {
+                vaccineIntervalRulesDTO.MinIntervalDays = 0;
+            }
+
             var rule = new VaccineIntervalRules
             {
                 VaccineId = vaccineIntervalRulesDTO.VaccineId,
@@ -91,7 +96,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
     }
 
-    public async Task<List<VaccineIntervalRulesDTO>> GetAllVaccineIntervalRulesAsync()
+    public async Task<List<GetVaccineInternalRulesDto>> GetAllVaccineIntervalRulesAsync()
     {
         try
         {
@@ -99,11 +104,12 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
             var vaccineIntervalRules = await _unitOfWork.VaccineIntervalRulesRepository.GetAllAsync();
 
-            var result = vaccineIntervalRules.Select(v => new VaccineIntervalRulesDTO
+            var result = vaccineIntervalRules.Select(v => new GetVaccineInternalRulesDto
             {
-                VaccineId = v.Id,
-                RelatedVaccineId = v.Id,
-                CanBeGivenTogether = true,
+                Id = v.Id,
+                VaccineId = v.VaccineId,
+                RelatedVaccineId = v.RelatedVaccineId,
+                CanBeGivenTogether = v.CanBeGivenTogether,
                 MinIntervalDays = v.MinIntervalDays
             }).ToList();
 
@@ -117,7 +123,6 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
     }
 
-    //hàm update có thể xem lại tùy theo FE yêu cầu flow như nào
     public async Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id,
         VaccineIntervalRulesDTO updateDto)
     {

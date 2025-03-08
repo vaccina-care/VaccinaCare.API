@@ -66,7 +66,7 @@ public class VaccineIntervalRulesController : ControllerBase
             if (vaccineIntervalRules == null || vaccineIntervalRules.Count == 0)
                 return NotFound(ApiResult<object>.Error("404 - No vaccine interval rules available."));
 
-            return Ok(ApiResult<List<VaccineIntervalRulesDTO>>.Success(vaccineIntervalRules,
+            return Ok(ApiResult<List<GetVaccineInternalRulesDto>>.Success(vaccineIntervalRules,
                 "Vaccine interval rules retrieved successfully."));
         }
         catch (Exception ex)
