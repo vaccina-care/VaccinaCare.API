@@ -341,6 +341,11 @@ public partial class VaccinaCareDbContext : DbContext
                 .WithOne(pt => pt.Payment)
                 .HasForeignKey(pt => pt.PaymentId)
                 .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(p => p.Appointment)
+                .WithMany(a => a.Payments) // Một Appointment có thể có nhiều Payment
+                .HasForeignKey(p => p.AppointmentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
 

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VaccinaCare.Domain;
 
@@ -11,9 +12,11 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    partial class VaccinaCareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250308173550_allownullPayment")]
+    partial class allownullPayment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -563,7 +566,7 @@ namespace VaccinaCare.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AppointmentId")
+                    b.Property<Guid?>("AppointmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1326,13 +1329,9 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
+                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", null)
                         .WithMany("Payments")
-                        .HasForeignKey("AppointmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Appointment");
+                        .HasForeignKey("AppointmentId");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentTransaction", b =>

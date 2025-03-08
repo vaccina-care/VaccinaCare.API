@@ -19,6 +19,20 @@ public class PaymentController : ControllerBase
         _paymentService = paymentService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> PaymentCallbackVnpay()
+    {
+        try
+        {
+            var response = await _paymentService.ProcessPaymentCallback(Request.Query);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+    
     [HttpGet("checkout/{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<string>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -52,10 +66,6 @@ public class PaymentController : ControllerBase
         }
     }
     
-    [HttpGet]
-    public IActionResult PaymentCallbackVnpay()
-    {
-        var response = _vnPayService.PaymentExecute(Request.Query);
-        return Ok(response);
-    }
+    
+
 }
