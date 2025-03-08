@@ -113,20 +113,20 @@ public class FeedbackService : IFeedbackService
         {
             try
             {
-                _logger.Info($"Attempting to delete feedback {feedbackId}.");
+                _logger.Info($"Attempting to delete feedback with ID: {feedbackId}.");
 
                 var feedback = await _unitOfWork.FeedbackRepository.GetByIdAsync(feedbackId);
 
                 if (feedback == null)
                 {
                     _logger.Warn($"Feedback {feedbackId} not found.");
-                    throw new KeyNotFoundException("Feedback not found.");
+                    throw new KeyNotFoundException($"Feedback with ID {feedbackId} not found.");
                 }
 
                 await _unitOfWork.FeedbackRepository.SoftRemove(feedback);
                 await _unitOfWork.SaveChangesAsync();
 
-                _logger.Info($"Successfully deleted feedback {feedbackId}.");
+                _logger.Info($"Successfully deleted feedback with ID: {feedbackId}.");
             }
             catch (Exception ex)
             {
@@ -188,9 +188,11 @@ public class FeedbackService : IFeedbackService
 
             if (feedback == null)
             {
-                _logger.Warn($"Feedback {feedbackId} not found.");
+                _logger.Warn($"Feedback with ID {feedbackId} not found.");
                 throw new KeyNotFoundException("Feedback not found.");
             }
+
+            _logger.Info($"Feedback fethching successfully: {feedback.Id}");
 
             return new FeedbackDTO
             {

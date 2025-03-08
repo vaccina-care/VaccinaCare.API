@@ -24,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IGenericRepository<Payment> _paymentRepository;
     private readonly IGenericRepository<PaymentTransaction> _paymentTransactionRepository;
     private readonly IGenericRepository<Invoice> _invoiceRepository;
+    private readonly IGenericRepository<CancellationPolicy> _cancellationPolicyRepository;
 
     public UnitOfWork(VaccinaCareDbContext dbContext, IGenericRepository<Notification> notificationRepository,
         IGenericRepository<User> userRepository, IGenericRepository<Role> roleRepository,
@@ -38,7 +39,7 @@ public class UnitOfWork : IUnitOfWork
         IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository,
         IGenericRepository<Feedback> feedbackRepository, IGenericRepository<Payment> paymentRepository,
         IGenericRepository<Invoice> invoiceRepository,
-        IGenericRepository<PaymentTransaction> paymentTransactionRepository)
+        IGenericRepository<PaymentTransaction> paymentTransactionRepository, IGenericRepository<CancellationPolicy> cancellationPolicyRepository)
     {
         _dbContext = dbContext;
         _notificationRepository = notificationRepository;
@@ -58,6 +59,7 @@ public class UnitOfWork : IUnitOfWork
         _paymentTransactionRepository = paymentTransactionRepository;
         _vaccinationRecordRepository = vaccinationRecordRepository;
         _feedbackRepository = feedbackRepository;
+        _cancellationPolicyRepository = cancellationPolicyRepository;
     }
 
     public IGenericRepository<Notification> NotificationRepository => _notificationRepository;
@@ -83,6 +85,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Payment> PaymentRepository => _paymentRepository;
     public IGenericRepository<PaymentTransaction> PaymentTransactionRepository => _paymentTransactionRepository;
     public IGenericRepository<Invoice> InvoiceRepository => _invoiceRepository;
+    public IGenericRepository<CancellationPolicy> CancellationPolicyRepository => _cancellationPolicyRepository;
 
     public Task<int> SaveChangesAsync()
     {
