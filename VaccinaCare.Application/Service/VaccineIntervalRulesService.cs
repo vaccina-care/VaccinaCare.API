@@ -103,7 +103,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
             var result = vaccineIntervalRules.Select(v => new GetVaccineInternalRulesDto
             {
-                Id = v.Id,
+                VaccineIntervalRUID = v.Id,
                 VaccineId = v.VaccineId,
                 RelatedVaccineId = v.RelatedVaccineId,
                 CanBeGivenTogether = v.CanBeGivenTogether,
