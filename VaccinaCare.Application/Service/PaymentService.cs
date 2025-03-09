@@ -35,16 +35,26 @@ public class PaymentService : IPaymentService
     {
         try
         {
-            if (_vnPayService == null) throw new InvalidOperationException("VNPay service is not initialized.");
+            _logger.Info($"Initiating payment URL generation for Appointment ID: {appointmentId}");
+
+            if (_vnPayService == null)
+            {
+                _logger.Error("VNPay service is not initialized.");
+                throw new InvalidOperationException("VNPay service is not initialized.");
+            }
 
             var appointmentVaccine = await _unitOfWork.AppointmentsVaccineRepository
                 .FirstOrDefaultAsync(av => av.AppointmentId == appointmentId);
 
-            if (appointmentVaccine == null) return null;
+            if (appointmentVaccine == null)
+            {
+                _logger.Warn($"No appointment vaccine found for Appointment ID: {appointmentId}");
+                return null;
+            }
 
             var totalAmount = appointmentVaccine.TotalPrice ?? 0m;
+            _logger.Info($"Total amount for appointment {appointmentId}: {totalAmount} VND");
 
-            // ✅ Gọi VNPay trước để lấy OrderId (vnp_TxnRef)
             string generatedOrderId;
             var paymentInfo = new PaymentInformationModel
             {
@@ -52,25 +62,22 @@ public class PaymentService : IPaymentService
                 OrderType = "other",
                 OrderDescription = $"Payment for vaccination - {totalAmount} VND",
                 Name = "VaccinePayment",
-                OrderId = "", // ✅ Chưa có, sẽ cập nhật sau
+                OrderId = "",
                 PaymentCallbackUrl = "http://localhost:5000/api/payments"
             };
 
-            var paymentUrl =
-                _vnPayService.CreatePaymentUrl(paymentInfo, context,
-                    out generatedOrderId); // ✅ Lấy OrderId từ VNPayService
+            var paymentUrl = _vnPayService.CreatePaymentUrl(paymentInfo, context, out generatedOrderId);
+            _logger.Info($"Generated VNPay order ID: {generatedOrderId}");
 
-            // ✅ Kiểm tra nếu Payment đã tồn tại
             var existingPayment = await _unitOfWork.PaymentRepository
                 .FirstOrDefaultAsync(p => p.OrderId == generatedOrderId);
 
             if (existingPayment == null)
             {
-                // ✅ Lưu Payment vào DB ngay sau khi có OrderId chính xác
                 var newPayment = new Payment
                 {
                     AppointmentId = appointmentId,
-                    OrderId = generatedOrderId, // ✅ Lưu OrderId từ VNPay
+                    OrderId = generatedOrderId,
                     OrderDescription = $"Payment for vaccination - {totalAmount} VND",
                     PaymentMethod = "VnPay",
                     CreatedAt = DateTime.UtcNow
@@ -78,62 +85,82 @@ public class PaymentService : IPaymentService
 
                 await _unitOfWork.PaymentRepository.AddAsync(newPayment);
                 await _unitOfWork.SaveChangesAsync();
+                _logger.Success($"Payment record created successfully for Order ID: {generatedOrderId}");
+            }
+            else
+            {
+                _logger.Warn($"Payment record already exists for Order ID: {generatedOrderId}");
             }
 
-            return paymentUrl; // ✅ Trả về URL thanh toán
+            return paymentUrl;
         }
         catch (Exception ex)
         {
+            _logger.Error($"Error generating payment URL: {ex.Message}");
             throw;
         }
     }
 
     public async Task<PaymentResponseModel> ProcessPaymentCallback(IQueryCollection query)
     {
-        var response = _vnPayService.PaymentExecute(query);
-
-        if (response == null || string.IsNullOrEmpty(response.OrderId))
+        try
         {
-            throw new Exception("Invalid VNPay response.");
-        }
+            _logger.Info("Processing VNPay payment callback.");
 
-        var payment = await _unitOfWork.PaymentRepository
-            .FirstOrDefaultAsync(p => p.OrderId == response.OrderId);
-
-        if (payment == null)
-        {
-            throw new Exception("Payment record not found.");
-        }
-
-        var paymentTransaction = new PaymentTransaction
-        {
-            PaymentId = payment.Id,
-            TransactionId = response.TransactionId,
-            Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100,
-            TransactionDate = DateTime.UtcNow,
-            ResponseCode = response.VnPayResponseCode,
-            ResponseMessage = response.Success ? "Success" : "Failed",
-            Status = response.Success ? PaymentTransactionStatus.Success : PaymentTransactionStatus.Failed
-        };
-
-        await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
-
-        if (response.Success)
-        {
-            payment.TransactionId = response.TransactionId;
-            payment.VnpayPaymentId = response.PaymentId;
-
-            var appointment = await _unitOfWork.AppointmentRepository
-                .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
-
-            if (appointment != null)
+            var response = _vnPayService.PaymentExecute(query);
+            if (response == null || string.IsNullOrEmpty(response.OrderId))
             {
-                appointment.Status = AppointmentStatus.Confirmed;
-                await _unitOfWork.AppointmentRepository.Update(appointment);
+                _logger.Error("Invalid VNPay response received.");
+                throw new Exception("Invalid VNPay response.");
             }
-        }
 
-        await _unitOfWork.SaveChangesAsync();
-        return response;
+            var payment = await _unitOfWork.PaymentRepository
+                .FirstOrDefaultAsync(p => p.OrderId == response.OrderId);
+
+            if (payment == null)
+            {
+                _logger.Error($"Payment record not found for Order ID: {response.OrderId}");
+                throw new Exception("Payment record not found.");
+            }
+
+            var paymentTransaction = new PaymentTransaction
+            {
+                PaymentId = payment.Id,
+                TransactionId = response.TransactionId,
+                Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100,
+                TransactionDate = DateTime.UtcNow,
+                ResponseCode = response.VnPayResponseCode,
+                ResponseMessage = response.Success ? "Success" : "Failed",
+                Status = response.Success ? PaymentTransactionStatus.Success : PaymentTransactionStatus.Failed
+            };
+
+            await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
+            _logger.Info(
+                $"Payment transaction recorded for Order ID: {response.OrderId}, Status: {paymentTransaction.Status}");
+
+            if (response.Success)
+            {
+                payment.TransactionId = response.TransactionId;
+                payment.VnpayPaymentId = response.PaymentId;
+
+                var appointment = await _unitOfWork.AppointmentRepository
+                    .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
+
+                if (appointment != null)
+                {
+                    appointment.Status = AppointmentStatus.Confirmed;
+                    await _unitOfWork.AppointmentRepository.Update(appointment);
+                    _logger.Success($"Appointment {appointment.Id} confirmed after successful payment.");
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error processing VNPay payment callback: {ex.Message}");
+            throw;
+        }
     }
 }
