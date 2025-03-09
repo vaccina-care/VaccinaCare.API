@@ -60,11 +60,11 @@ public class VaccineRecordController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetVaccinationRecordByChildId(Guid recordId)
+    public async Task<IActionResult> GetVaccinationRecordByChildId(Guid id)
     {
         try
         {
-            var result = await _vaccineRecordService.GetVaccinationRecordByRecordIdAsync(recordId);
+            var result = await _vaccineRecordService.GetVaccinationRecordByRecordIdAsync(id);
             return Ok(new ApiResult<VaccineRecordDto>
             {
                 Data = result,
