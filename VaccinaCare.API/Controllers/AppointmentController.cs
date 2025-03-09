@@ -55,7 +55,6 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    
 
     [HttpGet("details/{childId}")]
     [Authorize]
@@ -181,6 +180,4 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-    
-    
 }

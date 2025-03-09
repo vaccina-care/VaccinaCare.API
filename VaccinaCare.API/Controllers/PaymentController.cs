@@ -18,7 +18,7 @@ public class PaymentController : ControllerBase
         _vnPayService = vnPayService;
         _paymentService = paymentService;
     }
-    
+
     [HttpGet("checkout/{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<string>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -51,7 +51,7 @@ public class PaymentController : ControllerBase
             });
         }
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> PaymentCallbackVnpay()
     {
