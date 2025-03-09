@@ -1,6 +1,11 @@
+using VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
+
 namespace VaccinaCare.Application.Interface;
 
 public interface IVaccineRecordService
 {
-    Task AddVaccinationRecordAsync(Guid childId, Guid vaccineId, DateTime vaccinationDate, int doseNumber);
+    Task<VaccineRecordDto> AddVaccinationRecordAsync(AddVaccineRecordDto addVaccineRecordDto);
+    Task<VaccineRecordDto> GetVaccinationRecordByRecordIdAsync(Guid recordId);
+    Task<List<VaccineRecordDto>> GetListVaccinationRecordByChildIdAsync(Guid parentId);
+    
 }

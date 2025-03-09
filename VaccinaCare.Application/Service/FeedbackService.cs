@@ -232,7 +232,7 @@ public class FeedbackService : IFeedbackService
                 throw new KeyNotFoundException("Appointment not found.");
             }
 
-            if (appointment.ParentId.GetValueOrDefault() != userId)
+            if (appointment.ParentId != userId)
             {
                 _logger.Warn(
                     $"User {userId} is not authorized to update feedback for Appointment {feedback.AppointmentId}.");
