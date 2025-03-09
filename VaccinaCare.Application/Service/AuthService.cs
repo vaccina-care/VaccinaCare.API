@@ -192,64 +192,30 @@ public class AuthService : IAuthService
 
     public async Task<LoginResponseDTO?> RefreshTokenAsync(TokenRefreshRequestDTO tokenRequest,
         IConfiguration configuration)
-
     {
         _logger.Info("Refresh token process initiated.");
 
         try
         {
-            if (string.IsNullOrWhiteSpace(tokenRequest.RefreshToken) ||
-                string.IsNullOrWhiteSpace(tokenRequest.AccessToken))
+            if (string.IsNullOrWhiteSpace(tokenRequest.RefreshToken))
             {
-                _logger.Warn("Missing refresh token or access token.");
+                _logger.Warn("Missing refresh token.");
                 return null;
             }
 
             _logger.Info($"Received refresh token: {tokenRequest.RefreshToken}");
 
-            // 🛑 Giải mã Access Token nhưng KHÔNG kiểm tra expiration
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var jwtToken = tokenHandler.ReadJwtToken(tokenRequest.AccessToken);
-
-            if (jwtToken == null)
-            {
-                _logger.Warn("Invalid access token.");
-                return null;
-            }
-
-            var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Email);
-            if (emailClaim == null)
-            {
-                _logger.Warn("Email claim missing from access token.");
-                return null;
-            }
-
-            var email = emailClaim.Value;
-
-            //Tìm user có email trong database
-            var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == email);
+            // Tìm user có refresh token trong database
+            var user = await _unitOfWork.UserRepository.FirstOrDefaultAsync(u =>
+                u.RefreshToken == tokenRequest.RefreshToken);
 
             if (user == null)
             {
-                _logger.Warn("User not found.");
+                _logger.Warn("User not found with the provided refresh token.");
                 return null;
             }
 
-            //Kiểm tra Refresh Token có được gửi lên không
-            if (string.IsNullOrEmpty(tokenRequest.RefreshToken))
-            {
-                _logger.Warn("Refresh token is missing.");
-                return null;
-            }
-
-            //Kiểm tra Refresh Token gửi từ frontend có giống với trong DB không
-            if (user.RefreshToken != tokenRequest.RefreshToken)
-            {
-                _logger.Warn("Refresh token mismatch.");
-                return null;
-            }
-
-            // 🛑 Kiểm tra Refresh Token có hợp lệ không (thời gian hết hạn)
+            // Kiểm tra Refresh Token có hợp lệ không (thời gian hết hạn)
             if (user.RefreshTokenExpiryTime < DateTime.UtcNow)
             {
                 _logger.Warn("Refresh token invalid or expired.");

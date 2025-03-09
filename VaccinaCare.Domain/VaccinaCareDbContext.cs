@@ -107,8 +107,8 @@ public partial class VaccinaCareDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__8ECDFCA28A60492C");
             entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
-            entity.Property(e => e.CancellationReason).HasColumnType("text");
-            entity.Property(e => e.Notes).HasColumnType("text");
+            entity.Property(e => e.CancellationReason).HasMaxLength(255);
+            entity.Property(e => e.Notes).HasMaxLength(255);
             entity.Property(e => e.VaccineType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
 

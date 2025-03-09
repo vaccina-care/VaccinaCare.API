@@ -179,28 +179,15 @@ public class AuthController : ControllerBase
 
         try
         {
-            if (tokenRefreshRequestDto == null ||
-                string.IsNullOrWhiteSpace(tokenRefreshRequestDto.AccessToken) ||
-                string.IsNullOrWhiteSpace(tokenRefreshRequestDto.RefreshToken))
-            {
-                _logger.Warn("Invalid token refresh request.");
-                return BadRequest(ApiResult<object>.Error("Invalid token request."));
-            }
-
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", true, false)
                 .AddEnvironmentVariables()
                 .Build();
 
-            // Gọi AuthService để làm mới token
             var response = await _authService.RefreshTokenAsync(tokenRefreshRequestDto, configuration);
 
-            if (response == null)
-            {
-                _logger.Warn("Token refresh failed. Invalid or expired refresh token.");
-                return Unauthorized(ApiResult<object>.Error("Invalid or expired refresh token."));
-            }
+            if (response == null) return Unauthorized(ApiResult<object>.Error("Invalid or expired refresh token."));
 
             _logger.Info("Token refresh successful.");
             return Ok(ApiResult<LoginResponseDTO>.Success(response, "Token refreshed successfully."));

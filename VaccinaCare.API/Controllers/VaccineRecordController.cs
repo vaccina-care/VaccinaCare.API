@@ -19,7 +19,7 @@ public class VaccineRecordController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Policy = "StaffPolicy")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -46,25 +46,22 @@ public class VaccineRecordController : ControllerBase
                 IsSuccess = false
             };
 
-            if (ex is ArgumentException || ex is InvalidOperationException)
-            {
-                return BadRequest(apiResult);
-            }
+            if (ex is ArgumentException || ex is InvalidOperationException) return BadRequest(apiResult);
 
             return StatusCode(500, apiResult);
         }
     }
-    
-    // Get a single vaccination record by ChildId
+
     [HttpGet("{id}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetVaccinationRecordByChildId(Guid recordId)
+    public async Task<IActionResult> GetVaccinationRecordByChildId(Guid id)
     {
         try
         {
-            var result = await _vaccineRecordService.GetVaccinationRecordByRecordIdAsync(recordId);
+            var result = await _vaccineRecordService.GetVaccinationRecordByRecordIdAsync(id);
             return Ok(new ApiResult<VaccineRecordDto>
             {
                 Data = result,
@@ -85,6 +82,7 @@ public class VaccineRecordController : ControllerBase
 
     // Get list of vaccination records by ChildId
     [HttpGet("list/{childId}")]
+    [Authorize]
     [ProducesResponseType(typeof(ApiResult<List<VaccineRecordDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
