@@ -21,9 +21,6 @@ public class BlobService : IBlobService
         var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
 
-        _logger.Info($"Initializing BlobService...");
-        _logger.Info($"Connecting to MinIO at: {endpoint}");
-
         try
         {
             _minioClient = new MinioClient()
@@ -31,7 +28,6 @@ public class BlobService : IBlobService
                 .WithCredentials(accessKey, secretKey)
                 .WithSSL(false)
                 .Build();
-            _logger.Success("MinIO client initialized successfully.");
         }
         catch (Exception ex)
         {

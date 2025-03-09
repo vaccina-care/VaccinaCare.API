@@ -5,6 +5,6 @@ namespace VaccinaCare.Application.Interface.PaymentService;
 
 public interface IVnPayService
 {
-    string CreatePaymentUrl(PaymentInformationModel model, HttpContext context);
+    string CreatePaymentUrl(PaymentInformationModel model, HttpContext context, out string generatedOrderId);
     PaymentResponseModel PaymentExecute(IQueryCollection collections);
 }

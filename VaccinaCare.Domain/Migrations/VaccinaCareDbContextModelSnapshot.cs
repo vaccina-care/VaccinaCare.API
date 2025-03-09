@@ -174,7 +174,7 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<decimal?>("TotalPrice")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18, 2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -563,10 +563,7 @@ namespace VaccinaCare.Domain.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal?>("Amount")
-                        .HasColumnType("decimal(18, 0)");
-
-                    b.Property<Guid?>("AppointmentId")
+                    b.Property<Guid>("AppointmentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -588,80 +585,43 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("datetime");
+                    b.Property<string>("OrderDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("PaymentMethodId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("PaymentStatus")
+                    b.Property<string>("OrderId")
+                        .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
 
-                    b.Property<string>("PaymentType")
+                    b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("VnpayPaymentId")
+                        .HasMaxLength(100)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(100)");
 
                     b.HasKey("Id")
                         .HasName("PK_Payments");
 
                     b.HasIndex("AppointmentId");
 
-                    b.HasIndex("PaymentMethodId");
-
                     b.ToTable("Payment", (string)null);
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool?>("Active")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("MethodName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PaymentMethod");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentTransaction", b =>
@@ -1317,7 +1277,8 @@ namespace VaccinaCare.Domain.Migrations
                 {
                     b.HasOne("VaccinaCare.Domain.Entities.Payment", "Payment")
                         .WithMany("Invoices")
-                        .HasForeignKey("PaymentId");
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("VaccinaCare.Domain.Entities.User", "User")
                         .WithMany("Invoices")
@@ -1365,15 +1326,13 @@ namespace VaccinaCare.Domain.Migrations
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Payment", b =>
                 {
-                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", null)
+                    b.HasOne("VaccinaCare.Domain.Entities.Appointment", "Appointment")
                         .WithMany("Payments")
-                        .HasForeignKey("AppointmentId");
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("VaccinaCare.Domain.Entities.PaymentMethod", "PaymentMethod")
-                        .WithMany("Payments")
-                        .HasForeignKey("PaymentMethodId");
-
-                    b.Navigation("PaymentMethod");
+                    b.Navigation("Appointment");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentTransaction", b =>
@@ -1512,11 +1471,6 @@ namespace VaccinaCare.Domain.Migrations
                     b.Navigation("Invoices");
 
                     b.Navigation("PaymentTransactions");
-                });
-
-            modelBuilder.Entity("VaccinaCare.Domain.Entities.PaymentMethod", b =>
-                {
-                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("VaccinaCare.Domain.Entities.Role", b =>

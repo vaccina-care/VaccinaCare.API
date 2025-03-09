@@ -675,30 +675,27 @@ public class SystemController : ControllerBase
 
             var tablesToDelete = new List<Func<Task>>
             {
+                () => context.VaccinePackageDetails.ExecuteDeleteAsync(), // Delete dependent VaccinePackageDetail first
+                () => context.Invoices.ExecuteDeleteAsync(),
+                () => context.Payments.ExecuteDeleteAsync(),
                 () => context.Notifications.ExecuteDeleteAsync(),
                 () => context.AppointmentsVaccines.ExecuteDeleteAsync(),
                 () => context.Appointments.ExecuteDeleteAsync(),
                 () => context.CancellationPolicies.ExecuteDeleteAsync(),
                 () => context.Children.ExecuteDeleteAsync(),
                 () => context.Feedbacks.ExecuteDeleteAsync(),
-                () => context.Invoices.ExecuteDeleteAsync(),
                 () => context.PackageProgresses.ExecuteDeleteAsync(),
-                () => context.Payments.ExecuteDeleteAsync(),
                 () => context.PaymentTransactions.ExecuteDeleteAsync(),
                 () => context.UsersVaccinationServices.ExecuteDeleteAsync(),
                 () => context.VaccinationRecords.ExecuteDeleteAsync(),
                 () => context.VaccineSuggestions.ExecuteDeleteAsync(),
-                // Xóa bảng VaccineIntervalRules trước khi xóa Vaccine
                 () => context.VaccineIntervalRules.ExecuteDeleteAsync(),
-                // Xóa VaccinePackageDetail trước VaccinePackage
-                () => context.VaccinePackageDetails.ExecuteDeleteAsync(),
+                // Delete Vaccine packages before deleting the vaccine itself
                 () => context.VaccinePackages.ExecuteDeleteAsync(),
-                // Sau khi VaccineIntervalRules đã xóa, mới xóa Vaccine
-                () => context.Vaccines.ExecuteDeleteAsync(),
+                () => context.Vaccines.ExecuteDeleteAsync(), // Now we can delete the Vaccine
                 () => context.Users.ExecuteDeleteAsync(),
                 () => context.Roles.ExecuteDeleteAsync()
             };
-
 
             foreach (var deleteFunc in tablesToDelete) await deleteFunc();
 

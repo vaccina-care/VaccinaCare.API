@@ -21,5 +21,6 @@ public interface IUnitOfWork
     IGenericRepository<Payment> PaymentRepository { get; }
     IGenericRepository<PaymentTransaction> PaymentTransactionRepository { get; }
     IGenericRepository<Invoice> InvoiceRepository { get; }
+    IGenericRepository<CancellationPolicy> CancellationPolicyRepository { get; }
     Task<int> SaveChangesAsync();
 }

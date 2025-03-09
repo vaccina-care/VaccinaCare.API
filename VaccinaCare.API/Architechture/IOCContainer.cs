@@ -9,13 +9,12 @@ using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Interface.PaymentService;
 using VaccinaCare.Application.Service;
 using VaccinaCare.Application.Service.Common;
-using VaccinaCare.Application.Service.PaymentService;
+using VaccinaCare.Application.Service.ThirdParty;
 using VaccinaCare.Domain;
 using VaccinaCare.Repository;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 using VaccinaCare.Repository.Repositories;
-using VNPAY.NET;
 
 namespace VaccinaCare.API.Architechture;
 
@@ -75,37 +74,6 @@ public static class IOCContainer
             .AddEnvironmentVariables() // Đọc biến môi trường từ Docker
             .Build();
 
-        // Kiểm tra các tham số cấu hình cần thiết có tồn tại hay không
-        var tmnCode = configuration["Payment:VnPay:TmnCode"];
-        var hashSecret = configuration["Payment:VnPay:HashSecret"];
-        var baseUrl = configuration["Payment:VnPay:PaymentUrl"];
-        var callbackUrl = configuration["Payment:VnPay:ReturnUrl"];
-
-        if (string.IsNullOrEmpty(tmnCode))
-            throw new ArgumentNullException("Payment:VnPay:TmnCode", "VnPay TmnCode is missing in the configuration.");
-
-        if (string.IsNullOrEmpty(hashSecret))
-            throw new ArgumentNullException("Payment:VnPay:HashSecret",
-                "VnPay HashSecret is missing in the configuration.");
-
-        if (string.IsNullOrEmpty(baseUrl))
-            throw new ArgumentNullException("Payment:VnPay:PaymentUrl",
-                "VnPay PaymentUrl is missing in the configuration.");
-
-        if (string.IsNullOrEmpty(callbackUrl))
-            throw new ArgumentNullException("Payment:VnPay:ReturnUrl",
-                "VnPay ReturnUrl is missing in the configuration.");
-
-        // Khởi tạo IVnpay
-        IVnpay _vnpay = new Vnpay();
-
-        services.AddSingleton<IVnpay>(p =>
-        {
-            // Khởi tạo Vnpay với các giá trị cấu hình
-            _vnpay.Initialize(tmnCode, hashSecret, baseUrl, callbackUrl);
-            return _vnpay;
-        });
-
         return services;
     }
 
@@ -149,6 +117,9 @@ public static class IOCContainer
         services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<IVnPayService, VnPayService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+
+        services.AddScoped<IPolicyService, PolicyService>();
 
         services.AddHttpContextAccessor();
 
