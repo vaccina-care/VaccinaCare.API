@@ -118,7 +118,7 @@ public static class IOCContainer
         services.AddScoped<IFeedbackService, FeedbackService>();
         services.AddScoped<IVnPayService, VnPayService>();
         services.AddScoped<IPaymentService, PaymentService>();
-
+        services.AddScoped<IVaccineRecordService, VaccineRecordService>();
         services.AddScoped<IPolicyService, PolicyService>();
 
         services.AddHttpContextAccessor();
