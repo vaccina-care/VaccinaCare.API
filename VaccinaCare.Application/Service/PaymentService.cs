@@ -44,45 +44,49 @@ public class PaymentService : IPaymentService
 
             var totalAmount = appointmentVaccine.TotalPrice ?? 0m;
 
-            // Tạo Payment nếu chưa có
-            var existingPayment = await _unitOfWork.PaymentRepository
-                .FirstOrDefaultAsync(p => p.AppointmentId == appointmentId);
-
-            if (existingPayment == null)
-            {
-                existingPayment = new Payment
-                {
-                    AppointmentId = appointmentId,
-                    OrderId = Guid.NewGuid().ToString(),
-                    OrderDescription = $"Payment for vaccination - {totalAmount} VND",
-                    PaymentMethod = "VnPay",
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                await _unitOfWork.PaymentRepository.AddAsync(existingPayment);
-                await _unitOfWork.SaveChangesAsync();
-            }
-
-            // Chỉ cần callback về backend, không cần return về frontend
+            // ✅ Gọi VNPay trước để lấy OrderId (vnp_TxnRef)
+            string generatedOrderId;
             var paymentInfo = new PaymentInformationModel
             {
                 Amount = (long)(totalAmount * 100),
                 OrderType = "other",
                 OrderDescription = $"Payment for vaccination - {totalAmount} VND",
                 Name = "VaccinePayment",
-                OrderId = existingPayment.OrderId,
+                OrderId = "", // ✅ Chưa có, sẽ cập nhật sau
                 PaymentCallbackUrl = "http://localhost:5000/api/payments"
             };
 
-            var paymentUrl = _vnPayService.CreatePaymentUrl(paymentInfo, context);
-            return paymentUrl;
+            var paymentUrl =
+                _vnPayService.CreatePaymentUrl(paymentInfo, context,
+                    out generatedOrderId); // ✅ Lấy OrderId từ VNPayService
+
+            // ✅ Kiểm tra nếu Payment đã tồn tại
+            var existingPayment = await _unitOfWork.PaymentRepository
+                .FirstOrDefaultAsync(p => p.OrderId == generatedOrderId);
+
+            if (existingPayment == null)
+            {
+                // ✅ Lưu Payment vào DB ngay sau khi có OrderId chính xác
+                var newPayment = new Payment
+                {
+                    AppointmentId = appointmentId,
+                    OrderId = generatedOrderId, // ✅ Lưu OrderId từ VNPay
+                    OrderDescription = $"Payment for vaccination - {totalAmount} VND",
+                    PaymentMethod = "VnPay",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _unitOfWork.PaymentRepository.AddAsync(newPayment);
+                await _unitOfWork.SaveChangesAsync();
+            }
+
+            return paymentUrl; // ✅ Trả về URL thanh toán
         }
         catch (Exception ex)
         {
             throw;
         }
     }
-
 
     public async Task<PaymentResponseModel> ProcessPaymentCallback(IQueryCollection query)
     {
@@ -93,7 +97,6 @@ public class PaymentService : IPaymentService
             throw new Exception("Invalid VNPay response.");
         }
 
-        // Tìm Payment dựa trên OrderId
         var payment = await _unitOfWork.PaymentRepository
             .FirstOrDefaultAsync(p => p.OrderId == response.OrderId);
 
@@ -102,13 +105,12 @@ public class PaymentService : IPaymentService
             throw new Exception("Payment record not found.");
         }
 
-        // Lưu giao dịch vào PaymentTransaction
         var paymentTransaction = new PaymentTransaction
         {
             PaymentId = payment.Id,
             TransactionId = response.TransactionId,
-            Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100, // Convert VNPay amount
-            TransactionDate = DateTime.Now,
+            Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100,
+            TransactionDate = DateTime.UtcNow,
             ResponseCode = response.VnPayResponseCode,
             ResponseMessage = response.Success ? "Success" : "Failed",
             Status = response.Success ? PaymentTransactionStatus.Success : PaymentTransactionStatus.Failed
@@ -118,15 +120,13 @@ public class PaymentService : IPaymentService
 
         if (response.Success)
         {
-            // Cập nhật Payment
             payment.TransactionId = response.TransactionId;
             payment.VnpayPaymentId = response.PaymentId;
 
-            // **Lấy danh sách các Appointment liên kết với Payment**
-            var appointments = await _unitOfWork.AppointmentRepository
-                .GetAllAsync(a => a.Id == payment.AppointmentId);
+            var appointment = await _unitOfWork.AppointmentRepository
+                .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
 
-            foreach (var appointment in appointments)
+            if (appointment != null)
             {
                 appointment.Status = AppointmentStatus.Confirmed;
                 await _unitOfWork.AppointmentRepository.Update(appointment);
@@ -134,7 +134,6 @@ public class PaymentService : IPaymentService
         }
 
         await _unitOfWork.SaveChangesAsync();
-
         return response;
     }
 }

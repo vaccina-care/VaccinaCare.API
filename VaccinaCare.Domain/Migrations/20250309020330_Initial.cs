@@ -34,27 +34,6 @@ namespace VaccinaCare.Domain.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PaymentMethod",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MethodName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Active = table.Column<bool>(type: "bit", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DeletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    DeletedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PaymentMethod", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Role",
                 columns: table => new
                 {
@@ -451,7 +430,7 @@ namespace VaccinaCare.Domain.Migrations
                     AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     VaccineId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     DoseNumber = table.Column<int>(type: "int", nullable: true),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -581,12 +560,12 @@ namespace VaccinaCare.Domain.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    Amount = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
-                    PaymentStatus = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    PaymentType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    PaymentDate = table.Column<DateTime>(type: "datetime", nullable: true),
-                    PaymentMethodId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    AppointmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OrderId = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    PaymentMethod = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    VnpayPaymentId = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    TransactionId = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -602,12 +581,8 @@ namespace VaccinaCare.Domain.Migrations
                         name: "FK_Payment_Appointment_AppointmentId",
                         column: x => x.AppointmentId,
                         principalTable: "Appointment",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Payment_PaymentMethod_PaymentMethodId",
-                        column: x => x.PaymentMethodId,
-                        principalTable: "PaymentMethod",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -633,7 +608,8 @@ namespace VaccinaCare.Domain.Migrations
                         name: "FK_Invoice_Payment_PaymentId",
                         column: x => x.PaymentId,
                         principalTable: "Payment",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Invoice_User_UserId",
                         column: x => x.UserId,
@@ -759,11 +735,6 @@ namespace VaccinaCare.Domain.Migrations
                 column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payment_PaymentMethodId",
-                table: "Payment",
-                column: "PaymentMethodId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PaymentTransaction_PaymentId",
                 table: "PaymentTransaction",
                 column: "PaymentId");
@@ -868,9 +839,6 @@ namespace VaccinaCare.Domain.Migrations
 
             migrationBuilder.DropTable(
                 name: "Appointment");
-
-            migrationBuilder.DropTable(
-                name: "PaymentMethod");
 
             migrationBuilder.DropTable(
                 name: "CancellationPolicy");

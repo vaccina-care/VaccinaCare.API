@@ -15,11 +15,11 @@ public class VnPayService : IVnPayService
         _configuration = configuration;
     }
 
-    public string CreatePaymentUrl(PaymentInformationModel model, HttpContext context)
+    public string CreatePaymentUrl(PaymentInformationModel model, HttpContext context, out string generatedOrderId)
     {
         var timeZoneById = TimeZoneInfo.FindSystemTimeZoneById(_configuration["TimeZoneId"]);
         var timeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, timeZoneById);
-        var tick = DateTime.Now.Ticks.ToString();
+        var tick = DateTime.UtcNow.Ticks.ToString(); // ✅ Đây là `vnp_TxnRef`
         var pay = new VnPayLibrary();
         var urlCallBack = _configuration["Vnpay:PaymentBackReturnUrl"];
 
@@ -34,13 +34,16 @@ public class VnPayService : IVnPayService
         pay.AddRequestData("vnp_OrderInfo", $"{model.Name} {model.OrderDescription} {model.Amount}");
         pay.AddRequestData("vnp_OrderType", model.OrderType);
         pay.AddRequestData("vnp_ReturnUrl", urlCallBack);
-        pay.AddRequestData("vnp_TxnRef", tick);
+        pay.AddRequestData("vnp_TxnRef", tick); // ✅ Sử dụng `tick` làm OrderId
+
+        generatedOrderId = tick; // ✅ Gán `tick` vào `generatedOrderId`
 
         var paymentUrl =
             pay.CreateRequestUrl(_configuration["Vnpay:BaseUrl"], _configuration["Vnpay:HashSecret"]);
 
         return paymentUrl;
     }
+
 
     public PaymentResponseModel PaymentExecute(IQueryCollection collections)
     {
