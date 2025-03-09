@@ -39,9 +39,7 @@ public class AppointmentController : ControllerBase
             var parentId = _claimsService.GetCurrentUserId;
 
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
-            {
                 return Ok(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
-            }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
@@ -65,17 +63,12 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            if (childId == Guid.Empty)
-            {
-                return Ok(ApiResult<object>.Error("Child ID không hợp lệ."));
-            }
+            if (childId == Guid.Empty) return Ok(ApiResult<object>.Error("Child ID không hợp lệ."));
 
             var appointments = await _appointmentService.GetListlAppointmentsByChildIdAsync(childId);
 
             if (appointments == null || !appointments.Any())
-            {
                 return Ok(ApiResult<object>.Error("Không có lịch hẹn nào cho trẻ này."));
-            }
 
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointments, "Lấy danh sách lịch hẹn thành công."));
         }
@@ -84,7 +77,7 @@ public class AppointmentController : ControllerBase
             return Ok(ApiResult<object>.Error("Lỗi hệ thống. Vui lòng thử lại sau."));
         }
     }
-    
+
     [HttpGet("{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]

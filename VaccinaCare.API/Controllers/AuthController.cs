@@ -179,7 +179,6 @@ public class AuthController : ControllerBase
 
         try
         {
-
             IConfiguration configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", true, false)
@@ -188,10 +187,7 @@ public class AuthController : ControllerBase
 
             var response = await _authService.RefreshTokenAsync(tokenRefreshRequestDto, configuration);
 
-            if (response == null)
-            {
-                return Unauthorized(ApiResult<object>.Error("Invalid or expired refresh token."));
-            }
+            if (response == null) return Unauthorized(ApiResult<object>.Error("Invalid or expired refresh token."));
 
             _logger.Info("Token refresh successful.");
             return Ok(ApiResult<LoginResponseDTO>.Success(response, "Token refreshed successfully."));
