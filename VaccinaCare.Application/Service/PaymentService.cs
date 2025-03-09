@@ -107,22 +107,28 @@ public class PaymentService : IPaymentService
         {
             _logger.Info("Processing VNPay payment callback.");
 
+            // Giải mã dữ liệu trả về từ VNPay (bao gồm các tham số trong query string)
             var response = _vnPayService.PaymentExecute(query);
+
+            // Kiểm tra tính hợp lệ của phản hồi từ VNPay
             if (response == null || string.IsNullOrEmpty(response.OrderId))
             {
                 _logger.Error("Invalid VNPay response received.");
                 throw new Exception("Invalid VNPay response.");
             }
 
+            // Tìm payment record từ OrderId trong database
             var payment = await _unitOfWork.PaymentRepository
                 .FirstOrDefaultAsync(p => p.OrderId == response.OrderId);
 
+            // Nếu không tìm thấy payment record, báo lỗi
             if (payment == null)
             {
                 _logger.Error($"Payment record not found for Order ID: {response.OrderId}");
                 throw new Exception("Payment record not found.");
             }
 
+            // Tạo một PaymentTransaction mới và ghi nhận thông tin thanh toán vào database
             var paymentTransaction = new PaymentTransaction
             {
                 PaymentId = payment.Id,
@@ -134,10 +140,12 @@ public class PaymentService : IPaymentService
                 Status = response.Success ? PaymentTransactionStatus.Success : PaymentTransactionStatus.Failed
             };
 
+            // Thêm transaction vào database
             await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
             _logger.Info(
                 $"Payment transaction recorded for Order ID: {response.OrderId}, Status: {paymentTransaction.Status}");
 
+            // Nếu thanh toán thành công, cập nhật thông tin của Payment và Appointment
             if (response.Success)
             {
                 payment.TransactionId = response.TransactionId;
@@ -146,6 +154,7 @@ public class PaymentService : IPaymentService
                 var appointment = await _unitOfWork.AppointmentRepository
                     .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
 
+                // Nếu có Appointment, cập nhật trạng thái thành Confirmed
                 if (appointment != null)
                 {
                     appointment.Status = AppointmentStatus.Confirmed;
@@ -154,7 +163,9 @@ public class PaymentService : IPaymentService
                 }
             }
 
+            // Lưu tất cả thay đổi vào database
             await _unitOfWork.SaveChangesAsync();
+
             return response;
         }
         catch (Exception ex)

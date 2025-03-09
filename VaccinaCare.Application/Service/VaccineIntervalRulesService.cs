@@ -67,32 +67,6 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
     }
 
-    public async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
-    {
-        _logerService.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");
-        try
-        {
-            var vaccineIntervalRule = await _unitOfWork.VaccineIntervalRulesRepository.GetByIdAsync(id);
-
-            if (vaccineIntervalRule == null)
-            {
-                _logerService.Warn($"Vaccine Interlval Rule with ID {id} not found.");
-                return false;
-            }
-
-            await _unitOfWork.VaccineIntervalRulesRepository.SoftRemove(vaccineIntervalRule);
-            await _unitOfWork.SaveChangesAsync();
-
-            _logerService.Info($"Successfully deleted Vaccine Interval Rule with ID: {id}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logerService.Error($"Error deleting Vaccine Interval Rule with ID {id}: {ex.Message}");
-            return false;
-        }
-    }
-
     public async Task<List<GetVaccineInternalRulesDto>> GetAllVaccineIntervalRulesAsync()
     {
         try
@@ -103,7 +77,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
             var result = vaccineIntervalRules.Select(v => new GetVaccineInternalRulesDto
             {
-                Id = v.Id,
+                VaccineIntervalRUID = v.Id,
                 VaccineId = v.VaccineId,
                 RelatedVaccineId = v.RelatedVaccineId,
                 CanBeGivenTogether = v.CanBeGivenTogether,
@@ -186,6 +160,32 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         {
             _logerService.Error($"Error updating vaccine interval rule: {ex.Message}");
             throw;
+        }
+    }
+
+    public async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
+    {
+        _logerService.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");
+        try
+        {
+            var vaccineIntervalRule = await _unitOfWork.VaccineIntervalRulesRepository.GetByIdAsync(id);
+
+            if (vaccineIntervalRule == null)
+            {
+                _logerService.Warn($"Vaccine Interlval Rule with ID {id} not found.");
+                return false;
+            }
+
+            await _unitOfWork.VaccineIntervalRulesRepository.SoftRemove(vaccineIntervalRule);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logerService.Info($"Successfully deleted Vaccine Interval Rule with ID: {id}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logerService.Error($"Error deleting Vaccine Interval Rule with ID {id}: {ex.Message}");
+            return false;
         }
     }
 }

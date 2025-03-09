@@ -4,8 +4,8 @@ namespace VaccinaCare.Domain.Entities;
 
 public class Appointment : BaseEntity
 {
-    public Guid? ParentId { get; set; }
-    public Guid? ChildId { get; set; }
+    public Guid ParentId { get; set; }
+    public Guid ChildId { get; set; }
     public Guid? PolicyId { get; set; }
     public DateTime? AppointmentDate { get; set; }
     public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;

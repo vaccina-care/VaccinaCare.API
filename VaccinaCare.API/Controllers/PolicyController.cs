@@ -8,7 +8,7 @@ using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
-[Route("api/policy")]
+[Route("api/policies")]
 [ApiController]
 public class PolicyController : ControllerBase
 {
@@ -61,7 +61,6 @@ public class PolicyController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "AdminPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<PolicyDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -94,7 +93,6 @@ public class PolicyController : ControllerBase
     }
 
     [HttpGet("{policyId}")]
-    [Authorize(Policy = "AdminPolicy")]
     public async Task<IActionResult> GetPolicyById(Guid policyId)
     {
         try

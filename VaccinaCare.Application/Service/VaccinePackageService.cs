@@ -26,7 +26,6 @@ public class VaccinePackageService : IVaccinePackageService
         _claimsService = claimsService;
     }
 
-
     public async Task<VaccinePackageDTO> CreateVaccinePackageAsync(CreateVaccinePackageDTO dto)
     {
         _loggerService.Info($"Creating Vaccine Package: {dto.PackageName}");
@@ -41,13 +40,6 @@ public class VaccinePackageService : IVaccinePackageService
             if (string.IsNullOrWhiteSpace(dto.Description))
                 validationErrors.Add("Package description is required.");
 
-            if (dto.Price <= 0)
-                validationErrors.Add("Price cannot be negative or zero.");
-
-            // Cần xem xét lại vì có thể tạo Packgae trước rồi thêm Vaccine vào sau
-            //if (dto.VaccineDetails == null || !dto.VaccineDetails.Any())
-            //    validationErrors.Add("At least one vaccine detail is required.");
-
             if (validationErrors.Any())
             {
                 _loggerService.Warn(
@@ -55,27 +47,39 @@ public class VaccinePackageService : IVaccinePackageService
                 throw new ArgumentException(string.Join("; ", validationErrors));
             }
 
+            // Calculate total vaccine price from the details provided
+            decimal totalVaccinePrice = 0;
+            foreach (var vaccineDetail in dto.VaccineDetails)
+            {
+                var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineDetail.VaccineId);
+                if (vaccine != null) totalVaccinePrice += vaccine.Price ?? 0;
+            }
+
+            // Log the old price (before discount)
+            _loggerService.Info(
+                $"Total vaccine price (before discount) for package '{dto.PackageName}': {totalVaccinePrice:C}");
+
+            // Apply the 10% discount
+            var discountedPrice = totalVaccinePrice * 0.9m;
+
+            // Log the new price (after discount)
+            _loggerService.Info(
+                $"Discounted price (after 10% discount) for package '{dto.PackageName}': {discountedPrice:C}");
+
             var vaccinePackage = new VaccinePackage
             {
                 PackageName = dto.PackageName,
                 Description = dto.Description,
-                Price = dto.Price,
+                Price = discountedPrice, // Set the discounted price
                 VaccinePackageDetails = dto.VaccineDetails.Select(vd => new VaccinePackageDetail
                 {
                     VaccineId = vd.VaccineId,
                     DoseOrder = vd.DoseOrder
                 }).ToList()
             };
+
             await _unitOfWork.VaccinePackageRepository.AddAsync(vaccinePackage);
             await _unitOfWork.SaveChangesAsync();
-
-            var vaccineIds = vaccinePackage.VaccinePackageDetails
-                .Select(vd => vd.VaccineId)
-                .Where(id => id.HasValue)
-                .Select(id => id.Value)
-                .ToList();
-
-            var allVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => vaccineIds.Contains(v.Id));
 
             _loggerService.Info($"Created Vaccine Package successfully: {dto.PackageName}");
 
@@ -97,40 +101,6 @@ public class VaccinePackageService : IVaccinePackageService
         {
             _loggerService.Error($"Error creating Vaccine Package: {ex.Message}");
             throw;
-        }
-    }
-
-    public async Task<bool> DeleteVaccinePackageByIdAsync(Guid packageId)
-    {
-        _loggerService.Info($"Attempting to delete Vaccine Package with ID: {packageId}");
-
-        try
-        {
-            var vaccinePackage = await _unitOfWork.VaccinePackageRepository.GetByIdAsync(
-                packageId,
-                vp => vp.VaccinePackageDetails
-            );
-
-            if (vaccinePackage == null)
-            {
-                _loggerService.Warn($"Vaccine Package with ID {packageId} not found.");
-                return false;
-            }
-
-            if (vaccinePackage.VaccinePackageDetails.Any())
-                _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(
-                    vaccinePackage.VaccinePackageDetails.ToList());
-
-            _unitOfWork.VaccinePackageRepository.SoftRemove(vaccinePackage);
-            await _unitOfWork.SaveChangesAsync();
-
-            _loggerService.Info($"Successfully deleted Vaccine Package with ID: {packageId}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _loggerService.Error($"Error deleting Vaccine Package with ID {packageId}: {ex.Message}");
-            return false;
         }
     }
 
@@ -170,60 +140,6 @@ public class VaccinePackageService : IVaccinePackageService
         catch (Exception ex)
         {
             _loggerService.Error($"Error fetching Vaccine Packages: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<(List<VaccineDto>, List<VaccinePackageDTO>)> GetAllVaccinesAndPackagesAsync()
-    {
-        try
-        {
-            _loggerService.Info("Fetching all Vaccines and Vaccine Packages...");
-
-            var activeVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
-            var vaccineList = activeVaccines.Select(vaccine => new VaccineDto
-            {
-                Id = vaccine.Id,
-                VaccineName = vaccine.VaccineName,
-                Description = vaccine.Description,
-                PicUrl = vaccine.PicUrl,
-                Type = vaccine.Type,
-                Price = vaccine.Price,
-                RequiredDoses = vaccine.RequiredDoses,
-                DoseIntervalDays = vaccine.DoseIntervalDays,
-                ForBloodType = vaccine.ForBloodType,
-                AvoidChronic = vaccine.AvoidChronic,
-                AvoidAllergy = vaccine.AvoidAllergy,
-                HasDrugInteraction = vaccine.HasDrugInteraction,
-                HasSpecialWarning = vaccine.HasSpecialWarning
-            }).ToList();
-
-            var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
-            var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
-
-            var vaccinePackageList = vaccinePackages.Select(vp => new VaccinePackageDTO
-            {
-                Id = vp.Id,
-                PackageName = vp.PackageName,
-                Description = vp.Description,
-                Price = vp.Price,
-                VaccineDetails = allPackageDetails
-                    .Where(vd => vd.PackageId == vp.Id && activeVaccines.Any(v => v.Id == vd.VaccineId))
-                    .Select(vd => new VaccinePackageDetailDTO
-                    {
-                        VaccineId = vd.VaccineId ?? Guid.Empty,
-                        DoseOrder = vd.DoseOrder ?? 0
-                    }).ToList()
-            }).ToList();
-
-            _loggerService.Info(
-                $"Fetched {vaccineList.Count} Vaccines and {vaccinePackageList.Count} Vaccine Packages successfully.");
-            return (vaccineList, vaccinePackageList);
-        }
-
-        catch (Exception ex)
-        {
-            _loggerService.Error($"Error fetching Vaccines and Vaccine Packages: {ex.Message}");
             throw;
         }
     }
@@ -354,57 +270,6 @@ public class VaccinePackageService : IVaccinePackageService
         }
     }
 
-    public async Task<Pagination<VaccinePackageDTO>> GetVaccinePackagesPaging(PaginationParameter pagination)
-    {
-        try
-        {
-            _loggerService.Info(
-                $"Fetching vaccine package with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize}");
-
-            var query = _unitOfWork.VaccinePackageRepository.GetQueryable()
-                .Include(vp => vp.VaccinePackageDetails);
-
-            var totalPackages = await query.CountAsync();
-
-            var packages = await query
-                .OrderBy(vp => vp.PackageName)
-                .Skip((pagination.PageIndex - 1) * pagination.PageSize)
-                .Take(pagination.PageSize)
-                .ToListAsync();
-
-            if (!packages.Any())
-            {
-                _loggerService.Warn($"No vaccine packages found on page {pagination.PageIndex}.");
-                return new Pagination<VaccinePackageDTO>(new List<VaccinePackageDTO>(), 0, pagination.PageIndex,
-                    pagination.PageSize);
-            }
-
-            _loggerService.Success($"Retrieved {packages.Count} vaccine packages on page {pagination.PageIndex}");
-
-            var packageDtos = packages.Select(package => new VaccinePackageDTO
-            {
-                Id = package.Id,
-                PackageName = package.PackageName,
-                Description = package.Description,
-                Price = package.Price,
-                VaccineDetails = package.VaccinePackageDetails
-                    .Select(vd => new VaccinePackageDetailDTO
-                    {
-                        VaccineId = vd.VaccineId ?? Guid.Empty,
-                        DoseOrder = vd.DoseOrder ?? 0
-                    }).ToList()
-            }).ToList();
-
-            return new Pagination<VaccinePackageDTO>(packageDtos, totalPackages, pagination.PageIndex,
-                pagination.PageSize);
-        }
-        catch (Exception ex)
-        {
-            _loggerService.Error($"Error while fetching vaccine package: {ex.Message}");
-            throw new Exception("An error occurred while fetching vaccine package. Please try again later");
-        }
-    }
-
     public async Task<VaccinePackageDTO> UpdateVaccinePackageByIdAsync(Guid packageId, UpdateVaccinePackageDTO dto)
     {
         try
@@ -496,6 +361,40 @@ public class VaccinePackageService : IVaccinePackageService
         {
             _loggerService.Error($"{ex.Message}");
             throw;
+        }
+    }
+
+    public async Task<bool> DeleteVaccinePackageByIdAsync(Guid packageId)
+    {
+        _loggerService.Info($"Attempting to delete Vaccine Package with ID: {packageId}");
+
+        try
+        {
+            var vaccinePackage = await _unitOfWork.VaccinePackageRepository.GetByIdAsync(
+                packageId,
+                vp => vp.VaccinePackageDetails
+            );
+
+            if (vaccinePackage == null)
+            {
+                _loggerService.Warn($"Vaccine Package with ID {packageId} not found.");
+                return false;
+            }
+
+            if (vaccinePackage.VaccinePackageDetails.Any())
+                _unitOfWork.VaccinePackageDetailRepository.SoftRemoveRange(
+                    vaccinePackage.VaccinePackageDetails.ToList());
+
+            _unitOfWork.VaccinePackageRepository.SoftRemove(vaccinePackage);
+            await _unitOfWork.SaveChangesAsync();
+
+            _loggerService.Info($"Successfully deleted Vaccine Package with ID: {packageId}");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error deleting Vaccine Package with ID {packageId}: {ex.Message}");
+            return false;
         }
     }
 }

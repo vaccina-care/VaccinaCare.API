@@ -107,8 +107,8 @@ public partial class VaccinaCareDbContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__Appointm__8ECDFCA28A60492C");
             entity.Property(e => e.AppointmentDate).HasColumnType("datetime");
-            entity.Property(e => e.CancellationReason).HasColumnType("text");
-            entity.Property(e => e.Notes).HasColumnType("text");
+            entity.Property(e => e.CancellationReason).HasMaxLength(255);
+            entity.Property(e => e.Notes).HasMaxLength(255);
             entity.Property(e => e.VaccineType).HasMaxLength(255);
             entity.Property(e => e.Status).HasMaxLength(255);
 
@@ -218,7 +218,7 @@ public partial class VaccinaCareDbContext : DbContext
 
             entity.Property(e => e.FullName).HasMaxLength(255);
             entity.Property(e => e.Gender).HasMaxLength(255);
-            entity.Property(e => e.MedicalHistory).HasColumnType("text");
+            entity.Property(e => e.MedicalHistory).HasMaxLength(255);
 
             entity.HasOne(e => e.Parent) // Tham chiếu đến User (phụ huynh)
                 .WithMany(u => u.Children) // Một User có nhiều Child
@@ -399,7 +399,7 @@ public partial class VaccinaCareDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK_VaccinationRecords");
 
             entity.Property(e => e.VaccinationDate).IsRequired(false);
-            entity.Property(e => e.ReactionDetails).HasColumnType("text").IsRequired(false);
+            entity.Property(e => e.ReactionDetails).HasMaxLength(255);
 
             entity.HasOne(e => e.Child)
                 .WithMany(c => c.VaccinationRecords)
