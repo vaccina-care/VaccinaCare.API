@@ -5,7 +5,7 @@ namespace VaccinaCare.Domain.DTOs.ChildDTOs;
 
 public class CreateChildDto
 {
-    [DefaultValue("Nguyen Van A")] public string FullName { get; set; } = "Nguyen Van A";
+    [DefaultValue("Hoàng minh tiến")] public string FullName { get; set; } = "Hoàng minh tiến";
 
     [DefaultValue("2022-01-01")] public DateOnly DateOfBirth { get; set; } = new(2022, 1, 1);
 

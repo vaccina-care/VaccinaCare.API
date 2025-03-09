@@ -399,47 +399,6 @@ public class VaccineService : IVaccineService
         }
     }
 
-
-    /// <summary>
-    /// Kiểm tra xem tất cả vaccine trong danh sách có thuộc một package đã có sẵn không.
-    /// Nếu tất cả vaccine truyền vào đều thuộc package thì chặn đặt lẻ.
-    /// </summary>
-    public async Task<bool> IsVaccineInPackage(List<Guid> vaccineIds)
-    {
-        if (vaccineIds == null || vaccineIds.Count == 0) return false;
-
-        try
-        {
-            // Lấy tất cả các package có chứa vaccine trong danh sách vaccineIds
-            var packageDetails = await _unitOfWork.VaccinePackageDetailRepository
-                .GetAllAsync(vpd => vaccineIds.Contains(vpd.VaccineId.Value), vpd => vpd.Package);
-
-            if (!packageDetails.Any()) return false;
-
-            // Lấy danh sách tất cả packageId mà các vaccine này thuộc về
-            var packageIds = packageDetails.Select(vpd => vpd.PackageId.Value).Distinct().ToList();
-
-            foreach (var packageId in packageIds)
-            {
-                // Lấy danh sách vaccine của package này
-                var packageVaccineIds = await _unitOfWork.VaccinePackageDetailRepository
-                    .GetAllAsync(vpd => vpd.PackageId == packageId);
-
-                var packageVaccineList = packageVaccineIds.Select(vpd => vpd.VaccineId.Value).ToList();
-
-                // Kiểm tra xem tất cả vaccine của package này có nằm trong danh sách vaccineIds truyền vào không
-                if (packageVaccineList.All(v => vaccineIds.Contains(v))) return true;
-            }
-
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"[IsVaccineInPackage] Exception occurred: {ex.Message}");
-            throw;
-        }
-    }
-
     /// <summary>
     /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
     /// </summary>
@@ -482,28 +441,51 @@ public class VaccineService : IVaccineService
         return (true, successMessage);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="childId"></param>
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
         _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
 
+        // Lấy thông tin vaccine để kiểm tra số mũi yêu cầu
+        var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+        if (vaccine == null)
+        {
+            _logger.Error($"[GetNextDoseNumber] Vaccine ID {vaccineId} not found.");
+            throw new ArgumentException($"Vaccine ID {vaccineId} không tồn tại.");
+        }
+
+        // Lấy danh sách các lần tiêm trước đó
         var records = await _unitOfWork.VaccinationRecordRepository
             .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
 
         if (records == null || !records.Any())
         {
-            _logger.Warn(
-                $"[GetNextDoseNumber] No vaccination records found for ChildID: {childId}, VaccineID: {vaccineId}. Starting from dose 1.");
-            return 1;
+            _logger.Warn($"[GetNextDoseNumber] No vaccination records found. Returning dose 1.");
+            return 1; // Nếu chưa có lịch sử tiêm, bắt đầu từ mũi 1
         }
 
-        var lastDoseNumber = records.Max(r => r.DoseNumber);
+        // Tìm số mũi lớn nhất đã tiêm hợp lệ
+        var lastDoseNumber = records
+            .Where(r => r.DoseNumber > 0 && r.DoseNumber <= vaccine.RequiredDoses) // Lọc dữ liệu hợp lệ
+            .Select(r => r.DoseNumber)
+            .DefaultIfEmpty(0) // Nếu không có giá trị hợp lệ, mặc định là 0
+            .Max();
+
         var nextDose = lastDoseNumber + 1;
 
-        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
+        // Đảm bảo không vượt quá số mũi yêu cầu
+        if (nextDose > vaccine.RequiredDoses)
+        {
+            _logger.Warn($"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
+            return vaccine.RequiredDoses; // Giữ nguyên nếu đã đạt max dose
+        }
 
+        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
         return nextDose;
     }
-
 
     /// <summary>
     /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
@@ -513,8 +495,7 @@ public class VaccineService : IVaccineService
     /// - Nếu khoảng cách không đủ → trả về false.
     /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
-    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid?> bookedVaccineIds,
-        DateTime appointmentDate)
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds, DateTime appointmentDate)
     {
         _logger.Info(
             $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
