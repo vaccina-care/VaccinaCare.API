@@ -8,7 +8,7 @@ using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
-[Route("api/policy")]
+[Route("api/policies")]
 [ApiController]
 public class PolicyController : ControllerBase
 {

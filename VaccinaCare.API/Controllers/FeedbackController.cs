@@ -11,7 +11,7 @@ using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
-[Route("api/feedback")]
+[Route("api/feedbacks")]
 [ApiController]
 public class FeedbackController : ControllerBase
 {

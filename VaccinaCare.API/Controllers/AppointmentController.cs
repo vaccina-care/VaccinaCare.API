@@ -11,6 +11,7 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/appointments")]
+[Authorize]
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
@@ -28,7 +29,6 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPost("booking/single-vaccines")]
-    [Authorize]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -58,7 +58,6 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet("{childId}")]
-    [Authorize]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -86,8 +85,7 @@ public class AppointmentController : ControllerBase
         }
     }
     
-    [HttpGet("details/{appointmentId}")]
-    [Authorize]
+    [HttpGet("{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
