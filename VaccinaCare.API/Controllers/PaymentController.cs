@@ -33,6 +33,7 @@ public class PaymentController : ControllerBase
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
+                    Data = null,
                     Message = "Unable to create payment URL, please check the appointment details and try again."
                 });
             return Ok(new ApiResult<string>

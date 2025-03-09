@@ -11,7 +11,7 @@ using Application.Service;
 using System.Diagnostics.Contracts;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/interval-rules")]
 public class VaccineIntervalRulesController : ControllerBase
 {
     private readonly IVaccineIntervalRulesService _vaccineIntervalRulesService;
@@ -25,86 +25,98 @@ public class VaccineIntervalRulesController : ControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> CreateVaccineIntervalRule([FromBody] VaccineIntervalRulesDTO rulesDTO)
     {
-        _logger.Info("Create vaccine interval rule received.");
         if (rulesDTO == null)
         {
-            _logger.Warn("CreateVaccineIntervalRule: Data is null");
-            return BadRequest(ApiResult<object>.Error("400 - Invalid data."));
+            return Ok(ApiResult<object>.Error("400 - Invalid data."));
         }
 
         try
         {
-            _logger.Info($"Attempting to create vaccine interval rule for VaccineId: {rulesDTO.VaccineId}");
-
             var createdRule = await _vaccineIntervalRulesService.CreateVaccineIntervalRuleAsync(rulesDTO);
 
             if (createdRule == null)
             {
-                _logger.Warn("CreateVaccineIntervalRule: Rule creation failed due to validation issues.");
-                return BadRequest(ApiResult<object>.Error("400 - Rule creation failed. Please check input data."));
+                return Ok(ApiResult<object>.Error("400 - Rule creation failed. Please check input data."));
             }
 
-            _logger.Success(
-                $"CreateVaccineIntervalRule: Rule created successfully for VaccineId: {rulesDTO.VaccineId}");
             return Ok(ApiResult<VaccineIntervalRulesDTO>.Success(createdRule, "Rule created successfully."));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error during rule creation: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
+            return Ok(ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> GetAllVaccineIntervalRule()
     {
         try
         {
             var vaccineIntervalRules = await _vaccineIntervalRulesService.GetAllVaccineIntervalRulesAsync();
-            if (vaccineIntervalRules == null || vaccineIntervalRules.Count == 0)
-                return NotFound(ApiResult<object>.Error("404 - No vaccine interval rules available."));
 
-            return Ok(ApiResult<List<GetVaccineInternalRulesDto>>.Success(vaccineIntervalRules,
-                "Vaccine interval rules retrieved successfully."));
+            if (vaccineIntervalRules == null || vaccineIntervalRules.Count == 0)
+            {
+                return Ok(ApiResult<object>.Error("No vaccine interval rules found."));
+            }
+
+            return Ok(ApiResult<object>.Success(vaccineIntervalRules));
         }
         catch (Exception ex)
         {
-            return StatusCode(500,
-                ApiResult<object>.Error("An unexepected error occurred while retrieving vaccine interval rules."));
+            // Log the exception (optional)
+            return StatusCode(500, ApiResult<object>.Error("An error occurred while retrieving data."));
         }
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateVacicneIntervalRule(Guid id, [FromBody] VaccineIntervalRulesDTO updateDto)
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateVaccineIntervalRule(Guid id, [FromBody] VaccineIntervalRulesDTO updateDto)
     {
         try
         {
             var isUpdated = await _vaccineIntervalRulesService.UpdateVaccineIntervalRuleAsync(id, updateDto);
-            if (isUpdated == null) return NotFound(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
+            if (isUpdated == null)
+            {
+                return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
+            }
 
             return Ok(ApiResult<object>.Success(null, "Vaccine interval rule updated successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
+            return Ok(ApiResult<object>.Error("500 - Internal server error."));
         }
     }
 
     [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> DeleteVaccineIntervalRule(Guid id)
     {
         try
         {
             var isDeleted = await _vaccineIntervalRulesService.DeleteVaccineIntervalRuleAsync(id);
-            if (!isDeleted) return NotFound(ApiResult<object>.Error("404 - Vaccine interval rule  not found."));
+            if (!isDeleted)
+            {
+                return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
+            }
 
             return Ok(ApiResult<object>.Success(null, "Vaccine interval rule deleted successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
+            return Ok(ApiResult<object>.Error("500 - Internal server error."));
         }
     }
 }
