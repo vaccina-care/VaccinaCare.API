@@ -1,9 +1,9 @@
-﻿using System.Globalization;
+﻿using Microsoft.AspNetCore.Http;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
 namespace VaccinaCare.Application.Libraries;
@@ -142,16 +142,16 @@ public class VnPayLibrary
 
         return data.ToString();
     }
+}
 
-    public class VnPayCompare : IComparer<string>
+public class VnPayCompare : IComparer<string>
+{
+    public int Compare(string x, string y)
     {
-        public int Compare(string x, string y)
-        {
-            if (x == y) return 0;
-            if (x == null) return -1;
-            if (y == null) return 1;
-            var vnpCompare = CompareInfo.GetCompareInfo("en-US");
-            return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
-        }
+        if (x == y) return 0;
+        if (x == null) return -1;
+        if (y == null) return 1;
+        var vnpCompare = CompareInfo.GetCompareInfo("en-US");
+        return vnpCompare.Compare(x, y, CompareOptions.Ordinal);
     }
 }

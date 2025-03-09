@@ -8,44 +8,45 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VaccinaCare.Application.Service;
 
-    public class PolicyService : IPolicyService
+public class PolicyService : IPolicyService
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILoggerService _logger;
+
+    public PolicyService(IUnitOfWork unitOfWork, ILoggerService logger)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILoggerService _logger;
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
 
-        public PolicyService(IUnitOfWork unitOfWork, ILoggerService logger)
+    public async Task<PolicyDto> CreatePolicyAsync(PolicyDto policyDto)
+    {
+        try
         {
-            _unitOfWork = unitOfWork;
-            _logger = logger;
-        }
-        public async Task<PolicyDto> CreatePolicyAsync(PolicyDto policyDto)
-        {
-            try
+            _logger.Info($"Starting policy creation. Name: {policyDto.PolicyName}");
+            var policy = new CancellationPolicy
             {
-                _logger.Info($"Starting policy creation. Name: {policyDto.PolicyName}");
-                var policy = new CancellationPolicy
-                {
-                    PolicyName = policyDto.PolicyName,
-                    Description = policyDto.Description,
-                    CancellationDeadline = policyDto.CancellationDeadline ?? 0,
-                    PenaltyFee = policyDto.PenaltyFee ?? 0,
-                };
+                PolicyName = policyDto.PolicyName,
+                Description = policyDto.Description,
+                CancellationDeadline = policyDto.CancellationDeadline ?? 0,
+                PenaltyFee = policyDto.PenaltyFee ?? 0
+            };
 
-                await _unitOfWork.CancellationPolicyRepository.AddAsync(policy);
-                await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.CancellationPolicyRepository.AddAsync(policy);
+            await _unitOfWork.SaveChangesAsync();
 
-                _logger.Info($"Policy created successfully: {policy.PolicyName}");
-                return policyDto;
-            }
-            catch (Exception ex)
-            {
-                _logger.Error($"Error in CreatePolicyAsync {ex.Message}");
-                throw;
-            }
+            _logger.Info($"Policy created successfully: {policy.PolicyName}");
+            return policyDto;
         }
-
-        public async Task<bool> DeletePolicyAsync(Guid id)
+        catch (Exception ex)
         {
+            _logger.Error($"Error in CreatePolicyAsync {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<bool> DeletePolicyAsync(Guid id)
+    {
         try
         {
             _logger.Info($"Attempting to delete policy with ID:  {id}");
@@ -70,8 +71,8 @@ namespace VaccinaCare.Application.Service;
         }
     }
 
-        public async Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination)
-        {
+    public async Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination)
+    {
         try
         {
             _logger.Info(
@@ -98,10 +99,10 @@ namespace VaccinaCare.Application.Service;
 
             var policyDtos = policies.Select(policy => new PolicyDto
             {
-               PolicyName = policy.PolicyName,
-               Description = policy.Description,
-               CancellationDeadline = policy.CancellationDeadline,
-               PenaltyFee = policy.PenaltyFee
+                PolicyName = policy.PolicyName,
+                Description = policy.Description,
+                CancellationDeadline = policy.CancellationDeadline,
+                PenaltyFee = policy.PenaltyFee
             }).ToList();
 
             return new Pagination<PolicyDto>(policyDtos, totalPolicies, pagination.PageIndex, pagination.PageSize);
@@ -113,8 +114,8 @@ namespace VaccinaCare.Application.Service;
         }
     }
 
-        public async Task<PolicyDto> GetPolicyByIdAsync(Guid id)
-        {
+    public async Task<PolicyDto> GetPolicyByIdAsync(Guid id)
+    {
         try
         {
             _logger.Info($"Fetching policy with ID: {id}");
@@ -156,7 +157,7 @@ namespace VaccinaCare.Application.Service;
                 throw new KeyNotFoundException("Policy not found.");
             }
 
-            bool isChanged = false;
+            var isChanged = false;
 
             if (!string.IsNullOrWhiteSpace(policyDto.PolicyName) && policy.PolicyName != policyDto.PolicyName)
             {
@@ -170,7 +171,8 @@ namespace VaccinaCare.Application.Service;
                 isChanged = true;
             }
 
-            if (policyDto.CancellationDeadline.HasValue && policy.CancellationDeadline != policyDto.CancellationDeadline)
+            if (policyDto.CancellationDeadline.HasValue &&
+                policy.CancellationDeadline != policyDto.CancellationDeadline)
             {
                 policy.CancellationDeadline = policyDto.CancellationDeadline.Value;
                 isChanged = true;
@@ -181,6 +183,7 @@ namespace VaccinaCare.Application.Service;
                 policy.PenaltyFee = policyDto.PenaltyFee.Value;
                 isChanged = true;
             }
+
             if (isChanged)
             {
                 await _unitOfWork.CancellationPolicyRepository.Update(policy);
@@ -206,6 +209,4 @@ namespace VaccinaCare.Application.Service;
             throw;
         }
     }
-
 }
-

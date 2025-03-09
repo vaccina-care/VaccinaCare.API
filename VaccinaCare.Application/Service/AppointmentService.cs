@@ -210,7 +210,7 @@ public class AppointmentService : IAppointmentService
         return true;
     }
 
-    public async Task<List<AppointmentDTO>> GetAllAppointmentsByChildIdAsync(Guid childId)
+    public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {
         try
         {

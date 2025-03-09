@@ -4,15 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs
-{
-    public class GetVaccineInternalRulesDto
-    {
-        public Guid Id { get; set; }
-        public Guid VaccineId { get; set; }
-        public Guid? RelatedVaccineId { get; set; }
-        public int MinIntervalDays { get; set; }
-        public bool CanBeGivenTogether { get; set; }
-    }
-}
+namespace VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs;
 
+public class GetVaccineInternalRulesDto
+{
+    public Guid Id { get; set; }
+    public Guid VaccineId { get; set; }
+    public Guid? RelatedVaccineId { get; set; }
+    public int MinIntervalDays { get; set; }
+    public bool CanBeGivenTogether { get; set; }
+}

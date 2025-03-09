@@ -39,10 +39,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
             throw new ArgumentException("MinIntervalDays cannot be negative.");
         try
         {
-            if (vaccineIntervalRulesDTO.CanBeGivenTogether)
-            {
-                vaccineIntervalRulesDTO.MinIntervalDays = 0;
-            }
+            if (vaccineIntervalRulesDTO.CanBeGivenTogether) vaccineIntervalRulesDTO.MinIntervalDays = 0;
 
             var rule = new VaccineIntervalRules
             {

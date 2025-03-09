@@ -39,7 +39,8 @@ public class UnitOfWork : IUnitOfWork
         IGenericRepository<AppointmentsVaccine> appointmentsVaccineRepository,
         IGenericRepository<Feedback> feedbackRepository, IGenericRepository<Payment> paymentRepository,
         IGenericRepository<Invoice> invoiceRepository,
-        IGenericRepository<PaymentTransaction> paymentTransactionRepository, IGenericRepository<CancellationPolicy> cancellationPolicyRepository)
+        IGenericRepository<PaymentTransaction> paymentTransactionRepository,
+        IGenericRepository<CancellationPolicy> cancellationPolicyRepository)
     {
         _dbContext = dbContext;
         _notificationRepository = notificationRepository;
