@@ -39,7 +39,9 @@ public class AppointmentController : ControllerBase
             var parentId = _claimsService.GetCurrentUserId;
 
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
-                return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
+            {
+                return Ok(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
+            }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
@@ -47,25 +49,53 @@ public class AppointmentController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(ApiResult<object>.Error(ex.Message));
+            return Ok(ApiResult<object>.Error(ex.Message));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
+            return Ok(ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
 
+    [HttpGet("{childId}")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GetAppointmentsByChildId(Guid childId)
+    {
+        try
+        {
+            if (childId == Guid.Empty)
+            {
+                return Ok(ApiResult<object>.Error("Child ID không hợp lệ."));
+            }
 
-    [HttpGet("details/{childId}")]
+            var appointments = await _appointmentService.GetListlAppointmentsByChildIdAsync(childId);
+
+            if (appointments == null || !appointments.Any())
+            {
+                return Ok(ApiResult<object>.Error("Không có lịch hẹn nào cho trẻ này."));
+            }
+
+            return Ok(ApiResult<List<AppointmentDTO>>.Success(appointments, "Lấy danh sách lịch hẹn thành công."));
+        }
+        catch (Exception e)
+        {
+            return Ok(ApiResult<object>.Error("Lỗi hệ thống. Vui lòng thử lại sau."));
+        }
+    }
+    
+    [HttpGet("details/{appointmentId}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAppointmentDetailsByChildId(Guid childId)
+    public async Task<IActionResult> GetAppointmentDetailsByChildId(Guid appointmentId)
     {
         try
         {
-            var appointment = await _appointmentService.GetAppointmentDetailsByChildIdAsync(childId);
+            var appointment = await _appointmentService.GetAppointmentDetailsByIdAsync(appointmentId);
 
             if (appointment == null)
                 return NotFound(new ApiResult<object>
@@ -90,47 +120,4 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-
-    [HttpGet("{childId}")]
-    [Authorize]
-    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAppointmentsByChildId(Guid childId)
-    {
-        try
-        {
-            if (childId == Guid.Empty)
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Child ID không hợp lệ."
-                });
-
-            var appointments = await _appointmentService.GetListlAppointmentsByChildIdAsync(childId);
-
-            if (appointments == null || !appointments.Any())
-                return NotFound(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Không có lịch hẹn nào cho trẻ này."
-                });
-
-            return Ok(new ApiResult<List<AppointmentDTO>>
-            {
-                IsSuccess = true,
-                Message = "Lấy danh sách lịch hẹn thành công.",
-                Data = appointments
-            });
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Lỗi hệ thống. Vui lòng thử lại sau."
-            });
-        }
-    }
-    
 }

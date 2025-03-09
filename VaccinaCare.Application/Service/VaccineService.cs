@@ -479,7 +479,8 @@ public class VaccineService : IVaccineService
         // Đảm bảo không vượt quá số mũi yêu cầu
         if (nextDose > vaccine.RequiredDoses)
         {
-            _logger.Warn($"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
+            _logger.Warn(
+                $"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
             return vaccine.RequiredDoses; // Giữ nguyên nếu đã đạt max dose
         }
 
@@ -495,7 +496,8 @@ public class VaccineService : IVaccineService
     /// - Nếu khoảng cách không đủ → trả về false.
     /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
-    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds, DateTime appointmentDate)
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+        DateTime appointmentDate)
     {
         _logger.Info(
             $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");

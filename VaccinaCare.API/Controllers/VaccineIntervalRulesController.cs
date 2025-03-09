@@ -30,19 +30,13 @@ public class VaccineIntervalRulesController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> CreateVaccineIntervalRule([FromBody] VaccineIntervalRulesDTO rulesDTO)
     {
-        if (rulesDTO == null)
-        {
-            return Ok(ApiResult<object>.Error("400 - Invalid data."));
-        }
+        if (rulesDTO == null) return Ok(ApiResult<object>.Error("400 - Invalid data."));
 
         try
         {
             var createdRule = await _vaccineIntervalRulesService.CreateVaccineIntervalRuleAsync(rulesDTO);
-
             if (createdRule == null)
-            {
                 return Ok(ApiResult<object>.Error("400 - Rule creation failed. Please check input data."));
-            }
 
             return Ok(ApiResult<VaccineIntervalRulesDTO>.Success(createdRule, "Rule created successfully."));
         }
@@ -63,9 +57,7 @@ public class VaccineIntervalRulesController : ControllerBase
             var vaccineIntervalRules = await _vaccineIntervalRulesService.GetAllVaccineIntervalRulesAsync();
 
             if (vaccineIntervalRules == null || vaccineIntervalRules.Count == 0)
-            {
                 return Ok(ApiResult<object>.Error("No vaccine interval rules found."));
-            }
 
             return Ok(ApiResult<object>.Success(vaccineIntervalRules));
         }
@@ -85,10 +77,7 @@ public class VaccineIntervalRulesController : ControllerBase
         try
         {
             var isUpdated = await _vaccineIntervalRulesService.UpdateVaccineIntervalRuleAsync(id, updateDto);
-            if (isUpdated == null)
-            {
-                return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
-            }
+            if (isUpdated == null) return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
 
             return Ok(ApiResult<object>.Success(null, "Vaccine interval rule updated successfully."));
         }
@@ -107,10 +96,7 @@ public class VaccineIntervalRulesController : ControllerBase
         try
         {
             var isDeleted = await _vaccineIntervalRulesService.DeleteVaccineIntervalRuleAsync(id);
-            if (!isDeleted)
-            {
-                return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
-            }
+            if (!isDeleted) return Ok(ApiResult<object>.Error("404 - Vaccine interval rule not found."));
 
             return Ok(ApiResult<object>.Success(null, "Vaccine interval rule deleted successfully."));
         }

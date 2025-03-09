@@ -162,7 +162,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
             throw;
         }
     }
-    
+
     public async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
     {
         _logerService.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");

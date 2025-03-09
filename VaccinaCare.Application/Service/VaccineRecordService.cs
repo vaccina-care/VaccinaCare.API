@@ -33,9 +33,7 @@ public class VaccineRecordService : IVaccineRecordService
 
             // If record not found, throw an exception
             if (vaccinationRecord == null)
-            {
                 throw new Exception("Vaccination record not found for the specified recordId.");
-            }
 
             // Map the VaccinationRecord entity to VaccineRecordDto
             var vaccineRecordDto = new VaccineRecordDto
@@ -44,7 +42,7 @@ public class VaccineRecordService : IVaccineRecordService
                 VaccineId = vaccinationRecord.VaccineId,
                 VaccinationDate = vaccinationRecord.VaccinationDate.Value, // Assuming VaccinationDate is not null
                 ReactionDetails = vaccinationRecord.ReactionDetails,
-                DoseNumber = vaccinationRecord.DoseNumber,
+                DoseNumber = vaccinationRecord.DoseNumber
             };
 
             return vaccineRecordDto;
@@ -66,10 +64,7 @@ public class VaccineRecordService : IVaccineRecordService
                 .GetAllAsync(vr => vr.ChildId == childId);
 
             // If no records found, return an empty list
-            if (vaccinationRecords == null || !vaccinationRecords.Any())
-            {
-                return new List<VaccineRecordDto>();
-            }
+            if (vaccinationRecords == null || !vaccinationRecords.Any()) return new List<VaccineRecordDto>();
 
             // Map the VaccinationRecord entities to VaccineRecordDto list
             var vaccineRecordDtos = vaccinationRecords.Select(vr => new VaccineRecordDto
@@ -78,7 +73,7 @@ public class VaccineRecordService : IVaccineRecordService
                 VaccineId = vr.VaccineId,
                 VaccinationDate = vr.VaccinationDate.Value, // Assuming VaccinationDate is not null
                 ReactionDetails = vr.ReactionDetails,
-                DoseNumber = vr.DoseNumber,
+                DoseNumber = vr.DoseNumber
             }).ToList();
 
             return vaccineRecordDtos;
@@ -119,7 +114,8 @@ public class VaccineRecordService : IVaccineRecordService
             await _unitOfWork.VaccinationRecordRepository.AddAsync(vaccinationRecord);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"[Success] Vaccination record added for ChildId: {addVaccineRecordDto.ChildId}, VaccineId: {addVaccineRecordDto.VaccineId}, Dose: {addVaccineRecordDto.DoseNumber}");
+            _logger.Info(
+                $"[Success] Vaccination record added for ChildId: {addVaccineRecordDto.ChildId}, VaccineId: {addVaccineRecordDto.VaccineId}, Dose: {addVaccineRecordDto.DoseNumber}");
 
             // Prepare DTO to return
             var vaccineRecordDto = new VaccineRecordDto
@@ -141,5 +137,4 @@ public class VaccineRecordService : IVaccineRecordService
             throw new Exception("An error occurred while adding the vaccination record. Please try again later.");
         }
     }
-    
 }

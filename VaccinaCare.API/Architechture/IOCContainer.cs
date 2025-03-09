@@ -226,7 +226,7 @@ public static class IOCContainer
 
             options.AddPolicy("AdminOrStaffPolicy", policy =>
                 policy.RequireRole("Admin", "Staff"));
-            
+
             options.AddPolicy("StaffOrCustomerPolicy", policy =>
                 policy.RequireRole("Customer", "Staff"));
         });

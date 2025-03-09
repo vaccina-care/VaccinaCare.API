@@ -10,5 +10,4 @@ public interface IPolicyService
     Task<bool> DeletePolicyAsync(Guid id);
     Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination);
     Task<PolicyDto> GetPolicyByIdAsync(Guid id);
-
 }

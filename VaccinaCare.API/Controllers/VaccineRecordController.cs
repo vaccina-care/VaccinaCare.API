@@ -9,7 +9,6 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/vaccination/records")]
-
 public class VaccineRecordController : ControllerBase
 {
     private readonly IVaccineRecordService _vaccineRecordService;
@@ -47,15 +46,12 @@ public class VaccineRecordController : ControllerBase
                 IsSuccess = false
             };
 
-            if (ex is ArgumentException || ex is InvalidOperationException)
-            {
-                return BadRequest(apiResult);
-            }
+            if (ex is ArgumentException || ex is InvalidOperationException) return BadRequest(apiResult);
 
             return StatusCode(500, apiResult);
         }
     }
-    
+
     // Get a single vaccination record by ChildId
     [HttpGet("{id}")]
     [Authorize(Policy = "StaffOrCustomerPolicy")]
