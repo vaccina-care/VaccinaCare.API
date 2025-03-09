@@ -1,5 +1,9 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.AspNetCore.Mvc;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.VaccineDTOs;
+using VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
@@ -18,29 +22,57 @@ public class VaccineRecordService : IVaccineRecordService
         _logger = logger;
     }
 
-    public async Task AddVaccinationRecordAsync(Guid childId, Guid vaccineId, DateTime vaccinationDate, int doseNumber)
+    
+
+    public async Task<VaccineRecordDto> AddVaccinationRecordAsync(AddVaccineRecordDto addVaccineRecordDto)
     {
         try
         {
+            // Validation business rules
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(addVaccineRecordDto.VaccineId);
+            if (vaccine == null)
+                throw new Exception("Vaccine not found.");
+
+            var child = await _unitOfWork.ChildRepository.GetByIdAsync(addVaccineRecordDto.ChildId);
+            if (child == null)
+                throw new Exception("Child not found.");
+
+            if (addVaccineRecordDto.DoseNumber > vaccine.RequiredDoses)
+                throw new Exception("Dose number exceeds the required doses for this vaccine.");
+
             var vaccinationRecord = new VaccinationRecord
             {
-                ChildId = childId,
-                VaccineId = vaccineId,
-                VaccinationDate = vaccinationDate,
-                DoseNumber = doseNumber
+                ChildId = addVaccineRecordDto.ChildId,
+                VaccineId = addVaccineRecordDto.VaccineId,
+                VaccinationDate = addVaccineRecordDto.VaccinationDate,
+                DoseNumber = addVaccineRecordDto.DoseNumber,
+                ReactionDetails = addVaccineRecordDto.ReactionDetails
             };
 
+            // Add to the database
             await _unitOfWork.VaccinationRecordRepository.AddAsync(vaccinationRecord);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info(
-                $"[Success] Vaccination record added for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}");
+            _logger.Info($"[Success] Vaccination record added for ChildId: {addVaccineRecordDto.ChildId}, VaccineId: {addVaccineRecordDto.VaccineId}, Dose: {addVaccineRecordDto.DoseNumber}");
+
+            // Prepare DTO to return
+            var vaccineRecordDto = new VaccineRecordDto
+            {
+                ChildId = vaccinationRecord.ChildId,
+                VaccineId = vaccinationRecord.VaccineId,
+                VaccinationDate = vaccinationRecord.VaccinationDate,
+                ReactionDetails = vaccinationRecord.ReactionDetails,
+                DoseNumber = vaccinationRecord.DoseNumber,
+                VaccineName = vaccine.VaccineName,
+                ChildFullName = child.FullName
+            };
+
+            return vaccineRecordDto;
         }
         catch (Exception ex)
         {
-            _logger.Info(
-                $"[Error] Failed to add vaccination record for ChildId: {childId}, VaccineId: {vaccineId}, Dose: {doseNumber}. Error: {ex.Message}");
-            throw new Exception("Lỗi khi thêm hồ sơ tiêm chủng. Vui lòng thử lại sau.");
+            _logger.Error($"Error while adding vaccination record: {ex.Message}");
+            throw new Exception("An error occurred while adding the vaccination record. Please try again later.");
         }
     }
 }

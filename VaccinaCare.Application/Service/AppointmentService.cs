@@ -70,7 +70,7 @@ public class AppointmentService : IAppointmentService
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
-                ChildId = a.ChildId.Value,
+                ChildId = a.ChildId,
                 AppointmentDate = a.AppointmentDate.Value,
                 Status = a.Status.ToString(),
                 VaccineName = a.AppointmentsVaccines.First().Vaccine?.VaccineName ?? "Unknown",
@@ -160,55 +160,44 @@ public class AppointmentService : IAppointmentService
         return appointmentDate.AddDays(vaccine.DoseIntervalDays); // Return the updated appointmentDate
     }
 
-    public async Task<bool> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, AppointmentStatus newStatus)
-    {
-        var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(appointmentId);
-        if (appointment == null)
-            throw new Exception($"Không tìm thấy cuộc hẹn với ID {appointmentId}.");
-
-        // Kiểm tra quyền Staff
-        var currentUserId = _claimsService.GetCurrentUserId;
-        var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(currentUserId);
-        if (currentUser == null || currentUser.RoleName != RoleType.Staff)
-            throw new UnauthorizedAccessException("Bạn không có quyền cập nhật trạng thái cuộc hẹn.");
-
-        // Xử lý cập nhật trạng thái
-        switch (newStatus)
-        {
-            case AppointmentStatus.Confirmed:
-                if (appointment.Status != AppointmentStatus.Pending)
-                    throw new Exception("Chỉ có thể xác nhận cuộc hẹn khi đang ở trạng thái Pending.");
-                break;
-
-            case AppointmentStatus.Completed:
-                if (appointment.Status != AppointmentStatus.Confirmed)
-                    throw new Exception("Chỉ có thể hoàn thành cuộc hẹn khi đã được xác nhận.");
-
-                // Cập nhật vào bảng `VaccinationRecord`
-                var vaccineRecords = appointment.AppointmentsVaccines.Select(av => new VaccinationRecord
-                {
-                    ChildId = appointment.ChildId,
-                    VaccineId = av.VaccineId,
-                    VaccinationDate = appointment.AppointmentDate,
-                    DoseNumber = av.DoseNumber ?? 1
-                }).ToList();
-
-                await _unitOfWork.VaccinationRecordRepository.AddRangeAsync(vaccineRecords);
-                break;
-
-            case AppointmentStatus.Cancelled:
-                if (appointment.Status == AppointmentStatus.Completed)
-                    throw new Exception("Không thể hủy cuộc hẹn đã hoàn thành.");
-                break;
-
-            default:
-                throw new Exception("Trạng thái không hợp lệ.");
-        }
-
-        appointment.Status = newStatus;
-        await _unitOfWork.SaveChangesAsync();
-        return true;
-    }
+    // public async Task<bool> UpdateAppointmentStatusByStaffAsync(Guid appointmentId, AppointmentStatus newStatus)
+    // {
+    //     var appointment = await _unitOfWork.AppointmentRepository.GetByIdAsync(appointmentId);
+    //     if (appointment == null)
+    //         throw new Exception($"Không tìm thấy cuộc hẹn với ID {appointmentId}.");
+    //
+    //     // Kiểm tra quyền Staff
+    //     var currentUserId = _claimsService.GetCurrentUserId;
+    //     var currentUser = await _unitOfWork.UserRepository.GetByIdAsync(currentUserId);
+    //     if (currentUser == null || currentUser.RoleName != RoleType.Staff)
+    //         throw new UnauthorizedAccessException("Bạn không có quyền cập nhật trạng thái cuộc hẹn.");
+    //
+    //     // Xử lý cập nhật trạng thái
+    //     switch (newStatus)
+    //     {
+    //         case AppointmentStatus.Confirmed:
+    //             if (appointment.Status != AppointmentStatus.Pending)
+    //                 throw new Exception("Chỉ có thể xác nhận cuộc hẹn khi đang ở trạng thái Pending.");
+    //             break;
+    //
+    //         case AppointmentStatus.Completed:
+    //             if (appointment.Status != AppointmentStatus.Confirmed)
+    //                 throw new Exception("Chỉ có thể hoàn thành cuộc hẹn khi đã được xác nhận.");
+    //             break;
+    //
+    //         case AppointmentStatus.Cancelled:
+    //             if (appointment.Status == AppointmentStatus.Completed)
+    //                 throw new Exception("Không thể hủy cuộc hẹn đã hoàn thành.");
+    //             break;
+    //
+    //         default:
+    //             throw new Exception("Trạng thái không hợp lệ.");
+    //     }
+    //
+    //     appointment.Status = newStatus;
+    //     await _unitOfWork.SaveChangesAsync();
+    //     return true;
+    // }
 
     public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {
@@ -240,7 +229,7 @@ public class AppointmentService : IAppointmentService
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
-                ChildId = a.ChildId.Value,
+                ChildId = a.ChildId,
                 AppointmentDate = a.AppointmentDate.Value,
                 Status = a.Status.ToString(),
                 VaccineName =
@@ -295,7 +284,7 @@ public class AppointmentService : IAppointmentService
             var appointmentDto = new AppointmentDTO
             {
                 AppointmentId = appointment.Id,
-                ChildId = appointment.ChildId.Value,
+                ChildId = appointment.ChildId,
                 AppointmentDate = appointment.AppointmentDate.Value,
                 Status = appointment.Status.ToString(),
                 VaccineName = vaccine?.VaccineName ?? "Unknown", // ✅ Fix lỗi VaccineName

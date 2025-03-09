@@ -132,52 +132,5 @@ public class AppointmentController : ControllerBase
             });
         }
     }
-
-    [HttpPut("{appointmentId}/status")]
-    [Authorize(Roles = "Staff")]
-    [ProducesResponseType(typeof(ApiResult<bool>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 403)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> UpdateAppointmentStatusByStaffAsync(Guid appointmentId,
-        [FromBody] UpdateAppointmentStatusRequest request)
-    {
-        try
-        {
-            if (!Enum.IsDefined(typeof(AppointmentStatus), request.NewStatus))
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = "Trạng thái cuộc hẹn không hợp lệ.",
-                    Data = null
-                });
-
-            var result =
-                await _appointmentService.UpdateAppointmentStatusByStaffAsync(appointmentId, request.NewStatus);
-
-            return Ok(new ApiResult<bool>
-            {
-                IsSuccess = true,
-                Message = "Cập nhật trạng thái cuộc hẹn thành công.",
-                Data = result
-            });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.Error($"Unauthorized error: {ex.Message}");
-            return StatusCode(403, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Bạn không có quyền thực hiện hành động này."
-            });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "Lỗi hệ thống. Vui lòng thử lại sau."
-            });
-        }
-    }
+    
 }
