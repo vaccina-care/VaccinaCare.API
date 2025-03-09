@@ -53,17 +53,35 @@ public class PaymentController : ControllerBase
         }
     }
 
-    [HttpGet]
+    [HttpGet("callback")]
     public async Task<IActionResult> PaymentCallbackVnpay()
     {
         try
         {
+            // Lấy dữ liệu callback từ VNPay
             var response = await _paymentService.ProcessPaymentCallback(Request.Query);
-            return Ok(response);
+
+            // Kiểm tra kết quả thanh toán từ VNPay và cập nhật transaction vào database
+            if (response.Success)
+            {
+                // Ghi nhận giao dịch thành công vào database và chuyển hướng tới frontend
+                return Redirect($"https://vaccina-care-fe.vercel.app/payment-success?orderId={response.OrderId}&transactionid={response.TransactionId}");
+            }
+            else
+            {
+                // Nếu thanh toán thất bại, chuyển hướng đến frontend thông báo thất bại
+                return Redirect("https://vaccina-care-fe.vercel.app/payment-fail");
+            }
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { message = ex.Message });
+            // Nếu có lỗi, chuyển hướng đến frontend trang thất bại
+            return Redirect("https://vaccina-care-fe.vercel.app/payment-fail");
         }
     }
+
+
+
+
+
 }
