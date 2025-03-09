@@ -55,7 +55,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpGet("{childId}")]
+    [HttpGet]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
