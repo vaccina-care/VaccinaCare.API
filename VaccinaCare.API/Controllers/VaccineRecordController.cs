@@ -61,7 +61,7 @@ public class VaccineRecordController : ControllerBase
     {
         try
         {
-            var result = await _vaccineRecordService.GetVaccinationRecordByRecordIdAsync(id);
+            var result = await _vaccineRecordService.GetRecordDetailsByIdAsync(id);
             return Ok(new ApiResult<VaccineRecordDto>
             {
                 Data = result,
@@ -90,7 +90,7 @@ public class VaccineRecordController : ControllerBase
     {
         try
         {
-            var result = await _vaccineRecordService.GetListVaccinationRecordByChildIdAsync(childId);
+            var result = await _vaccineRecordService.GetListRecordsByChildIdAsync(childId);
             return Ok(new ApiResult<List<VaccineRecordDto>>
             {
                 Data = result,

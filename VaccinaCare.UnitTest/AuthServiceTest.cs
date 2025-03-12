@@ -26,16 +26,13 @@ public class AuthServiceTest
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<PasswordHasher> _passwordHasherMock;
 
-    public AuthServiceTest()
+    public AuthServiceTest(Mock<ILoggerService> loggerMock, AuthService authService, Mock<IUnitOfWork> unitOfWorkMock, Mock<IConfiguration> mockConfiguration, Mock<PasswordHasher> passwordHasherMock)
     {
-        _loggerMock = new Mock<ILoggerService>();
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _mockConfiguration = new Mock<IConfiguration>();
-        _passwordHasherMock = new Mock<PasswordHasher>();
-
-        _authService = new AuthService(
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+        _loggerMock = loggerMock;
+        _authService = authService;
+        _unitOfWorkMock = unitOfWorkMock;
+        _mockConfiguration = mockConfiguration;
+        _passwordHasherMock = passwordHasherMock;
     }
 
     [Fact]

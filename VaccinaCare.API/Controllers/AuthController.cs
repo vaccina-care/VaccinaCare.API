@@ -38,12 +38,9 @@ public class AuthController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDTO registerDTO)
     {
-        _logger.Info("Registration attempt initiated.");
-
         if (registerDTO == null || string.IsNullOrWhiteSpace(registerDTO.Email) ||
             string.IsNullOrWhiteSpace(registerDTO.Password))
         {
-            _logger.Warn("Invalid registration request. Email and password are required.");
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
         }
 
@@ -53,25 +50,7 @@ public class AuthController : ControllerBase
 
             if (user == null)
             {
-                _logger.Warn($"Registration failed for email: {registerDTO.Email}. Email might already be in use.");
                 return BadRequest(ApiResult<object>.Error("Registration failed. Email might already be in use."));
-            }
-
-            _logger.Success($"User {registerDTO.Email} registered successfully.");
-
-            var notificationDTO = new NotificationDTO
-            {
-                Title = "Welcome to VaccinaCare!",
-                Content = "Thank you for registering with VaccinaCare. We're excited to have you on board!",
-                Url = "/welcome",
-
-                UserId = user.Id
-            };
-
-            if (!string.IsNullOrEmpty(user.FullName) && !string.IsNullOrEmpty(user.Email))
-            {
-                var emailRequest = new EmailRequestDTO(user.Email, user.FullName);
-                await _emailService.SendWelcomeNewUserAsync(emailRequest);
             }
 
             var response = new RegisterRequestDTO
@@ -88,7 +67,6 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error during registration: {ex.Message}");
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during registration."));
         }
     }
