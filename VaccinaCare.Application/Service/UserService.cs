@@ -1,7 +1,11 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.AspNetCore.Identity.Data;
+using System.Text.RegularExpressions;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -41,7 +45,6 @@ public class UserService : IUserService
             throw;
         }
     }
-
     public async Task<CurrentUserDTO> GetUserDetails(Guid id)
     {
         if (id == Guid.Empty)
@@ -90,7 +93,6 @@ public class UserService : IUserService
             throw;
         }
     }
-
     public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
     {
         try
@@ -124,7 +126,6 @@ public class UserService : IUserService
                 isUpdated = true;
             }
 
-            // ✅ Xử lý upload ảnh
             if (userUpdateDto.ImageFile != null && userUpdateDto.ImageFile.Length > 0)
             {
                 using var stream = userUpdateDto.ImageFile.OpenReadStream();
@@ -133,7 +134,7 @@ public class UserService : IUserService
                 await _blobService.UploadFileAsync(fileName, stream);
                 var previewUrl = await _blobService.GetPreviewUrlAsync(fileName);
 
-                user.ImageUrl = previewUrl; // Cập nhật link preview ảnh
+                user.ImageUrl = previewUrl;
                 isUpdated = true;
             }
 
@@ -146,6 +147,15 @@ public class UserService : IUserService
             if (!string.IsNullOrEmpty(userUpdateDto.Address) && user.Address != userUpdateDto.Address)
             {
                 user.Address = userUpdateDto.Address;
+                isUpdated = true;
+            }
+
+            if (!string.IsNullOrEmpty(userUpdateDto.PhoneNumber) &&
+                user.PhoneNumber != userUpdateDto.PhoneNumber)
+            {
+                if (!Regex.IsMatch(userUpdateDto.PhoneNumber, @"^\d{10,15}$"))
+                    throw new ArgumentException("Invalid phone number format.");
+                user.PhoneNumber = userUpdateDto.PhoneNumber;
                 isUpdated = true;
             }
 
@@ -182,6 +192,117 @@ public class UserService : IUserService
         {
             _logger.Error($"Error updating user info for UserId: {userId}. Exception: {ex.Message}");
             throw;
+        }
+    }
+
+
+    public async Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync()
+    {
+        try
+        {
+            _logger.Info("Fetching all users from the database.");
+
+            var users = await _unitOfWork.UserRepository.GetAllAsync();
+
+            var userDtos = users.Select(u => new GetUserDTO
+            {
+               FullName = u.FullName,
+               Email = u.Email,
+               RoleName = u.RoleName,
+               CreatedAt = u.CreatedAt
+            });
+
+            _logger.Info($"Successfully fetched {userDtos.Count()} user.");
+
+            return userDtos;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while fetching users: {ex.Message}");
+            throw;
+        }
+    }
+    public async Task<bool> DeactivateUserAsync(Guid id)
+    {
+        try
+        {
+            _logger.Info($"Attempting to delete user with ID: {id}");
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            if (user == null)
+            {
+                _logger.Warn($"User with ID {id} not found.");
+                return false;
+            }
+
+            if (user.IsDeleted)
+            {
+                _logger.Warn($"User with ID {id} is already deleted.");
+                return false;
+            }
+
+            await _unitOfWork.UserRepository.SoftRemove(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Info($"User with ID {id} has been soft deleted.");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error while deleting user: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<User> CreateStaffAsync(StaffDTO staffDTO)
+    {
+        try
+        {
+            _logger.Info("Starting creating staff account.");
+
+            if (string.IsNullOrWhiteSpace(staffDTO.Email) || string.IsNullOrWhiteSpace(staffDTO.Password))
+            {
+                _logger.Warn("Email or Password is missing in the registration request.");
+                return null;
+            }
+
+            var existingStaff =
+                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == staffDTO.Email);
+            if (existingStaff != null) 
+            {
+                _logger.Warn($"Creating attempt failed. Email {staffDTO.Email} is already in use.");
+                return null;
+            }
+
+            _logger.Info($"Email {staffDTO.Email} is available for creating.");
+
+            //Hash password
+            _logger.Info("Hashing the password.");
+            var passwordHasher = new PasswordHasher();
+            var hashedPassword = passwordHasher.HashPassword(staffDTO.Password);
+
+            //Creating new staff
+            _logger.Info("Creating new staff object.");
+            var newStaff = new User
+            {
+                Email = staffDTO.Email,
+                FullName = staffDTO.FullName,
+                PasswordHash = hashedPassword,
+                RoleName = RoleType.Staff
+            };
+
+            _logger.Info("Saving the new staff to the database.");
+            await _unitOfWork.UserRepository.AddAsync(newStaff);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"User {staffDTO.Email} successfully registered.");
+            return newStaff;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(
+                $"An unexpected error occurred during registration for email {staffDTO?.Email ?? "Unknown"}: {ex.Message}");
+            return null;
         }
     }
 }
