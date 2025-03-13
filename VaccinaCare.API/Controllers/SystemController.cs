@@ -703,23 +703,25 @@ public class SystemController : ControllerBase
         }
     }
 
-
-    //Seed policy table
+    //
     private async Task<List<CancellationPolicy>> SeedPolicies()
     {
         var policies = new List<CancellationPolicy>
         {
             new()
             {
-                PolicyName = "Chính sách hủy tiêu chuẩn",
-                Description = "Quý khách vui lòng thông báo hủy lịch hẹn ít nhất 24 giờ trước thời gian tiêm chủng. " +
-                              "Trường hợp hủy đặt lịch, trung tâm sẽ giữ lại 20% tiền đặt cọc như một khoản phí xử lý. " +
-                              "Chúng tôi mong quý khách thông cảm và tuân thủ chính sách này để đảm bảo quyền lợi cho tất cả khách hàng.",
-                CancellationDeadline = 24, // Hủy trước 24 giờ
-                PenaltyFee = 20m // Giữ 20% tiền đặt cọc
+                PolicyName = "Standard Cancellation Policy",
+                Description =
+                    "Customers are required to make 100% payment for the appointment at the time of booking. " +
+                    "Once the payment has been made, cancellation is no longer possible. " +
+                    "However, rescheduling is available, provided that the rescheduling request is made at least 24 hours in advance of the scheduled appointment. " +
+                    "We kindly ask for your understanding and cooperation with this policy to ensure smooth operations for all our valued customers.",
+                CancellationDeadline =
+                    24, 
+                PenaltyFee = 0m 
             }
         };
-        // Kiểm tra nếu bảng đã có dữ liệu thì không seed lại để tránh trùng lặp
+
         if (!_context.CancellationPolicies.Any())
         {
             await _context.CancellationPolicies.AddRangeAsync(policies);
