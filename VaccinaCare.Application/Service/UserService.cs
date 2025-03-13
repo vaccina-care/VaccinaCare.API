@@ -45,6 +45,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
     public async Task<CurrentUserDTO> GetUserDetails(Guid id)
     {
         if (id == Guid.Empty)
@@ -93,6 +94,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
     public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
     {
         try
@@ -195,7 +197,7 @@ public class UserService : IUserService
         }
     }
 
-
+    //admin methods: 
     public async Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync()
     {
         try
@@ -206,10 +208,10 @@ public class UserService : IUserService
 
             var userDtos = users.Select(u => new GetUserDTO
             {
-               FullName = u.FullName,
-               Email = u.Email,
-               RoleName = u.RoleName,
-               CreatedAt = u.CreatedAt
+                FullName = u.FullName,
+                Email = u.Email,
+                RoleName = u.RoleName,
+                CreatedAt = u.CreatedAt
             });
 
             _logger.Info($"Successfully fetched {userDtos.Count()} user.");
@@ -222,6 +224,8 @@ public class UserService : IUserService
             throw;
         }
     }
+
+    //email when deactivate successfully
     public async Task<bool> DeactivateUserAsync(Guid id)
     {
         try
@@ -244,7 +248,7 @@ public class UserService : IUserService
             await _unitOfWork.UserRepository.SoftRemove(user);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"User with ID {id} has been soft deleted.");
+
             return true;
         }
         catch (Exception ex)
@@ -254,54 +258,51 @@ public class UserService : IUserService
         }
     }
 
-    public async Task<User> CreateStaffAsync(StaffDTO staffDTO)
+    public async Task<User> CreateStaffAsync(CreateStaffDto createStaffDto)
     {
         try
         {
             _logger.Info("Starting creating staff account.");
 
-            if (string.IsNullOrWhiteSpace(staffDTO.Email) || string.IsNullOrWhiteSpace(staffDTO.Password))
+            if (string.IsNullOrWhiteSpace(createStaffDto.Email) || string.IsNullOrWhiteSpace(createStaffDto.Password))
             {
                 _logger.Warn("Email or Password is missing in the registration request.");
                 return null;
             }
 
             var existingStaff =
-                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == staffDTO.Email);
-            if (existingStaff != null) 
+                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == createStaffDto.Email);
+            if (existingStaff != null)
             {
-                _logger.Warn($"Creating attempt failed. Email {staffDTO.Email} is already in use.");
+                _logger.Warn($"Creating attempt failed. Email {createStaffDto.Email} is already in use.");
                 return null;
             }
-
-            _logger.Info($"Email {staffDTO.Email} is available for creating.");
 
             //Hash password
             _logger.Info("Hashing the password.");
             var passwordHasher = new PasswordHasher();
-            var hashedPassword = passwordHasher.HashPassword(staffDTO.Password);
+            var hashedPassword = passwordHasher.HashPassword(createStaffDto.Password);
 
             //Creating new staff
-            _logger.Info("Creating new staff object.");
+            _logger.Info("Creating new staff");
             var newStaff = new User
             {
-                Email = staffDTO.Email,
-                FullName = staffDTO.FullName,
+                Email = createStaffDto.Email,
+                FullName = createStaffDto.FullName,
                 PasswordHash = hashedPassword,
                 RoleName = RoleType.Staff
             };
 
-            _logger.Info("Saving the new staff to the database.");
             await _unitOfWork.UserRepository.AddAsync(newStaff);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Success($"User {staffDTO.Email} successfully registered.");
+            _logger.Success($"User {createStaffDto.Email} successfully registered.");
             return newStaff;
         }
         catch (Exception ex)
         {
             _logger.Error(
-                $"An unexpected error occurred during registration for email {staffDTO?.Email ?? "Unknown"}: {ex.Message}");
+                $"An unexpected error occurred during registration for email {createStaffDto?.Email ?? "Unknown"}: {ex.Message}");
             return null;
         }
     }

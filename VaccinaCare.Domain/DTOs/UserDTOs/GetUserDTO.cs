@@ -5,13 +5,12 @@ using System.Text;
 using System.Threading.Tasks;
 using VaccinaCare.Domain.Enums;
 
-namespace VaccinaCare.Domain.DTOs.UserDTOs
+namespace VaccinaCare.Domain.DTOs.UserDTOs;
+
+public class GetUserDTO
 {
-    public class GetUserDTO
-    {
-        public string? FullName { get; set; }
-        public string? Email { get; set; }
-        public RoleType? RoleName { get; set; }
-        public DateTime CreatedAt { get; set; }
-    }
+    public string? FullName { get; set; }
+    public string? Email { get; set; }
+    public RoleType? RoleName { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

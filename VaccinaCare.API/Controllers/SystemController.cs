@@ -22,9 +22,6 @@ public class SystemController : ControllerBase
     }
 
     [HttpPost("seed-all-data")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> SeedData()
     {
         try
@@ -54,9 +51,6 @@ public class SystemController : ControllerBase
     }
 
     [HttpPost("seed-policy")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> SeedPolicyData()
     {
         try
@@ -81,7 +75,6 @@ public class SystemController : ControllerBase
             return StatusCode(500, "Error seeding data: General failure.");
         }
     }
-
 
     //Seed other tables
     private async Task SeedRolesAndUsers()
