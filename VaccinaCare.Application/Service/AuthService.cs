@@ -5,6 +5,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
+using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
@@ -15,12 +16,14 @@ namespace VaccinaCare.Application.Service;
 public class AuthService : IAuthService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IEmailService _emailService;
     private readonly ILoggerService _logger;
 
-    public AuthService(IUnitOfWork unitOfWork, ILoggerService logger)
+    public AuthService(IUnitOfWork unitOfWork, ILoggerService logger, IEmailService emailService)
     {
         _unitOfWork = unitOfWork;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task<LoginResponseDTO?> LoginAsync(LoginRequestDto loginDto, IConfiguration configuration)
@@ -147,6 +150,15 @@ public class AuthService : IAuthService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Success($"User {registerRequest.Email} successfully registered.");
+
+            // Gọi hàm gửi email chào mừng người dùng mới
+            var emailRequest = new EmailRequestDTO
+            {
+                UserEmail = newUser.Email,
+                UserName = newUser.FullName
+            };
+            await _emailService.SendWelcomeNewUserAsync(emailRequest);
+
             return newUser;
         }
         catch (Exception ex)
@@ -156,6 +168,7 @@ public class AuthService : IAuthService
             return null;
         }
     }
+
 
     public async Task<bool> LogoutAsync(Guid userId)
     {

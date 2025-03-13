@@ -5,6 +5,7 @@ using MimeKit.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
+using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Service;
 
@@ -16,35 +17,6 @@ public class EmailService : IEmailService
     {
         _logger = logger;
     }
-
-    public async Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest)
-    {
-        // Create a welcome email
-        var welcomeEmail = new EmailDTO
-        {
-            To = emailRequest.UserEmail,
-            Subject = "Welcome to VaccinaCare!",
-            Body = $@"
-        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-            <h1 style='color: #1e1b4b; text-align: center;'>Welcome, {emailRequest.UserName}!</h1>
-            <p style='font-size: 16px;'>Thank you for signing up for VaccinaCare, your trusted partner in managing your child's vaccination schedule. We're excited to have you on board!</p>
-            <p style='font-size: 16px;'>Here are some of the features you can enjoy:</p>
-            <ul style='font-size: 16px; padding-left: 20px;'>
-                <li>Track your child's vaccination history</li>
-                <li>Receive timely reminders for upcoming vaccines</li>
-                <li>Book and manage vaccination appointments with ease</li>
-            </ul>
-            <p style='font-size: 16px;'>If you have any questions, feel free to reach out to our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
-            <p style='font-size: 16px;'>Best regards,<br>
-            <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
-        </div>
-        "
-        };
-
-        // Send the email
-        await SendEmailAsync(welcomeEmail);
-    }
-
 
     private async Task SendEmailAsync(EmailDTO request)
     {
@@ -82,5 +54,63 @@ public class EmailService : IEmailService
         {
             await smtp.DisconnectAsync(true);
         }
+    }
+
+    public async Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest)
+    {
+        // Create a welcome email
+        var welcomeEmail = new EmailDTO
+        {
+            To = emailRequest.UserEmail,
+            Subject = "Welcome to VaccinaCare!",
+            Body = $@"
+        <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
+            <h1 style='color: #1e1b4b; text-align: center;'>Welcome, {emailRequest.UserName}!</h1>
+            <p style='font-size: 16px;'>Thank you for signing up for VaccinaCare, your trusted partner in managing your child's vaccination schedule. We're excited to have you on board!</p>
+            <p style='font-size: 16px;'>Here are some of the features you can enjoy:</p>
+            <ul style='font-size: 16px; padding-left: 20px;'>
+                <li>Track your child's vaccination history</li>
+                <li>Receive timely reminders for upcoming vaccines</li>
+                <li>Book and manage vaccination appointments with ease</li>
+            </ul>
+            <p style='font-size: 16px;'>If you have any questions, feel free to reach out to our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+            <p style='font-size: 16px;'>Best regards,<br>
+            <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+        </div>
+        "
+        };
+        // Send the email
+        await SendEmailAsync(welcomeEmail);
+    }
+
+    public async Task SendAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment)
+    {
+        var email = new EmailDTO
+        {
+            To = emailRequest.UserEmail,
+            Subject = "Appointment Confirmation - VaccinaCare",
+            Body = $@"
+        <div style='font-family: Arial, sans-serif; line-height: 1.8; color: #333;'>
+            <h1 style='color: #1e1b4b; text-align: center; font-size: 24px;'>Appointment Confirmation</h1>
+            <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserName}</strong>,</p>
+            <p style='font-size: 16px; line-height: 1.6;'>We are pleased to inform you that your appointment for the vaccination of <strong>{appointment.AppointmentsVaccines.First().Vaccine?.VaccineName ?? "Unknown Vaccine"}</strong> has been successfully scheduled. Please find the details of the appointment below:</p>
+            <div style='margin-top: 20px; background-color: #f8f8f8; padding: 20px; border-radius: 8px;'>
+                <ul style='font-size: 16px; line-height: 1.6; padding-left: 20px;'>
+                    <li><strong style='color: #1e1b4b;'>Child:</strong> {appointment.Child.FullName}</li>
+                    <li><strong style='color: #1e1b4b;'>Appointment Date:</strong> {appointment.AppointmentDate:yyyy-MM-dd HH:mm}</li>
+                    <li><strong style='color: #1e1b4b;'>Status:</strong> {appointment.Status}</li>
+                    <li><strong style='color: #1e1b4b;'>Dose:</strong> {appointment.AppointmentsVaccines.First().DoseNumber}/{appointment.AppointmentsVaccines.First().Vaccine?.RequiredDoses}</li>
+                    <li><strong style='color: #1e1b4b;'>Total Price:</strong> {appointment.AppointmentsVaccines.First().TotalPrice:C0} VND</li>
+                </ul>
+            </div>
+            <p style='font-size: 16px; margin-top: 20px;'>If you have any questions or need further assistance, please feel free to contact our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+            <p style='font-size: 16px;'>We look forward to serving you.</p>
+            <p style='font-size: 16px; margin-top: 30px;'>Best regards,<br>
+            <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+        </div>
+        "
+        };
+
+        await SendEmailAsync(email);
     }
 }

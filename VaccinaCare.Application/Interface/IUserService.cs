@@ -9,6 +9,6 @@ public interface IUserService
     Task<CurrentUserDTO> GetUserDetails(Guid id);
     Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto);
     Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync();
-    Task<bool> DeleteUserAsync(Guid id);
+    Task<bool> DeactivateUserAsync(Guid id);
     Task<User> CreateStaffAsync(StaffDTO staffDTO);
 }

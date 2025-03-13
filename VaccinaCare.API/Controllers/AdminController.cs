@@ -166,7 +166,7 @@ public class AdminController : Controller
 
         try
         {
-            var result = await _userService.DeleteUserAsync(id);
+            var result = await _userService.DeactivateUserAsync(id);
 
             if (!result)
             {

@@ -22,8 +22,7 @@ public class VaccineRecordService : IVaccineRecordService
         _logger = logger;
     }
 
-    // Method to get a single vaccination record by recordId
-    public async Task<VaccineRecordDto> GetVaccinationRecordByRecordIdAsync(Guid recordId)
+    public async Task<VaccineRecordDto> GetRecordDetailsByIdAsync(Guid recordId)
     {
         try
         {
@@ -54,8 +53,7 @@ public class VaccineRecordService : IVaccineRecordService
         }
     }
 
-    // Method to get a list of vaccination records by ChildId
-    public async Task<List<VaccineRecordDto>> GetListVaccinationRecordByChildIdAsync(Guid childId)
+    public async Task<List<VaccineRecordDto>> GetListRecordsByChildIdAsync(Guid childId)
     {
         try
         {

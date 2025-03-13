@@ -63,15 +63,12 @@ public class PaymentController : ControllerBase
 
             // Kiểm tra kết quả thanh toán từ VNPay và cập nhật transaction vào database
             if (response.Success)
-            {
                 // Ghi nhận giao dịch thành công vào database và chuyển hướng tới frontend
-                return Redirect($"https://vaccina-care-fe.vercel.app/payment-success?orderId={response.OrderId}&transactionid={response.TransactionId}");
-            }
+                return Redirect(
+                    $"https://vaccina-care-fe.vercel.app/payment-success?orderId={response.OrderId}&transactionid={response.TransactionId}");
             else
-            {
                 // Nếu thanh toán thất bại, chuyển hướng đến frontend thông báo thất bại
                 return Redirect("https://vaccina-care-fe.vercel.app/payment-fail");
-            }
         }
         catch (Exception ex)
         {
@@ -79,9 +76,4 @@ public class PaymentController : ControllerBase
             return Redirect("https://vaccina-care-fe.vercel.app/payment-fail");
         }
     }
-
-
-
-
-
 }
