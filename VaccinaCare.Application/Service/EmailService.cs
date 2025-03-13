@@ -82,7 +82,40 @@ public class EmailService : IEmailService
         // Send the email
         await SendEmailAsync(welcomeEmail);
     }
+    public async Task SendDeactivationNotificationAsync(EmailRequestDTO emailRequest)
+    {
+        // Create a deactivation notification email
+        var deactivationEmail = new EmailDTO
+        {
+            To = emailRequest.UserEmail,
+            Subject = "Your VaccinaCare Account Has Been Deactivated",
+            Body = $@"
+    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
 
+        <h1 style='color: #1e1b4b; text-align: center;'>Dear {emailRequest.UserEmail},</h1>
+
+        <p style='font-size: 16px;'>We regret to inform you that your VaccinaCare account has been deactivated. This action was taken due to various reasons, which may include inactivity or a request for deactivation.</p>
+        
+        <p style='font-size: 16px;'>Here are a few things you should know:</p>
+        <ul style='font-size: 16px; padding-left: 20px;'>
+            <li>Your vaccination appointment history will still be available for viewing.</li>
+            <li>You will no longer receive reminders for future vaccinations.</li>
+            <li>If you believe this was a mistake or wish to discuss your account, please contact our support team.</li>
+        </ul>
+
+        <p style='font-size: 16px;'>For any inquiries or assistance, please reach out to us at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+
+        <p style='font-size: 16px;'>Thank you for using VaccinaCare, and we hope to assist you in the future if needed.</p>
+
+        <p style='font-size: 16px;'>Best regards,<br>
+        <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+
+    </div>
+    "
+        };
+        // Send the email
+        await SendEmailAsync(deactivationEmail);
+    }
     public async Task SendAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment)
     {
         var email = new EmailDTO
@@ -92,7 +125,7 @@ public class EmailService : IEmailService
             Body = $@"
         <div style='font-family: Arial, sans-serif; line-height: 1.8; color: #333;'>
             <h1 style='color: #1e1b4b; text-align: center; font-size: 24px;'>Appointment Confirmation</h1>
-            <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserName}</strong>,</p>
+            <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserEmail}</strong>,</p>
             <p style='font-size: 16px; line-height: 1.6;'>We are pleased to inform you that your appointment for the vaccination of <strong>{appointment.AppointmentsVaccines.First().Vaccine?.VaccineName ?? "Unknown Vaccine"}</strong> has been successfully scheduled. Please find the details of the appointment below:</p>
             <div style='margin-top: 20px; background-color: #f8f8f8; padding: 20px; border-radius: 8px;'>
                 <ul style='font-size: 16px; line-height: 1.6; padding-left: 20px;'>

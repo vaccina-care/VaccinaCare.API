@@ -9,7 +9,7 @@ public interface IUserService
     Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto);
 
     //admin
-    Task<bool> DeactivateUserAsync(Guid id);
+    Task<bool> DeactivateUserAsync(Guid userId);
     Task<User> CreateStaffAsync(CreateStaffDto createStaffDto);
-    Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync();
+    Task<IEnumerable<UserDto>> GetAllUsersForAdminAsync();
 }

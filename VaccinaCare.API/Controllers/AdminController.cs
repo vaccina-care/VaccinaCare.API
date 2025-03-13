@@ -106,7 +106,7 @@ public class AdminController : Controller
             if (!result)
                 return BadRequest(ApiResult<object>.Error("Delete failed. No user found with the provided ID."));
 
-            return Ok(ApiResult<object>.Success(null, "User deleted successfully."));
+            return Ok(ApiResult<object>.Success(result));
         }
         catch (Exception ex)
         {

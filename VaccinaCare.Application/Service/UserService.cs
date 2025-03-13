@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
@@ -15,35 +16,17 @@ public class UserService : IUserService
     private readonly ILoggerService _logger;
     private readonly IBlobService _blobService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClaimsService _claimsService;
+    private readonly IEmailService _emailService;
 
-    public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService)
+    public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService,
+        IClaimsService claimsService, IEmailService emailService)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
         _blobService = blobService;
-    }
-
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
-    {
-        try
-        {
-            // Log the start of the operation
-            _logger.Info("Fetching all users from the database.");
-
-            // Fetch all users from the repository
-            var users = await _unitOfWork.UserRepository.GetAllAsync();
-
-            // Log the success of the operation
-            _logger.Info($"Successfully fetched {users.Count()} users.");
-
-            return users;
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            _logger.Error($"An error occurred while fetching users: {ex.Message}");
-            throw;
-        }
+        _claimsService = claimsService;
+        _emailService = emailService;
     }
 
     public async Task<CurrentUserDTO> GetUserDetails(Guid id)
@@ -198,7 +181,7 @@ public class UserService : IUserService
     }
 
     //admin methods: 
-    public async Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersForAdminAsync()
     {
         try
         {
@@ -206,8 +189,9 @@ public class UserService : IUserService
 
             var users = await _unitOfWork.UserRepository.GetAllAsync();
 
-            var userDtos = users.Select(u => new GetUserDTO
+            var userDtos = users.Select(u => new UserDto
             {
+                UserId = u.Id,
                 FullName = u.FullName,
                 Email = u.Email,
                 RoleName = u.RoleName,
@@ -215,7 +199,6 @@ public class UserService : IUserService
             });
 
             _logger.Info($"Successfully fetched {userDtos.Count()} user.");
-
             return userDtos;
         }
         catch (Exception ex)
@@ -226,34 +209,62 @@ public class UserService : IUserService
     }
 
     //email when deactivate successfully
-    public async Task<bool> DeactivateUserAsync(Guid id)
+    public async Task<bool> DeactivateUserAsync(Guid userId)
     {
         try
         {
-            _logger.Info($"Attempting to delete user with ID: {id}");
+            _logger.Info($"Attempting to deactivate user with ID: {userId}");
 
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                _logger.Warn($"User with ID {id} not found.");
+                _logger.Warn($"User with ID {userId} not found.");
                 return false;
             }
 
             if (user.IsDeleted)
             {
-                _logger.Warn($"User with ID {id} is already deleted.");
+                _logger.Warn($"User with ID {userId} is already deactivated.");
                 return false;
             }
+
+            // // Check for active appointments related to the user
+            // var activeAppointments = await _unitOfWork.AppointmentRepository.GetAllAsync(a => a.ParentId == userId && a.Status == AppointmentStatus.Pending);
+            // if (activeAppointments.Any())
+            // {
+            //     _logger.Warn($"User with ID {userId} has active appointments and cannot be deactivated.");
+            //     return false;
+            // }
+
+            // Update the user status to soft-deleted
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            user.DeletedBy = _claimsService.GetCurrentUserId;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.UserRepository.SoftRemove(user);
             await _unitOfWork.SaveChangesAsync();
 
+            var emailRequest = new EmailRequestDTO
+            {
+                UserEmail = user.Email,
+                UserName = user.FullName
+            };
+            _emailService.SendDeactivationNotificationAsync(emailRequest);
+
+            // foreach (var appointment in activeAppointments)
+            // {
+            //     appointment.Status = AppointmentStatus.Cancelled; // Example of related record update
+            //     await _unitOfWork.AppointmentRepository.Update(appointment);
+            // }
+
+            // Save all changes in the repository
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while deleting user: {ex.Message}");
+            _logger.Error($"Error while deactivating user with ID {userId}: {ex.Message}");
             throw;
         }
     }
