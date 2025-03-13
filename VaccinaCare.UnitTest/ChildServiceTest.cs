@@ -37,6 +37,7 @@ public class ChildServiceTest
     }
 
     [Fact]
+    //Test case 1 : Create child success
     public async Task CreateChildAsync_Success()
     {
         // Arrange
@@ -117,5 +118,65 @@ public class ChildServiceTest
         _notificationService.Verify(
             n => n.PushNotificationWhenUserUseService(It.IsAny<Guid>(), It.IsAny<NotificationForUserDTO>()),
             Times.Once);
+    }
+    [Fact]
+    //Test case 2 : Create Child when parent does not exist
+    public async Task CreateChildAsync_ShouldThrowKeyNotFoundException_WhenParentDoesNotExist()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+        var childDto = new CreateChildDto { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
+        _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId)).ReturnsAsync((User)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => _childService.CreateChildAsync(childDto));
+
+        _loggerMock.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("does not exist"))), Times.Once);
+    }
+    [Fact]
+    //Test case 3 : Create child when save changes fails
+    public async Task CreateChildAsync_ShouldThrowException_WhenSaveChangesFails()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+        var childDto = new CreateChildDto { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+        var parent = new User { Id = parentId };
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
+        _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId)).ReturnsAsync(parent);
+        _unitOfWorkMock.Setup(u => u.ChildRepository.AddAsync(It.IsAny<Child>())).ReturnsAsync((Child child) => child);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("Database error"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(() => _childService.CreateChildAsync(childDto));
+
+        _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Database error"))), Times.Once);
+    }
+    [Fact]
+    //Test case 4 : Create child when notification fails
+    public async Task CreateChildAsync_ShouldFail_WhenNotificationFails()
+    {
+        // Arrange
+        var parentId = Guid.NewGuid();
+        var childDto = new CreateChildDto { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
+
+        _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
+        _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId))
+                       .ReturnsAsync(new User { Id = parentId });
+
+        _unitOfWorkMock.Setup(u => u.ChildRepository.AddAsync(It.IsAny<Child>())).ReturnsAsync((Child child) => child);
+        _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+        _notificationService
+            .Setup(n => n.PushNotificationWhenUserUseService(It.IsAny<Guid>(), It.IsAny<NotificationForUserDTO>()))
+            .ThrowsAsync(new Exception("Notification service failed"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<Exception>(async () =>
+        {
+            await _childService.CreateChildAsync(childDto);
+        });
     }
 }
