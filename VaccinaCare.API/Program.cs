@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SwaggerThemes;
 using VaccinaCare.API.Architechture;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +34,8 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "VaccinaCare API v1");
         c.RoutePrefix = string.Empty;
+        c.InjectStylesheet("/swagger-ui/custom-theme.css"); 
+        c.HeadContent = $"<style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>";
     });
 }
 
