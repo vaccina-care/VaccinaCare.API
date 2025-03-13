@@ -1,8 +1,11 @@
 ﻿namespace VaccinaCare.Domain.DTOs.AppointmentDTOs;
 
-public class CreateAppointmentDto
+public class CreateAppointmentPackageVaccineDto
 {
-    public Guid VaccineId { get; set; } = new(); // Danh sách vaccine cần đặt lịch
+    //package
+    public Guid PackageId { get; set; } // ID của gói vaccine
+
     public Guid ChildId { get; set; }
+
     public DateTime StartDate { get; set; } // Ngày bắt đầu tiêm chủng
 }
