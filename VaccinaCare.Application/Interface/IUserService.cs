@@ -1,5 +1,6 @@
 ﻿using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.Application.Interface;
 
@@ -11,5 +12,7 @@ public interface IUserService
     //admin
     Task<bool> DeactivateUserAsync(Guid userId);
     Task<User> CreateStaffAsync(CreateStaffDto createStaffDto);
-    Task<IEnumerable<UserDto>> GetAllUsersForAdminAsync();
+
+    Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter,
+        string? searchTerm = null);
 }

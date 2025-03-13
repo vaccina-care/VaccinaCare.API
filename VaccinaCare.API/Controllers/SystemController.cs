@@ -717,8 +717,8 @@ public class SystemController : ControllerBase
                     "However, rescheduling is available, provided that the rescheduling request is made at least 24 hours in advance of the scheduled appointment. " +
                     "We kindly ask for your understanding and cooperation with this policy to ensure smooth operations for all our valued customers.",
                 CancellationDeadline =
-                    24, 
-                PenaltyFee = 0m 
+                    24,
+                PenaltyFee = 0m
             }
         };
 

@@ -82,6 +82,7 @@ public class EmailService : IEmailService
         // Send the email
         await SendEmailAsync(welcomeEmail);
     }
+
     public async Task SendDeactivationNotificationAsync(EmailRequestDTO emailRequest)
     {
         // Create a deactivation notification email
@@ -116,6 +117,7 @@ public class EmailService : IEmailService
         // Send the email
         await SendEmailAsync(deactivationEmail);
     }
+
     public async Task SendAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment)
     {
         var email = new EmailDTO
