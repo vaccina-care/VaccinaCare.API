@@ -34,7 +34,7 @@ if (app.Environment.IsDevelopment())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "VaccinaCare API v1");
         c.RoutePrefix = string.Empty;
-        c.InjectStylesheet("/swagger-ui/custom-theme.css"); 
+        c.InjectStylesheet("/swagger-ui/custom-theme.css");
         c.HeadContent = $"<style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>";
     });
 }

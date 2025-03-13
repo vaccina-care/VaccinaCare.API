@@ -126,7 +126,7 @@ public class AppointmentService : IAppointmentService
                 };
 
                 foreach (var appointment in appointments)
-                    await _emailService.SendAppointmentConfirmationAsync(emailRequest, appointment);
+                    await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
             }
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
@@ -172,7 +172,9 @@ public class AppointmentService : IAppointmentService
 
             // Lấy danh sách vaccine trong gói
             var packageDetails = vaccinePackage.VaccinePackageDetails
-                .OrderBy(vpd => vpd.DoseOrder) // Sắp xếp theo thứ tự mũi tiêm
+                .Where(vpd => vpd.Service != null)
+                .Select(vpd => vpd.Service!)
+                .Distinct()
                 .ToList();
 
             if (!packageDetails.Any())
@@ -181,11 +183,8 @@ public class AppointmentService : IAppointmentService
             var appointmentDate = request.StartDate;
             var blockIntervalDays = 3;
 
-            foreach (var packageDetail in packageDetails)
+            foreach (var vaccine in packageDetails)
             {
-                var vaccine = packageDetail.Service;
-                if (vaccine == null) continue;
-
                 // Kiểm tra điều kiện tiêm chủng của trẻ
                 var (isEligible, message) = await _vaccineService.CanChildReceiveVaccine(request.ChildId, vaccine.Id);
                 if (!isEligible)
@@ -206,28 +205,30 @@ public class AppointmentService : IAppointmentService
                     throw new ArgumentException(
                         $"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây. Vui lòng chọn ngày khác.");
 
-                // Tạo lịch hẹn
-                var appointment = new Appointment
+                for (var doseNumber = 1; doseNumber <= vaccine.RequiredDoses; doseNumber++)
                 {
-                    ParentId = parentId,
-                    ChildId = request.ChildId,
-                    AppointmentDate = appointmentDate,
-                    Status = AppointmentStatus.Pending,
-                    VaccineType = VaccineType.Package,
-                    Notes = $"Mũi {packageDetail.DoseOrder} - {vaccine.VaccineName}",
-                    AppointmentsVaccines = new List<AppointmentsVaccine>
+                    var appointment = new Appointment
                     {
-                        new()
+                        ParentId = parentId,
+                        ChildId = request.ChildId,
+                        AppointmentDate = appointmentDate,
+                        Status = AppointmentStatus.Pending,
+                        VaccineType = VaccineType.Package,
+                        Notes = $"Mũi {doseNumber}/{vaccine.RequiredDoses} - {vaccine.VaccineName}",
+                        AppointmentsVaccines = new List<AppointmentsVaccine>
                         {
-                            VaccineId = vaccine.Id,
-                            DoseNumber = packageDetail.DoseOrder ?? 1,
-                            TotalPrice = vaccine.Price
+                            new()
+                            {
+                                VaccineId = vaccine.Id,
+                                DoseNumber = doseNumber,
+                                TotalPrice = vaccine.Price
+                            }
                         }
-                    }
-                };
+                    };
 
-                appointments.Add(appointment);
-                appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
+                    appointments.Add(appointment);
+                    appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
+                }
             }
 
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
@@ -243,9 +244,10 @@ public class AppointmentService : IAppointmentService
                     UserName = user.FullName
                 };
 
-                foreach (var appointment in appointments)
-                    await _emailService.SendAppointmentConfirmationAsync(emailRequest, appointment);
+                await _emailService.SendPackageAppointmentConfirmationAsync(emailRequest, appointments,
+                    request.PackageId);
             }
+
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {

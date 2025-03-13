@@ -441,10 +441,6 @@ public class VaccineService : IVaccineService
         return (true, successMessage);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="childId"></param>
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
         _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");

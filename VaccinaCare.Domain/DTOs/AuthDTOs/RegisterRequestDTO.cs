@@ -6,7 +6,8 @@ namespace VaccinaCare.Domain.DTOs.AuthDTOs;
 
 public class RegisterRequestDTO
 {
-    [DefaultValue("a@gmail.com")] public string Email { get; set; } = "a@gmail.com";
+    [DefaultValue("trangiaphuc362003181@gmail.com")]
+    public string Email { get; set; } = "a@gmail.com";
 
     [DefaultValue("Anonymous User")] public string FullName { get; set; } = "Anonymous User";
 
