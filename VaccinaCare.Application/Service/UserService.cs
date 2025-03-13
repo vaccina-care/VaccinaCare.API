@@ -222,7 +222,7 @@ public class UserService : IUserService
             throw;
         }
     }
-    public async Task<bool> DeleteUserAsync(Guid id)
+    public async Task<bool> DeactivateUserAsync(Guid id)
     {
         try
         {
