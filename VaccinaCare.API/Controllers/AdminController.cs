@@ -29,11 +29,12 @@ public class AdminController : Controller
 
     [HttpGet("users")]
     [ProducesResponseType(typeof(ApiResult<Pagination<UserDto>>), 200)]
-    public async Task<IActionResult> GetAllUsers([FromQuery] PaginationParameter paginationParameter)
+    public async Task<IActionResult> GetAllUsers([FromQuery] PaginationParameter paginationParameter,
+        [FromQuery] string? searchTerm)
     {
         try
         {
-            var users = await _userService.GetAllUsersForAdminAsync(paginationParameter);
+            var users = await _userService.GetAllUsersForAdminAsync(paginationParameter, searchTerm);
             return Ok(ApiResult<Pagination<UserDto>>.Success(users, "Fetched users successfully."));
         }
         catch (Exception ex)
@@ -41,6 +42,7 @@ public class AdminController : Controller
             return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
+
 
     [HttpPost("users/staff")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

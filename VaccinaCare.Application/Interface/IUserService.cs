@@ -12,6 +12,7 @@ public interface IUserService
     //admin
     Task<bool> DeactivateUserAsync(Guid userId);
     Task<User> CreateStaffAsync(CreateStaffDto createStaffDto);
-    Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter);
-    
+
+    Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter,
+        string? searchTerm = null);
 }

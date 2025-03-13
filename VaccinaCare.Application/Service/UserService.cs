@@ -183,13 +183,22 @@ public class UserService : IUserService
     }
 
     //admin methods: 
-    public async Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter)
+    public async Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter,
+        string? searchTerm = null)
     {
         try
         {
-            _logger.Info("Fetching all users from the database with pagination.");
+            _logger.Info("Fetching users from the database with pagination and search.");
 
             var query = _unitOfWork.UserRepository.GetQueryable();
+
+            // Áp dụng tìm kiếm theo tên hoặc email nếu searchTerm không rỗng
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var searchLower = searchTerm.ToLower();
+                query = query.Where(u =>
+                    u.FullName.ToLower().Contains(searchLower) || u.Email.ToLower().Contains(searchLower));
+            }
 
             var totalUsers = await query.CountAsync();
 
@@ -208,9 +217,11 @@ public class UserService : IUserService
                 CreatedAt = u.CreatedAt
             }).ToList();
 
-            _logger.Info($"Successfully fetched {userDtos.Count} users out of {totalUsers}.");
+            _logger.Info(
+                $"Successfully fetched {userDtos.Count} users out of {totalUsers} (searchTerm: {searchTerm}).");
 
-            return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex, paginationParameter.PageSize);
+            return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
+                paginationParameter.PageSize);
         }
         catch (Exception ex)
         {
@@ -218,6 +229,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
 
     public async Task<bool> DeactivateUserAsync(Guid userId)
     {
@@ -270,6 +282,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
     public async Task<User> CreateStaffAsync(CreateStaffDto createStaffDto)
     {
         try
