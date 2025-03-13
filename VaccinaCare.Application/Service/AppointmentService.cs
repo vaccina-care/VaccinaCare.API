@@ -126,7 +126,7 @@ public class AppointmentService : IAppointmentService
                 };
 
                 foreach (var appointment in appointments)
-                    await _emailService.SendAppointmentConfirmationAsync(emailRequest, appointment);
+                    await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
             }
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
@@ -173,12 +173,8 @@ public class AppointmentService : IAppointmentService
             // Lấy danh sách vaccine trong gói
             var packageDetails = vaccinePackage.VaccinePackageDetails
                 .Where(vpd => vpd.Service != null)
-                .GroupBy(vpd => vpd.VaccineId) // Nhóm theo từng loại vaccine
-                .Select(group => new
-                {
-                    Vaccine = group.First().Service!,
-                    Doses = group.OrderBy(vpd => vpd.DoseOrder).ToList() // Sắp xếp theo thứ tự mũi tiêm
-                })
+                .Select(vpd => vpd.Service!)
+                .Distinct()
                 .ToList();
 
             if (!packageDetails.Any())
@@ -187,11 +183,8 @@ public class AppointmentService : IAppointmentService
             var appointmentDate = request.StartDate;
             var blockIntervalDays = 3;
 
-            foreach (var packageDetail in packageDetails)
+            foreach (var vaccine in packageDetails)
             {
-                var vaccine = packageDetail.Vaccine;
-                var doses = packageDetail.Doses;
-
                 // Kiểm tra điều kiện tiêm chủng của trẻ
                 var (isEligible, message) = await _vaccineService.CanChildReceiveVaccine(request.ChildId, vaccine.Id);
                 if (!isEligible)
@@ -212,8 +205,7 @@ public class AppointmentService : IAppointmentService
                     throw new ArgumentException(
                         $"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây. Vui lòng chọn ngày khác.");
 
-                // Tạo danh sách lịch hẹn cho từng mũi tiêm của vaccine này
-                foreach (var dose in doses)
+                for (var doseNumber = 1; doseNumber <= vaccine.RequiredDoses; doseNumber++)
                 {
                     var appointment = new Appointment
                     {
@@ -222,13 +214,13 @@ public class AppointmentService : IAppointmentService
                         AppointmentDate = appointmentDate,
                         Status = AppointmentStatus.Pending,
                         VaccineType = VaccineType.Package,
-                        Notes = $"Mũi {dose.DoseOrder}/{vaccine.RequiredDoses} - {vaccine.VaccineName}",
+                        Notes = $"Mũi {doseNumber}/{vaccine.RequiredDoses} - {vaccine.VaccineName}",
                         AppointmentsVaccines = new List<AppointmentsVaccine>
                         {
                             new()
                             {
                                 VaccineId = vaccine.Id,
-                                DoseNumber = dose.DoseOrder ?? 1,
+                                DoseNumber = doseNumber,
                                 TotalPrice = vaccine.Price
                             }
                         }
@@ -252,9 +244,10 @@ public class AppointmentService : IAppointmentService
                     UserName = user.FullName
                 };
 
-                foreach (var appointment in appointments)
-                    await _emailService.SendAppointmentConfirmationAsync(emailRequest, appointment);
+                await _emailService.SendPackageAppointmentConfirmationAsync(emailRequest, appointments,
+                    request.PackageId);
             }
+
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
@@ -279,6 +272,7 @@ public class AppointmentService : IAppointmentService
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
+
 
     public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {

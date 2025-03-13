@@ -1,4 +1,5 @@
-﻿using MailKit.Net.Smtp;
+﻿using System.Globalization;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
 using MimeKit.Text;
@@ -6,16 +7,19 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
 
 public class EmailService : IEmailService
 {
     private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public EmailService(ILoggerService logger)
+    public EmailService(ILoggerService logger, IUnitOfWork unitOfWork)
     {
         _logger = logger;
+        _unitOfWork = unitOfWork;
     }
 
     private async Task SendEmailAsync(EmailDTO request)
@@ -118,7 +122,7 @@ public class EmailService : IEmailService
         await SendEmailAsync(deactivationEmail);
     }
 
-    public async Task SendAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment)
+    public async Task SendSingleAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment)
     {
         var email = new EmailDTO
         {
@@ -144,6 +148,77 @@ public class EmailService : IEmailService
             <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
         </div>
         "
+        };
+
+        await SendEmailAsync(email);
+    }
+
+    public async Task SendPackageAppointmentConfirmationAsync(EmailRequestDTO emailRequest,
+        List<Appointment> appointments, Guid packageId)
+    {
+        // Lấy thông tin gói vaccine từ PackageId
+        var vaccinePackage = await _unitOfWork.VaccinePackageRepository.GetByIdAsync(packageId);
+        if (vaccinePackage == null)
+        {
+            throw new ArgumentException($"Gói vaccine với ID {packageId} không tồn tại.");
+        }
+
+        var totalPrice = vaccinePackage.Price ?? 0; // Nếu giá gói vaccine không có, mặc định là 0
+
+        // Định dạng giá tiền đúng với đơn vị VND
+        var totalPriceFormatted = totalPrice.ToString("C0", new CultureInfo("vi-VN"));
+
+        var emailBody = $@"
+    <div style='font-family: Arial, sans-serif; line-height: 1.8; color: #333;'>
+        <h1 style='color: #1e1b4b; text-align: center; font-size: 24px;'>Vaccine Package Appointment Confirmation</h1>
+        <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserEmail}</strong>,</p>
+        <p style='font-size: 16px; line-height: 1.6;'>We are pleased to inform you that your vaccination package appointments have been successfully scheduled. Below is the full list of your upcoming vaccination appointments:</p>
+        <table style='width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #f8f8f8;'>
+            <thead>
+                <tr style='background-color: #1e1b4b; color: white;'>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Vaccine Name</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Dose</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Appointment Date</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Status</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Price</th>
+                </tr>
+            </thead>
+            <tbody>";
+
+        foreach (var appointment in appointments)
+        {
+            var vaccine = appointment.AppointmentsVaccines.First().Vaccine;
+            var doseNumber = appointment.AppointmentsVaccines.First().DoseNumber;
+            var totalPriceForAppointment = appointment.AppointmentsVaccines.First().TotalPrice;
+
+            // Định dạng giá tiền cho mỗi lịch hẹn
+            var priceFormatted = totalPriceForAppointment?.ToString("C0", new CultureInfo("vi-VN")) ?? "0 VND";
+
+            emailBody += $@"
+            <tr>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{vaccine?.VaccineName ?? "Unknown"}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{doseNumber}/{vaccine?.RequiredDoses}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.AppointmentDate:yyyy-MM-dd HH:mm}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.Status}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{priceFormatted}</td>
+            </tr>";
+        }
+
+        emailBody += $@"
+            </tbody>
+        </table>
+        <p style='font-size: 16px; margin-top: 20px;'>The total price for this package is: <strong>{totalPriceFormatted}</strong></p>
+        <p style='font-size: 16px; margin-top: 20px;'>If you have any questions or need further assistance, please feel free to contact our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+        <p style='font-size: 16px;'>We look forward to serving you.</p>
+        <p style='font-size: 16px; margin-top: 30px;'>Best regards,<br>
+        <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+    </div>";
+
+        var email = new EmailDTO
+        {
+            To = emailRequest.UserEmail,
+            Subject = "Vaccine Package Appointment Confirmation - VaccinaCare",
+            Body = emailBody
         };
 
         await SendEmailAsync(email);
