@@ -65,7 +65,7 @@ public class EmailService : IEmailService
             Subject = "Welcome to VaccinaCare!",
             Body = $@"
         <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333;'>
-            <h1 style='color: #1e1b4b; text-align: center;'>Welcome, {emailRequest.UserName}!</h1>
+            <h1 style='color: #1e1b4b; text-align: center;'>Welcome, {emailRequest.UserEmail}!</h1>
             <p style='font-size: 16px;'>Thank you for signing up for VaccinaCare, your trusted partner in managing your child's vaccination schedule. We're excited to have you on board!</p>
             <p style='font-size: 16px;'>Here are some of the features you can enjoy:</p>
             <ul style='font-size: 16px; padding-left: 20px;'>
