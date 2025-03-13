@@ -207,8 +207,6 @@ public class UserService : IUserService
             throw;
         }
     }
-
-    //email when deactivate successfully
     public async Task<bool> DeactivateUserAsync(Guid userId)
     {
         try
@@ -222,19 +220,18 @@ public class UserService : IUserService
                 return false;
             }
 
+            // Prevent deactivation for users with 'admin' role
+            if (user.RoleName == RoleType.Admin) // Assuming 'RoleName' is stored as a string
+            {
+                _logger.Warn($"User with ID {userId} is an admin and cannot be deactivated.");
+                return false;
+            }
+
             if (user.IsDeleted)
             {
                 _logger.Warn($"User with ID {userId} is already deactivated.");
                 return false;
             }
-
-            // // Check for active appointments related to the user
-            // var activeAppointments = await _unitOfWork.AppointmentRepository.GetAllAsync(a => a.ParentId == userId && a.Status == AppointmentStatus.Pending);
-            // if (activeAppointments.Any())
-            // {
-            //     _logger.Warn($"User with ID {userId} has active appointments and cannot be deactivated.");
-            //     return false;
-            // }
 
             // Update the user status to soft-deleted
             user.IsDeleted = true;
@@ -245,20 +242,13 @@ public class UserService : IUserService
             await _unitOfWork.UserRepository.SoftRemove(user);
             await _unitOfWork.SaveChangesAsync();
 
+            // Send deactivation notification email
             var emailRequest = new EmailRequestDTO
             {
                 UserEmail = user.Email,
                 UserName = user.FullName
             };
-            _emailService.SendDeactivationNotificationAsync(emailRequest);
-
-            // foreach (var appointment in activeAppointments)
-            // {
-            //     appointment.Status = AppointmentStatus.Cancelled; // Example of related record update
-            //     await _unitOfWork.AppointmentRepository.Update(appointment);
-            // }
-
-            // Save all changes in the repository
+            await _emailService.SendDeactivationNotificationAsync(emailRequest);
 
             return true;
         }
@@ -268,7 +258,6 @@ public class UserService : IUserService
             throw;
         }
     }
-
     public async Task<User> CreateStaffAsync(CreateStaffDto createStaffDto)
     {
         try
