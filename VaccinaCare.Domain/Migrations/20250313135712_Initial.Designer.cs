@@ -12,8 +12,8 @@ using VaccinaCare.Domain;
 namespace VaccinaCare.Domain.Migrations
 {
     [DbContext(typeof(VaccinaCareDbContext))]
-    [Migration("20250309033628_fix-db")]
-    partial class fixdb
+    [Migration("20250313135712_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,7 +35,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasColumnType("datetime");
 
                     b.Property<string>("CancellationReason")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<Guid>("ChildId")
                         .HasColumnType("uniqueidentifier");
@@ -60,7 +61,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("Notes")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<bool>("NotificationSent")
                         .HasColumnType("bit");
@@ -308,7 +310,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("MedicalHistory")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("OtherSpecialConditionDescription")
                         .HasColumnType("nvarchar(max)");
@@ -894,7 +897,8 @@ namespace VaccinaCare.Domain.Migrations
                         .HasDefaultValue(false);
 
                     b.Property<string>("ReactionDetails")
-                        .HasColumnType("text");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
