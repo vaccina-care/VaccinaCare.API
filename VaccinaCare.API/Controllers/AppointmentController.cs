@@ -11,7 +11,6 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/appointments")]
-[Authorize]
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
@@ -32,12 +31,12 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GenerateAppointments([FromBody] CreateAppointmentDto request)
+    public async Task<IActionResult> BookAppointmentsForSingleVaccine(
+        [FromBody] CreateAppointmentSingleVaccineDto request)
     {
         try
         {
             var parentId = _claimsService.GetCurrentUserId;
-
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
                 return Ok(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
 
@@ -53,6 +52,43 @@ public class AppointmentController : ControllerBase
         {
             return Ok(ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
+    }
+
+    [HttpPost("booking/package-vaccines")]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> BookAppointmentsForPackageVaccine(
+        [FromBody] CreateAppointmentPackageVaccineDto request)
+    {
+        try
+        {
+            var parentId = _claimsService.GetCurrentUserId;
+            if (request == null || request.PackageId == Guid.Empty || request.ChildId == Guid.Empty)
+                return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
+
+            var appointments = await _appointmentService.GenerateAppointmentsForPackageVaccine(request, parentId);
+
+            return Ok(ApiResult<List<AppointmentDTO>>.Success(appointments, "Lịch hẹn đã được tạo thành công."));
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ApiResult<object>.Error(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
+        }
+    }
+
+
+    [HttpPost("booking/consultant")]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> BookAppointmentsForConsultant()
+    {
+        return null;
     }
 
     [HttpGet]

@@ -26,7 +26,8 @@ public class AuthServiceTest
     private readonly Mock<IConfiguration> _mockConfiguration;
     private readonly Mock<PasswordHasher> _passwordHasherMock;
 
-    public AuthServiceTest(Mock<ILoggerService> loggerMock, AuthService authService, Mock<IUnitOfWork> unitOfWorkMock, Mock<IConfiguration> mockConfiguration, Mock<PasswordHasher> passwordHasherMock)
+    public AuthServiceTest(Mock<ILoggerService> loggerMock, AuthService authService, Mock<IUnitOfWork> unitOfWorkMock,
+        Mock<IConfiguration> mockConfiguration, Mock<PasswordHasher> passwordHasherMock)
     {
         _loggerMock = loggerMock;
         _authService = authService;

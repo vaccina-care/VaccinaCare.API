@@ -40,18 +40,14 @@ public class AuthController : ControllerBase
     {
         if (registerDTO == null || string.IsNullOrWhiteSpace(registerDTO.Email) ||
             string.IsNullOrWhiteSpace(registerDTO.Password))
-        {
             return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-        }
 
         try
         {
             var user = await _authService.RegisterAsync(registerDTO);
 
             if (user == null)
-            {
                 return BadRequest(ApiResult<object>.Error("Registration failed. Email might already be in use."));
-            }
 
             var response = new RegisterRequestDTO
             {
