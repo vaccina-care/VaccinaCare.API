@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
@@ -15,36 +16,19 @@ public class UserService : IUserService
     private readonly ILoggerService _logger;
     private readonly IBlobService _blobService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClaimsService _claimsService;
+    private readonly IEmailService _emailService;
 
-    public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService)
+    public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService,
+        IClaimsService claimsService, IEmailService emailService)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
         _blobService = blobService;
+        _claimsService = claimsService;
+        _emailService = emailService;
     }
 
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
-    {
-        try
-        {
-            // Log the start of the operation
-            _logger.Info("Fetching all users from the database.");
-
-            // Fetch all users from the repository
-            var users = await _unitOfWork.UserRepository.GetAllAsync();
-
-            // Log the success of the operation
-            _logger.Info($"Successfully fetched {users.Count()} users.");
-
-            return users;
-        }
-        catch (Exception ex)
-        {
-            // Log the exception
-            _logger.Error($"An error occurred while fetching users: {ex.Message}");
-            throw;
-        }
-    }
     public async Task<CurrentUserDTO> GetUserDetails(Guid id)
     {
         if (id == Guid.Empty)
@@ -93,6 +77,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
     public async Task<UserUpdateDto> UpdateUserInfo(Guid userId, UserUpdateDto userUpdateDto)
     {
         try
@@ -195,8 +180,8 @@ public class UserService : IUserService
         }
     }
 
-
-    public async Task<IEnumerable<GetUserDTO>> GetAllUsersForAdminAsync()
+    //admin methods: 
+    public async Task<IEnumerable<UserDto>> GetAllUsersForAdminAsync()
     {
         try
         {
@@ -204,16 +189,16 @@ public class UserService : IUserService
 
             var users = await _unitOfWork.UserRepository.GetAllAsync();
 
-            var userDtos = users.Select(u => new GetUserDTO
+            var userDtos = users.Select(u => new UserDto
             {
-               FullName = u.FullName,
-               Email = u.Email,
-               RoleName = u.RoleName,
-               CreatedAt = u.CreatedAt
+                UserId = u.Id,
+                FullName = u.FullName,
+                Email = u.Email,
+                RoleName = u.RoleName,
+                CreatedAt = u.CreatedAt
             });
 
             _logger.Info($"Successfully fetched {userDtos.Count()} user.");
-
             return userDtos;
         }
         catch (Exception ex)
@@ -222,86 +207,102 @@ public class UserService : IUserService
             throw;
         }
     }
-    public async Task<bool> DeactivateUserAsync(Guid id)
+    public async Task<bool> DeactivateUserAsync(Guid userId)
     {
         try
         {
-            _logger.Info($"Attempting to delete user with ID: {id}");
+            _logger.Info($"Attempting to deactivate user with ID: {userId}");
 
-            var user = await _unitOfWork.UserRepository.GetByIdAsync(id);
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
             if (user == null)
             {
-                _logger.Warn($"User with ID {id} not found.");
+                _logger.Warn($"User with ID {userId} not found.");
+                return false;
+            }
+
+            // Prevent deactivation for users with 'admin' role
+            if (user.RoleName == RoleType.Admin) // Assuming 'RoleName' is stored as a string
+            {
+                _logger.Warn($"User with ID {userId} is an admin and cannot be deactivated.");
                 return false;
             }
 
             if (user.IsDeleted)
             {
-                _logger.Warn($"User with ID {id} is already deleted.");
+                _logger.Warn($"User with ID {userId} is already deactivated.");
                 return false;
             }
+
+            // Update the user status to soft-deleted
+            user.IsDeleted = true;
+            user.DeletedAt = DateTime.UtcNow;
+            user.DeletedBy = _claimsService.GetCurrentUserId;
+            user.UpdatedAt = DateTime.UtcNow;
 
             await _unitOfWork.UserRepository.SoftRemove(user);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"User with ID {id} has been soft deleted.");
+            // Send deactivation notification email
+            var emailRequest = new EmailRequestDTO
+            {
+                UserEmail = user.Email,
+                UserName = user.FullName
+            };
+            await _emailService.SendDeactivationNotificationAsync(emailRequest);
+
             return true;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while deleting user: {ex.Message}");
+            _logger.Error($"Error while deactivating user with ID {userId}: {ex.Message}");
             throw;
         }
     }
-
-    public async Task<User> CreateStaffAsync(StaffDTO staffDTO)
+    public async Task<User> CreateStaffAsync(CreateStaffDto createStaffDto)
     {
         try
         {
             _logger.Info("Starting creating staff account.");
 
-            if (string.IsNullOrWhiteSpace(staffDTO.Email) || string.IsNullOrWhiteSpace(staffDTO.Password))
+            if (string.IsNullOrWhiteSpace(createStaffDto.Email) || string.IsNullOrWhiteSpace(createStaffDto.Password))
             {
                 _logger.Warn("Email or Password is missing in the registration request.");
                 return null;
             }
 
             var existingStaff =
-                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == staffDTO.Email);
-            if (existingStaff != null) 
+                await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == createStaffDto.Email);
+            if (existingStaff != null)
             {
-                _logger.Warn($"Creating attempt failed. Email {staffDTO.Email} is already in use.");
+                _logger.Warn($"Creating attempt failed. Email {createStaffDto.Email} is already in use.");
                 return null;
             }
-
-            _logger.Info($"Email {staffDTO.Email} is available for creating.");
 
             //Hash password
             _logger.Info("Hashing the password.");
             var passwordHasher = new PasswordHasher();
-            var hashedPassword = passwordHasher.HashPassword(staffDTO.Password);
+            var hashedPassword = passwordHasher.HashPassword(createStaffDto.Password);
 
             //Creating new staff
-            _logger.Info("Creating new staff object.");
+            _logger.Info("Creating new staff");
             var newStaff = new User
             {
-                Email = staffDTO.Email,
-                FullName = staffDTO.FullName,
+                Email = createStaffDto.Email,
+                FullName = createStaffDto.FullName,
                 PasswordHash = hashedPassword,
                 RoleName = RoleType.Staff
             };
 
-            _logger.Info("Saving the new staff to the database.");
             await _unitOfWork.UserRepository.AddAsync(newStaff);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Success($"User {staffDTO.Email} successfully registered.");
+            _logger.Success($"User {createStaffDto.Email} successfully registered.");
             return newStaff;
         }
         catch (Exception ex)
         {
             _logger.Error(
-                $"An unexpected error occurred during registration for email {staffDTO?.Email ?? "Unknown"}: {ex.Message}");
+                $"An unexpected error occurred during registration for email {createStaffDto?.Email ?? "Unknown"}: {ex.Message}");
             return null;
         }
     }

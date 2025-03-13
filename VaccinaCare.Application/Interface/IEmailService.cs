@@ -7,4 +7,6 @@ public interface IEmailService
 {
     Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest);
     Task SendAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment);
+    Task SendDeactivationNotificationAsync(EmailRequestDTO emailRequest);
+    
 }

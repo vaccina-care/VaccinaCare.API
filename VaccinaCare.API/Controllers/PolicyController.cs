@@ -30,8 +30,6 @@ public class PolicyController : ControllerBase
     {
         try
         {
-            _logger.Info("Received request to create policy.");
-
             if (policyDto == null || string.IsNullOrEmpty(policyDto.PolicyName))
                 return BadRequest(new ApiResult<object>
                 {
@@ -40,7 +38,6 @@ public class PolicyController : ControllerBase
                 });
 
             var policy = await _policyService.CreatePolicyAsync(policyDto);
-            _logger.Success("Policy created successfully.");
 
             return StatusCode(201, new ApiResult<PolicyDto>
             {
