@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.Data;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
@@ -7,6 +8,7 @@ using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
+using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -181,13 +183,21 @@ public class UserService : IUserService
     }
 
     //admin methods: 
-    public async Task<IEnumerable<UserDto>> GetAllUsersForAdminAsync()
+    public async Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter)
     {
         try
         {
-            _logger.Info("Fetching all users from the database.");
+            _logger.Info("Fetching all users from the database with pagination.");
 
-            var users = await _unitOfWork.UserRepository.GetAllAsync();
+            var query = _unitOfWork.UserRepository.GetQueryable();
+
+            var totalUsers = await query.CountAsync();
+
+            var users = await query
+                .OrderBy(u => u.CreatedAt)
+                .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
+                .Take(paginationParameter.PageSize)
+                .ToListAsync();
 
             var userDtos = users.Select(u => new UserDto
             {
@@ -196,10 +206,11 @@ public class UserService : IUserService
                 Email = u.Email,
                 RoleName = u.RoleName,
                 CreatedAt = u.CreatedAt
-            });
+            }).ToList();
 
-            _logger.Info($"Successfully fetched {userDtos.Count()} user.");
-            return userDtos;
+            _logger.Info($"Successfully fetched {userDtos.Count} users out of {totalUsers}.");
+
+            return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex, paginationParameter.PageSize);
         }
         catch (Exception ex)
         {
@@ -207,6 +218,7 @@ public class UserService : IUserService
             throw;
         }
     }
+
     public async Task<bool> DeactivateUserAsync(Guid userId)
     {
         try
