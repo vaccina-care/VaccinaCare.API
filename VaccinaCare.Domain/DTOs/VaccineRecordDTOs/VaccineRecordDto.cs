@@ -2,6 +2,7 @@ namespace VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
 
 public class VaccineRecordDto
 {
+    public Guid Id { get; set; }
     public Guid ChildId { get; set; }
     public Guid VaccineId { get; set; }
     public DateTime? VaccinationDate { get; set; }

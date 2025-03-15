@@ -19,7 +19,7 @@ public class PolicyService : IPolicyService
         _logger = logger;
     }
 
-    public async Task<PolicyDto> CreatePolicyAsync(PolicyDto policyDto)
+    public async Task<PolicyDto> CreatePolicyAsync(CreatePolicyDto policyDto)
     {
         try
         {
@@ -36,7 +36,17 @@ public class PolicyService : IPolicyService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info($"Policy created successfully: {policy.PolicyName}");
-            return policyDto;
+
+            var policyDtoResult = new PolicyDto
+            {
+                PolicyId = policy.Id,
+                PolicyName = policy.PolicyName,
+                Description = policy.Description,
+                CancellationDeadline = policy.CancellationDeadline,
+                PenaltyFee = policy.PenaltyFee
+            };
+
+            return policyDtoResult;
         }
         catch (Exception ex)
         {
@@ -146,7 +156,7 @@ public class PolicyService : IPolicyService
         }
     }
 
-    public async Task<PolicyDto> UpdatePolicyAsync(Guid id, PolicyDto policyDto)
+    public async Task<PolicyDto> UpdatePolicyAsync(Guid id, UpdatePolicyDto policyDto)
     {
         try
         {
@@ -199,6 +209,7 @@ public class PolicyService : IPolicyService
 
             return new PolicyDto
             {
+                PolicyId = policy.Id,
                 PolicyName = policy.PolicyName,
                 Description = policy.Description,
                 CancellationDeadline = policy.CancellationDeadline,

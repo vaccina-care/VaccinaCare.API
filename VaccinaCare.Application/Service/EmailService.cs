@@ -158,10 +158,7 @@ public class EmailService : IEmailService
     {
         // Lấy thông tin gói vaccine từ PackageId
         var vaccinePackage = await _unitOfWork.VaccinePackageRepository.GetByIdAsync(packageId);
-        if (vaccinePackage == null)
-        {
-            throw new ArgumentException($"Gói vaccine với ID {packageId} không tồn tại.");
-        }
+        if (vaccinePackage == null) throw new ArgumentException($"Gói vaccine với ID {packageId} không tồn tại.");
 
         var totalPrice = vaccinePackage.Price ?? 0; // Nếu giá gói vaccine không có, mặc định là 0
 
