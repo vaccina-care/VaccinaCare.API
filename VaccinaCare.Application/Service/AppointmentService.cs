@@ -129,6 +129,7 @@ public class AppointmentService : IAppointmentService
                 foreach (var appointment in appointments)
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
             }
+
             //Push notification khi book vaccine lẻ
             foreach (var appointment in appointments)
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
@@ -274,6 +275,78 @@ public class AppointmentService : IAppointmentService
         catch (Exception ex)
         {
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
+        }
+    }
+
+    public async Task<bool> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
+    {
+        try
+        {
+            var appointment =
+                await _unitOfWork.AppointmentRepository.GetByIdAsync(appointmentId, a => a.AppointmentsVaccines);
+
+            // Kiểm tra appointment không phải null
+            if (appointment == null)
+                throw new ArgumentException($"Appointment với ID {appointmentId} không tồn tại.");
+
+            // Kiểm tra AppointmentDate không phải null
+            if (!appointment.AppointmentDate.HasValue)
+                throw new ArgumentException("Ngày tiêm của lịch hẹn không hợp lệ.");
+
+            var vaccines = appointment.AppointmentsVaccines?.Select(av => av.Vaccine).ToList();
+
+            // Kiểm tra nếu vaccines là null hoặc không có vaccine nào
+            if (vaccines == null || !vaccines.Any())
+                throw new ArgumentException("Không tìm thấy vaccine nào cho lịch hẹn này.");
+
+            foreach (var vaccine in vaccines)
+            {
+                if (vaccine.DoseIntervalDays < 0)
+                    throw new ArgumentException($"Vaccine {vaccine.VaccineName} có DoseIntervalDays không hợp lệ.");
+
+                var minDate = appointment.AppointmentDate.Value.AddDays(-vaccine.DoseIntervalDays);
+                var maxDate = appointment.AppointmentDate.Value.AddDays(vaccine.DoseIntervalDays);
+
+                if (newDate < minDate || newDate > maxDate)
+                    throw new ArgumentException(
+                        $"Ngày tiêm mới phải nằm trong khoảng {minDate:dd/MM/yyyy} - {maxDate:dd/MM/yyyy} để đảm bảo đúng lịch tiêm.");
+            }
+
+            var dateDifference = (newDate - appointment.AppointmentDate.Value).Days;
+
+            // Cập nhật ngày cho Appointment
+            appointment.AppointmentDate = newDate;
+            await _unitOfWork.AppointmentRepository.Update(appointment);
+
+            // Cập nhật ngày cho các Appointment sau đó
+            var subsequentAppointments = await _unitOfWork.AppointmentRepository
+                .GetQueryable()
+                .Where(a => a.ChildId == appointment.ChildId
+                            && a.AppointmentDate > appointment.AppointmentDate
+                            && a.Status != AppointmentStatus.Cancelled)
+                .ToListAsync();
+
+            foreach (var subAppointment in subsequentAppointments)
+                // Kiểm tra subAppointment.AppointmentDate không phải null
+                if (subAppointment.AppointmentDate.HasValue)
+                {
+                    subAppointment.AppointmentDate = subAppointment.AppointmentDate.Value.AddDays(dateDifference);
+                    await _unitOfWork.AppointmentRepository.Update(subAppointment);
+                }
+                else
+                {
+                    _logger.Warn($"Sub-appointment with ID {subAppointment.Id} has null AppointmentDate.");
+                }
+
+            await _unitOfWork.SaveChangesAsync();
+            _logger.Info($"Cập nhật ngày tiêm thành công cho Appointment {appointmentId} và các mũi tiêm sau đó.");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Lỗi khi cập nhật ngày tiêm: {ex.Message}");
+            throw;
         }
     }
 

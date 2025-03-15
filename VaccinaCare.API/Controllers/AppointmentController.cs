@@ -81,7 +81,6 @@ public class AppointmentController : ControllerBase
         }
     }
 
-
     [HttpPost("booking/consultant")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -89,6 +88,34 @@ public class AppointmentController : ControllerBase
     public async Task<IActionResult> BookAppointmentsForConsultant()
     {
         return null;
+    }
+
+    [HttpPut("{appointmentId}/date")]
+    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
+    {
+        try
+        {
+            var result = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
+
+            return Ok(new ApiResult<object>
+            {
+                IsSuccess = true,
+                Message = "Cập nhật ngày tiêm thành công",
+                Data = result
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = $"Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau {ex}",
+                Data = null
+            });
+        }
     }
 
     [HttpGet]

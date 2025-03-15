@@ -81,7 +81,7 @@ public class VaccineRecordController : ControllerBase
     }
 
     // Get list of vaccination records by ChildId
-    [HttpGet("list/{childId}")]
+    [HttpGet("{childId}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<List<VaccineRecordDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
