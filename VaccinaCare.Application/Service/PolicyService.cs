@@ -39,7 +39,7 @@ public class PolicyService : IPolicyService
 
             var policyDtoResult = new PolicyDto
             {
-                PolicyId = policy.Id, 
+                PolicyId = policy.Id,
                 PolicyName = policy.PolicyName,
                 Description = policy.Description,
                 CancellationDeadline = policy.CancellationDeadline,

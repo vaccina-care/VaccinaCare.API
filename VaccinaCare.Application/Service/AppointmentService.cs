@@ -129,6 +129,7 @@ public class AppointmentService : IAppointmentService
                 foreach (var appointment in appointments)
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
             }
+
             //Push notification khi book vaccine lẻ
             foreach (var appointment in appointments)
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
@@ -326,7 +327,6 @@ public class AppointmentService : IAppointmentService
                 .ToListAsync();
 
             foreach (var subAppointment in subsequentAppointments)
-            {
                 // Kiểm tra subAppointment.AppointmentDate không phải null
                 if (subAppointment.AppointmentDate.HasValue)
                 {
@@ -337,7 +337,6 @@ public class AppointmentService : IAppointmentService
                 {
                     _logger.Warn($"Sub-appointment with ID {subAppointment.Id} has null AppointmentDate.");
                 }
-            }
 
             await _unitOfWork.SaveChangesAsync();
             _logger.Info($"Cập nhật ngày tiêm thành công cho Appointment {appointmentId} và các mũi tiêm sau đó.");
