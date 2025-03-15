@@ -37,6 +37,7 @@ public class VaccineRecordService : IVaccineRecordService
             // Map the VaccinationRecord entity to VaccineRecordDto
             var vaccineRecordDto = new VaccineRecordDto
             {
+                Id = vaccinationRecord.Id,
                 ChildId = vaccinationRecord.ChildId,
                 VaccineId = vaccinationRecord.VaccineId,
                 VaccinationDate = vaccinationRecord.VaccinationDate.Value, // Assuming VaccinationDate is not null
@@ -67,6 +68,7 @@ public class VaccineRecordService : IVaccineRecordService
             // Map the VaccinationRecord entities to VaccineRecordDto list
             var vaccineRecordDtos = vaccinationRecords.Select(vr => new VaccineRecordDto
             {
+                Id = vr.Id,
                 ChildId = vr.ChildId,
                 VaccineId = vr.VaccineId,
                 VaccinationDate = vr.VaccinationDate.Value, // Assuming VaccinationDate is not null
