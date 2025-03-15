@@ -98,13 +98,23 @@ public class AppointmentController : ControllerBase
     {
         try
         {
-            var result = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
+            var (success, message) = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
+
+            if (!success)
+            {
+                return BadRequest(new ApiResult<object>
+                {
+                    IsSuccess = false,
+                    Message = message, // Trả về đúng message từ service
+                    Data = null
+                });
+            }
 
             return Ok(new ApiResult<object>
             {
                 IsSuccess = true,
-                Message = "Cập nhật ngày tiêm thành công",
-                Data = result
+                Message = message,
+                Data = null
             });
         }
         catch (Exception ex)
@@ -112,11 +122,12 @@ public class AppointmentController : ControllerBase
             return StatusCode(500, new ApiResult<object>
             {
                 IsSuccess = false,
-                Message = $"Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau {ex}",
+                Message = $"Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau. {ex.Message}",
                 Data = null
             });
         }
     }
+
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]

@@ -12,8 +12,7 @@ public interface IAppointmentService
     Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(CreateAppointmentPackageVaccineDto request,
         Guid parentId);
 
-
-    Task<bool> UpdateAppointmentDate(Guid appointmentId, DateTime newDate);
+    Task<(bool success, string message)> UpdateAppointmentDate(Guid appointmentId, DateTime newDate);
     Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId);
     Task<AppointmentDTO> GetAppointmentDetailsByIdAsync(Guid appointmentId);
 }
