@@ -112,6 +112,7 @@ public class AppointmentService : IAppointmentService
                 appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
             }
 
+
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
@@ -128,6 +129,9 @@ public class AppointmentService : IAppointmentService
                 foreach (var appointment in appointments)
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
             }
+            //Push notification khi book vaccine lẻ
+            foreach (var appointment in appointments)
+                await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {

@@ -26,7 +26,7 @@ public class PolicyController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<PolicyDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> CreatePolicy([FromBody] PolicyDto policyDto)
+    public async Task<IActionResult> CreatePolicy([FromBody] CreatePolicyDto policyDto)
     {
         try
         {
@@ -128,7 +128,7 @@ public class PolicyController : ControllerBase
 
     [HttpPut("{policyId}")]
     [Authorize(Policy = "AdminPolicy")]
-    public async Task<IActionResult> UpdatePolicy(Guid policyId, [FromBody] PolicyDto policyDto)
+    public async Task<IActionResult> UpdatePolicy(Guid policyId, [FromBody] UpdatePolicyDto policyDto)
     {
         try
         {
