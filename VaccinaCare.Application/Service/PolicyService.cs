@@ -209,6 +209,7 @@ public class PolicyService : IPolicyService
 
             return new PolicyDto
             {
+                PolicyId = policy.Id,
                 PolicyName = policy.PolicyName,
                 Description = policy.Description,
                 CancellationDeadline = policy.CancellationDeadline,
