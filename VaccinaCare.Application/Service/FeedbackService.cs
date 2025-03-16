@@ -136,7 +136,7 @@ public class FeedbackService : IFeedbackService
         }
     }
 
-    public async Task<Pagination<FeedbackDTO>> GetAllFeedbacksAsync(PaginationParameter pagination)
+    public async Task<Pagination<GetFeedbackDto>> GetAllFeedbacksAsync(PaginationParameter pagination)
     {
         try
         {
@@ -156,20 +156,21 @@ public class FeedbackService : IFeedbackService
             if (!feedbacks.Any())
             {
                 _logger.Warn($"No feedbacks found on page {pagination.PageIndex}.");
-                return new Pagination<FeedbackDTO>(new List<FeedbackDTO>(), 0, pagination.PageIndex,
+                return new Pagination<GetFeedbackDto>(new List<GetFeedbackDto>(), 0, pagination.PageIndex,
                     pagination.PageSize);
             }
 
             _logger.Success($"Retrieved {feedbacks.Count} feedbacks on page {pagination.PageIndex}");
 
-            var feedfackDtos = feedbacks.Select(feedback => new FeedbackDTO
+            var feedfackDtos = feedbacks.Select(feedback => new GetFeedbackDto
             {
+                Id = feedback.Id,
                 AppointmentId = feedback.AppointmentId.GetValueOrDefault(),
                 Rating = feedback.Rating.GetValueOrDefault(),
                 Comments = feedback.Comments
             }).ToList();
 
-            return new Pagination<FeedbackDTO>(feedfackDtos, totalFeedbacks, pagination.PageIndex, pagination.PageSize);
+            return new Pagination<GetFeedbackDto>(feedfackDtos, totalFeedbacks, pagination.PageIndex, pagination.PageSize);
         }
         catch (Exception ex)
         {
@@ -178,32 +179,39 @@ public class FeedbackService : IFeedbackService
         }
     }
 
-    public async Task<FeedbackDTO> GetFeedbackByIdAsync(Guid feedbackId)
+    public async Task<List<GetFeedbackDto>> GetFeedbackByUserIdAsync()
     {
         try
         {
-            _logger.Info($"Fetching feedback with ID: {feedbackId}");
+            var userId = _claimsService.GetCurrentUserId;
 
-            var feedback = await _unitOfWork.FeedbackRepository.GetByIdAsync(feedbackId);
+            _logger.Info($"Fetching feedback for User ID: {userId}");
 
-            if (feedback == null)
+            var feedbacks = await _unitOfWork.FeedbackRepository.GetAllAsync();
+
+            var feedbackList = feedbacks
+                    .Where(f => f.CreatedBy == userId && !f.IsDeleted)
+                    .ToList();
+
+            if (!feedbackList.Any())
             {
-                _logger.Warn($"Feedback with ID {feedbackId} not found.");
-                throw new KeyNotFoundException("Feedback not found.");
+                _logger.Warn($"No feedback found for User ID {userId}.");
+                return new List<GetFeedbackDto>();
             }
 
-            _logger.Info($"Feedback fethching successfully: {feedback.Id}");
+            _logger.Info($"Successfully fetched {feedbackList.Count} feedback records for User ID {userId}");
 
-            return new FeedbackDTO
+            return feedbackList.Select(f => new GetFeedbackDto
             {
-                AppointmentId = feedback.AppointmentId.GetValueOrDefault(),
-                Rating = feedback.Rating.GetValueOrDefault(),
-                Comments = feedback.Comments
-            };
+                Id = f.Id,
+                AppointmentId = f.AppointmentId.GetValueOrDefault(),
+                Rating = f.Rating.GetValueOrDefault(),
+                Comments = f.Comments
+            }).ToList();
         }
         catch (Exception ex)
         {
-            _logger.Error($"An error occurred while fetching feedback {feedbackId}");
+            _logger.Error($"An error occurred while fetching feedback: {ex.Message}");
             throw;
         }
     }

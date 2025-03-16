@@ -61,7 +61,8 @@ public class PolicyController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<Pagination<PolicyDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAllPolicies([FromQuery] PaginationParameter pagination, [FromQuery] string? searchTerm = null)
+    public async Task<IActionResult> GetAllPolicies([FromQuery] PaginationParameter pagination,
+        [FromQuery] string? searchTerm = null)
     {
         try
         {
@@ -69,7 +70,7 @@ public class PolicyController : ControllerBase
 
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = policies.Count,
+                totalCount = policies.TotalCount,
                 policies = policies
             }));
         }

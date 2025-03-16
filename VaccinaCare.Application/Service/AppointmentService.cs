@@ -30,6 +30,18 @@ public class AppointmentService : IAppointmentService
         _emailService = emailService;
     }
 
+    // public async Task<List<AppointmentDTO>> GenerateAppointmentsForConsultant(Guid parentId, DateTime startDate)
+    // {
+    //     try
+    //     {
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         throw;
+    //     }
+    // }
+
+
     public async Task<(bool success, string message)> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
     {
         try

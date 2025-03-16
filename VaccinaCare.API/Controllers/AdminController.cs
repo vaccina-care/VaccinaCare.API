@@ -47,7 +47,6 @@ public class AdminController : Controller
         }
     }
 
-
     [HttpPost("users/staff")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     public async Task<IActionResult> CreateStaff([FromBody] CreateStaffDto createStaffDto)
