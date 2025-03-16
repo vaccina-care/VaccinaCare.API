@@ -1,4 +1,4 @@
-namespace VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
+namespace VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 
 public class VaccineRecordDto
 {
