@@ -101,14 +101,12 @@ public class AppointmentController : ControllerBase
             var (success, message) = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
 
             if (!success)
-            {
                 return BadRequest(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = message, // Trả về đúng message từ service
                     Data = null
                 });
-            }
 
             return Ok(new ApiResult<object>
             {

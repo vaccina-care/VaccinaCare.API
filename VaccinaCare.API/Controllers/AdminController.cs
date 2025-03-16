@@ -35,7 +35,11 @@ public class AdminController : Controller
         try
         {
             var users = await _userService.GetAllUsersForAdminAsync(paginationParameter, searchTerm);
-            return Ok(ApiResult<Pagination<UserDto>>.Success(users, "Fetched users successfully."));
+            return Ok(ApiResult<object>.Success(new
+            {
+                totalCount = users.TotalCount,
+                users = users
+            }));
         }
         catch (Exception ex)
         {

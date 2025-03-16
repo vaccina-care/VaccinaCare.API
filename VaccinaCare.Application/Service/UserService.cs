@@ -192,36 +192,67 @@ public class UserService : IUserService
 
             var query = _unitOfWork.UserRepository.GetQueryable();
 
-            // Áp dụng tìm kiếm theo tên hoặc email nếu searchTerm không rỗng
+            // Apply search by fullName, email, or roleName if searchTerm is not empty
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var searchLower = searchTerm.ToLower();
-                query = query.Where(u =>
-                    u.FullName.ToLower().Contains(searchLower) || u.Email.ToLower().Contains(searchLower));
+
+                // Fetch users first, and then filter by role name using ToString()
+                var users = await query
+                    .Where(u => u.IsDeleted == false) // Assuming IsDeleted field exists for filtering
+                    .ToListAsync(); // Fetch the data into memory
+
+                users = users.Where(u =>
+                        u.FullName.ToLower().Contains(searchLower) ||
+                        u.Email.ToLower().Contains(searchLower) ||
+                        u.RoleName.ToString().ToLower().Contains(searchLower)) // Perform the ToString() here
+                    .ToList();
+
+                var totalUsers = users.Count;
+
+                var userDtos = users
+                    .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
+                    .Take(paginationParameter.PageSize)
+                    .Select(u => new UserDto
+                    {
+                        UserId = u.Id,
+                        FullName = u.FullName,
+                        Email = u.Email,
+                        RoleName = u.RoleName, // Store RoleName as string in the DTO
+                        CreatedAt = u.CreatedAt
+                    }).ToList();
+
+                _logger.Info(
+                    $"Successfully fetched {userDtos.Count} users out of {totalUsers} (searchTerm: {searchTerm}).");
+
+                return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
+                    paginationParameter.PageSize);
             }
 
-            var totalUsers = await query.CountAsync();
-
-            var users = await query
-                .OrderBy(u => u.CreatedAt)
-                .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
-                .Take(paginationParameter.PageSize)
-                .ToListAsync();
-
-            var userDtos = users.Select(u => new UserDto
+            // In case there's no search term, return all users with pagination
+            else
             {
-                UserId = u.Id,
-                FullName = u.FullName,
-                Email = u.Email,
-                RoleName = u.RoleName,
-                CreatedAt = u.CreatedAt
-            }).ToList();
+                var totalUsers = await query.CountAsync();
 
-            _logger.Info(
-                $"Successfully fetched {userDtos.Count} users out of {totalUsers} (searchTerm: {searchTerm}).");
+                var users = await query
+                    .Where(u => u.IsDeleted == false)
+                    .OrderBy(u => u.CreatedAt)
+                    .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
+                    .Take(paginationParameter.PageSize)
+                    .ToListAsync();
 
-            return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
-                paginationParameter.PageSize);
+                var userDtos = users.Select(u => new UserDto
+                {
+                    UserId = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    RoleName = u.RoleName,
+                    CreatedAt = u.CreatedAt
+                }).ToList();
+
+                return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
+                    paginationParameter.PageSize);
+            }
         }
         catch (Exception ex)
         {

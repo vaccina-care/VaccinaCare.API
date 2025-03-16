@@ -31,73 +31,74 @@ public class AppointmentService : IAppointmentService
     }
 
     public async Task<(bool success, string message)> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
-{
-    try
     {
-        var appointment = await _unitOfWork.AppointmentRepository
-            .GetQueryable()
-            .Include(a => a.AppointmentsVaccines)
-            .FirstOrDefaultAsync(a => a.Id == appointmentId);
-
-        if (appointment == null)
+        try
         {
-            var errorMsg = $"Appointment with Id={appointmentId} not found.";
-            _logger.Error(errorMsg);
-            return (false, errorMsg);
-        }
+            var appointment = await _unitOfWork.AppointmentRepository
+                .GetQueryable()
+                .Include(a => a.AppointmentsVaccines)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
 
-        var oldDate = appointment.AppointmentDate;
-        if (!oldDate.HasValue)
+            if (appointment == null)
+            {
+                var errorMsg = $"Appointment with Id={appointmentId} not found.";
+                _logger.Error(errorMsg);
+                return (false, errorMsg);
+            }
+
+            var oldDate = appointment.AppointmentDate;
+            if (!oldDate.HasValue)
+            {
+                var errorMsg = $"Appointment with Id={appointmentId} không có ngày hẹn hợp lệ.";
+                _logger.Error(errorMsg);
+                return (false, errorMsg);
+            }
+
+            // Kiểm tra appointment trước đó đã Confirmed chưa
+            var previousAppointment = await _unitOfWork.AppointmentRepository
+                .GetQueryable()
+                .Where(a => a.ChildId == appointment.ChildId
+                            && a.Id != appointment.Id
+                            && a.AppointmentDate.HasValue
+                            && a.AppointmentDate.Value < oldDate.Value)
+                .OrderByDescending(a => a.AppointmentDate)
+                .FirstOrDefaultAsync();
+
+            if (previousAppointment != null && previousAppointment.Status != AppointmentStatus.Confirmed)
+            {
+                var errorMsg =
+                    $"Cannot reschedule Appointment {appointmentId} because previous Appointment {previousAppointment.Id} is not Confirmed.";
+                _logger.Error(errorMsg);
+                return (false, errorMsg);
+            }
+
+            // Kiểm tra VaccineId
+            var vaccineId = appointment.AppointmentsVaccines.FirstOrDefault()?.VaccineId ?? Guid.Empty;
+            if (vaccineId == Guid.Empty)
+            {
+                var errorMsg = $"Cannot determine VaccineId for Appointment {appointmentId}.";
+                _logger.Error(errorMsg);
+                return (false, errorMsg);
+            }
+
+            // Không cho phép dời lịch vào quá khứ
+            if (newDate < DateTime.UtcNow.Date)
+            {
+                var errorMsg = $"Cannot reschedule to a past date: {newDate}";
+                _logger.Error(errorMsg);
+                return (false, errorMsg);
+            }
+
+            // ✅ Thành công
+            _logger.Info($"Appointment {appointmentId} has been rescheduled from {oldDate} to {newDate}.");
+            return (true, "Cập nhật ngày tiêm thành công");
+        }
+        catch (Exception ex)
         {
-            var errorMsg = $"Appointment with Id={appointmentId} không có ngày hẹn hợp lệ.";
-            _logger.Error(errorMsg);
-            return (false, errorMsg);
+            _logger.Error($"Error when updating appointment date: {ex.Message}");
+            return (false, $"Đã xảy ra lỗi: {ex.Message}");
         }
-
-        // Kiểm tra appointment trước đó đã Confirmed chưa
-        var previousAppointment = await _unitOfWork.AppointmentRepository
-            .GetQueryable()
-            .Where(a => a.ChildId == appointment.ChildId
-                        && a.Id != appointment.Id
-                        && a.AppointmentDate.HasValue
-                        && a.AppointmentDate.Value < oldDate.Value)
-            .OrderByDescending(a => a.AppointmentDate)
-            .FirstOrDefaultAsync();
-
-        if (previousAppointment != null && previousAppointment.Status != AppointmentStatus.Confirmed)
-        {
-            var errorMsg = $"Cannot reschedule Appointment {appointmentId} because previous Appointment {previousAppointment.Id} is not Confirmed.";
-            _logger.Error(errorMsg);
-            return (false, errorMsg);
-        }
-
-        // Kiểm tra VaccineId
-        var vaccineId = appointment.AppointmentsVaccines.FirstOrDefault()?.VaccineId ?? Guid.Empty;
-        if (vaccineId == Guid.Empty)
-        {
-            var errorMsg = $"Cannot determine VaccineId for Appointment {appointmentId}.";
-            _logger.Error(errorMsg);
-            return (false, errorMsg);
-        }
-
-        // Không cho phép dời lịch vào quá khứ
-        if (newDate < DateTime.UtcNow.Date)
-        {
-            var errorMsg = $"Cannot reschedule to a past date: {newDate}";
-            _logger.Error(errorMsg);
-            return (false, errorMsg);
-        }
-
-        // ✅ Thành công
-        _logger.Info($"Appointment {appointmentId} has been rescheduled from {oldDate} to {newDate}.");
-        return (true, "Cập nhật ngày tiêm thành công");
     }
-    catch (Exception ex)
-    {
-        _logger.Error($"Error when updating appointment date: {ex.Message}");
-        return (false, $"Đã xảy ra lỗi: {ex.Message}");
-    }
-}
 
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
@@ -260,13 +261,11 @@ public class AppointmentService : IAppointmentService
 
             foreach (var vaccine in packageDetails)
             {
-                // Kiểm tra điều kiện tiêm chủng của trẻ
                 var (isEligible, message) = await _vaccineService.CanChildReceiveVaccine(request.ChildId, vaccine.Id);
                 if (!isEligible)
                     throw new ArgumentException(
                         $"Trẻ không đủ điều kiện tiêm vaccine {vaccine.VaccineName}: {message}");
 
-                // Kiểm tra lịch hẹn gần đây để tránh trùng lặp
                 var recentAppointments = await _unitOfWork.AppointmentRepository.GetQueryable()
                     .Include(a => a.AppointmentsVaccines)
                     .Where(a => !a.IsDeleted
