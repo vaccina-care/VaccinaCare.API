@@ -14,6 +14,6 @@ public interface IFeedbackService
     Task<FeedbackDTO> CreateFeedbackAsync(FeedbackDTO feedbackDto);
     Task<FeedbackDTO> UpdateFeedbackAsync(Guid feedbackId, FeedbackDTO feedbackDto);
     Task DeleteFeedbackAsync(Guid feedbackId);
-    Task<FeedbackDTO> GetFeedbackByIdAsync(Guid feedbackId);
-    Task<Pagination<FeedbackDTO>> GetAllFeedbacksAsync(PaginationParameter pagination);
+    Task<List<GetFeedbackDto>> GetFeedbackByUserIdAsync();
+    Task<Pagination<GetFeedbackDto>> GetAllFeedbacksAsync(PaginationParameter pagination);
 }
