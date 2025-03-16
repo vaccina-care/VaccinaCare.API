@@ -11,5 +11,6 @@ public interface IPolicyService
 
     Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination,
         string? searchTerm = null);
+
     Task<PolicyDto> GetPolicyByIdAsync(Guid id);
 }

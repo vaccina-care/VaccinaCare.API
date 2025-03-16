@@ -192,20 +192,18 @@ public class UserService : IUserService
 
             var query = _unitOfWork.UserRepository.GetQueryable();
 
-            // Apply search by fullName, email, or roleName if searchTerm is not empty
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var searchLower = searchTerm.ToLower();
 
-                // Fetch users first, and then filter by role name using ToString()
                 var users = await query
-                    .Where(u => u.IsDeleted == false) // Assuming IsDeleted field exists for filtering
-                    .ToListAsync(); // Fetch the data into memory
+                    .Where(u => u.IsDeleted == false)
+                    .ToListAsync();
 
                 users = users.Where(u =>
                         u.FullName.ToLower().Contains(searchLower) ||
                         u.Email.ToLower().Contains(searchLower) ||
-                        u.RoleName.ToString().ToLower().Contains(searchLower)) // Perform the ToString() here
+                        u.RoleName.ToString().ToLower().Contains(searchLower))
                     .ToList();
 
                 var totalUsers = users.Count;
@@ -218,7 +216,8 @@ public class UserService : IUserService
                         UserId = u.Id,
                         FullName = u.FullName,
                         Email = u.Email,
-                        RoleName = u.RoleName, // Store RoleName as string in the DTO
+                        RoleName = u.RoleName,
+                        PhoneNumber = u.PhoneNumber,
                         CreatedAt = u.CreatedAt
                     }).ToList();
 
@@ -261,7 +260,6 @@ public class UserService : IUserService
         }
     }
 
-
     public async Task<UserUpdateDtoByAdmin> UpdateUserInfoByAdmin(Guid userId,
         UserUpdateDtoByAdmin userUpdateByAdminDto)
     {
@@ -283,9 +281,7 @@ public class UserService : IUserService
             {
                 // Email validation (basic regex check)
                 if (!Regex.IsMatch(userUpdateByAdminDto.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
-                {
                     throw new ArgumentException("Invalid email format.");
-                }
 
                 user.Email = userUpdateByAdminDto.Email;
                 isUpdated = true;
@@ -296,9 +292,7 @@ public class UserService : IUserService
                 user.PhoneNumber != userUpdateByAdminDto.PhoneNumber)
             {
                 if (!Regex.IsMatch(userUpdateByAdminDto.PhoneNumber, @"^\d{10,15}$"))
-                {
                     throw new ArgumentException("Invalid phone number format.");
-                }
 
                 user.PhoneNumber = userUpdateByAdminDto.PhoneNumber;
                 isUpdated = true;
@@ -400,24 +394,14 @@ public class UserService : IUserService
     {
         try
         {
-            _logger.Info("Starting creating staff account.");
-
-            if (string.IsNullOrWhiteSpace(createStaffDto.Email) || string.IsNullOrWhiteSpace(createStaffDto.Password))
-            {
-                _logger.Warn("Email or Password is missing in the registration request.");
-                return null;
-            }
+            if (string.IsNullOrWhiteSpace(createStaffDto.Email) ||
+                string.IsNullOrWhiteSpace(createStaffDto.Password)) return null;
 
             var existingStaff =
                 await _unitOfWork.UserRepository.FirstOrDefaultAsync(u => u.Email == createStaffDto.Email);
-            if (existingStaff != null)
-            {
-                _logger.Warn($"Creating attempt failed. Email {createStaffDto.Email} is already in use.");
-                return null;
-            }
+            if (existingStaff != null) return null;
 
             //Hash password
-            _logger.Info("Hashing the password.");
             var passwordHasher = new PasswordHasher();
             var hashedPassword = passwordHasher.HashPassword(createStaffDto.Password);
 
