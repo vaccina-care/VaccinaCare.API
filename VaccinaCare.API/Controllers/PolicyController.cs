@@ -61,33 +61,24 @@ public class PolicyController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<Pagination<PolicyDto>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAllPolicies([FromQuery] PaginationParameter pagination)
+    public async Task<IActionResult> GetAllPolicies([FromQuery] PaginationParameter pagination, [FromQuery] string? searchTerm = null)
     {
         try
         {
-            _logger.Info("Received request to get policy list.");
+            var policies = await _policyService.GetAllPolicyAsync(pagination, searchTerm);
 
-            var policies = await _policyService.GetAllPolicyAsync(pagination);
-
-            _logger.Success("Fetched policies successfully.");
-
-            return Ok(new ApiResult<Pagination<PolicyDto>>
+            return Ok(ApiResult<object>.Success(new
             {
-                IsSuccess = true,
-                Message = "Policy list retrieved successfully.",
-                Data = policies
-            });
+                totalCount = policies.Count,
+                policies = policies
+            }));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while fetching policies: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = "An error occurred while retrieving the policy list. Please try again later."
-            });
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
+
 
     [HttpGet("{policyId}")]
     public async Task<IActionResult> GetPolicyById(Guid policyId)

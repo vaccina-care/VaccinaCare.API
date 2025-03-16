@@ -192,36 +192,67 @@ public class UserService : IUserService
 
             var query = _unitOfWork.UserRepository.GetQueryable();
 
-            // Áp dụng tìm kiếm theo tên hoặc email nếu searchTerm không rỗng
+            // Apply search by fullName, email, or roleName if searchTerm is not empty
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 var searchLower = searchTerm.ToLower();
-                query = query.Where(u =>
-                    u.FullName.ToLower().Contains(searchLower) || u.Email.ToLower().Contains(searchLower));
+
+                // Fetch users first, and then filter by role name using ToString()
+                var users = await query
+                    .Where(u => u.IsDeleted == false) // Assuming IsDeleted field exists for filtering
+                    .ToListAsync(); // Fetch the data into memory
+
+                users = users.Where(u =>
+                        u.FullName.ToLower().Contains(searchLower) ||
+                        u.Email.ToLower().Contains(searchLower) ||
+                        u.RoleName.ToString().ToLower().Contains(searchLower)) // Perform the ToString() here
+                    .ToList();
+
+                var totalUsers = users.Count;
+
+                var userDtos = users
+                    .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
+                    .Take(paginationParameter.PageSize)
+                    .Select(u => new UserDto
+                    {
+                        UserId = u.Id,
+                        FullName = u.FullName,
+                        Email = u.Email,
+                        RoleName = u.RoleName, // Store RoleName as string in the DTO
+                        CreatedAt = u.CreatedAt
+                    }).ToList();
+
+                _logger.Info(
+                    $"Successfully fetched {userDtos.Count} users out of {totalUsers} (searchTerm: {searchTerm}).");
+
+                return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
+                    paginationParameter.PageSize);
             }
 
-            var totalUsers = await query.CountAsync();
-
-            var users = await query
-                .OrderBy(u => u.CreatedAt)
-                .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
-                .Take(paginationParameter.PageSize)
-                .ToListAsync();
-
-            var userDtos = users.Select(u => new UserDto
+            // In case there's no search term, return all users with pagination
+            else
             {
-                UserId = u.Id,
-                FullName = u.FullName,
-                Email = u.Email,
-                RoleName = u.RoleName,
-                CreatedAt = u.CreatedAt
-            }).ToList();
+                var totalUsers = await query.CountAsync();
 
-            _logger.Info(
-                $"Successfully fetched {userDtos.Count} users out of {totalUsers} (searchTerm: {searchTerm}).");
+                var users = await query
+                    .Where(u => u.IsDeleted == false)
+                    .OrderBy(u => u.CreatedAt)
+                    .Skip((paginationParameter.PageIndex - 1) * paginationParameter.PageSize)
+                    .Take(paginationParameter.PageSize)
+                    .ToListAsync();
 
-            return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
-                paginationParameter.PageSize);
+                var userDtos = users.Select(u => new UserDto
+                {
+                    UserId = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    RoleName = u.RoleName,
+                    CreatedAt = u.CreatedAt
+                }).ToList();
+
+                return new Pagination<UserDto>(userDtos, totalUsers, paginationParameter.PageIndex,
+                    paginationParameter.PageSize);
+            }
         }
         catch (Exception ex)
         {
@@ -230,6 +261,88 @@ public class UserService : IUserService
         }
     }
 
+
+    public async Task<UserUpdateDtoByAdmin> UpdateUserInfoByAdmin(Guid userId,
+        UserUpdateDtoByAdmin userUpdateByAdminDto)
+    {
+        try
+        {
+            _logger.Info($"Starting admin update for UserId: {userId}");
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.Warn($"User with ID {userId} not found.");
+                throw new KeyNotFoundException("User not found.");
+            }
+
+            var isUpdated = false;
+
+            // Update Email
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.Email) && user.Email != userUpdateByAdminDto.Email)
+            {
+                // Email validation (basic regex check)
+                if (!Regex.IsMatch(userUpdateByAdminDto.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    throw new ArgumentException("Invalid email format.");
+                }
+
+                user.Email = userUpdateByAdminDto.Email;
+                isUpdated = true;
+            }
+
+            // Update Phone Number
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.PhoneNumber) &&
+                user.PhoneNumber != userUpdateByAdminDto.PhoneNumber)
+            {
+                if (!Regex.IsMatch(userUpdateByAdminDto.PhoneNumber, @"^\d{10,15}$"))
+                {
+                    throw new ArgumentException("Invalid phone number format.");
+                }
+
+                user.PhoneNumber = userUpdateByAdminDto.PhoneNumber;
+                isUpdated = true;
+            }
+
+            // Update FullName
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.FullName) && user.FullName != userUpdateByAdminDto.FullName)
+            {
+                user.FullName = userUpdateByAdminDto.FullName;
+                isUpdated = true;
+            }
+
+            // If no changes were made, return the current user data
+            if (!isUpdated)
+            {
+                _logger.Warn($"No changes detected for UserId: {userId}");
+                return new UserUpdateDtoByAdmin
+                {
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    FullName = user.FullName
+                };
+            }
+
+            // Save changes to the database
+            await _unitOfWork.UserRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"Admin updated user info successfully for UserId: {userId}");
+
+            // Return the updated user data
+            return new UserUpdateDtoByAdmin
+            {
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                FullName = user.FullName
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error updating user info by admin for UserId: {userId}. Exception: {ex.Message}");
+            throw;
+        }
+    }
 
     public async Task<bool> DeactivateUserAsync(Guid userId)
     {
