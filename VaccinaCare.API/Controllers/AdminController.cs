@@ -78,26 +78,23 @@ public class AdminController : Controller
 
     [HttpPut("users/{userId}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    public async Task<IActionResult> UpdateUserInfo(Guid userId, [FromBody] UserUpdateDto userUpdateDto)
+    public async Task<IActionResult> UpdateUserInfoByAdmin(Guid userId,
+        [FromBody] UserUpdateDtoByAdmin userUpdateByAdminDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ApiResult<object>.Error("Invalid request data"));
-
         try
         {
-            var updatedUser = await _userService.UpdateUserInfo(userId, userUpdateDto);
+            var updatedUser = await _userService.UpdateUserInfoByAdmin(userId, userUpdateByAdminDto);
 
-            return Ok(ApiResult<object>.Success(updatedUser, "User info updated successfully"));
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ApiResult<object>.Error("User not found"));
+            return Ok(ApiResult<object>.Success(updatedUser, "User info updated successfully by admin"));
         }
         catch (Exception ex)
         {
             return StatusCode(500, ApiResult<object>.Error("Internal server error"));
         }
     }
+
 
     [HttpDelete("users/{userId}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

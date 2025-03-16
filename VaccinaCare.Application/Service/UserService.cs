@@ -262,6 +262,88 @@ public class UserService : IUserService
     }
 
 
+    public async Task<UserUpdateDtoByAdmin> UpdateUserInfoByAdmin(Guid userId,
+        UserUpdateDtoByAdmin userUpdateByAdminDto)
+    {
+        try
+        {
+            _logger.Info($"Starting admin update for UserId: {userId}");
+
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.Warn($"User with ID {userId} not found.");
+                throw new KeyNotFoundException("User not found.");
+            }
+
+            var isUpdated = false;
+
+            // Update Email
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.Email) && user.Email != userUpdateByAdminDto.Email)
+            {
+                // Email validation (basic regex check)
+                if (!Regex.IsMatch(userUpdateByAdminDto.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                {
+                    throw new ArgumentException("Invalid email format.");
+                }
+
+                user.Email = userUpdateByAdminDto.Email;
+                isUpdated = true;
+            }
+
+            // Update Phone Number
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.PhoneNumber) &&
+                user.PhoneNumber != userUpdateByAdminDto.PhoneNumber)
+            {
+                if (!Regex.IsMatch(userUpdateByAdminDto.PhoneNumber, @"^\d{10,15}$"))
+                {
+                    throw new ArgumentException("Invalid phone number format.");
+                }
+
+                user.PhoneNumber = userUpdateByAdminDto.PhoneNumber;
+                isUpdated = true;
+            }
+
+            // Update FullName
+            if (!string.IsNullOrEmpty(userUpdateByAdminDto.FullName) && user.FullName != userUpdateByAdminDto.FullName)
+            {
+                user.FullName = userUpdateByAdminDto.FullName;
+                isUpdated = true;
+            }
+
+            // If no changes were made, return the current user data
+            if (!isUpdated)
+            {
+                _logger.Warn($"No changes detected for UserId: {userId}");
+                return new UserUpdateDtoByAdmin
+                {
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    FullName = user.FullName
+                };
+            }
+
+            // Save changes to the database
+            await _unitOfWork.UserRepository.Update(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Success($"Admin updated user info successfully for UserId: {userId}");
+
+            // Return the updated user data
+            return new UserUpdateDtoByAdmin
+            {
+                Email = user.Email,
+                PhoneNumber = user.PhoneNumber,
+                FullName = user.FullName
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error updating user info by admin for UserId: {userId}. Exception: {ex.Message}");
+            throw;
+        }
+    }
+
     public async Task<bool> DeactivateUserAsync(Guid userId)
     {
         try

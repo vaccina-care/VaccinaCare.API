@@ -14,3 +14,4 @@ public class UserUpdateDto
     [SwaggerIgnore] public string? ImageUrl { get; set; }
     public string? PhoneNumber { get; set; }
 }
+
