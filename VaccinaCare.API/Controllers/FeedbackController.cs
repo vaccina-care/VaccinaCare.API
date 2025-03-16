@@ -40,7 +40,7 @@ public class FeedbackController : ControllerBase
 
             if (feedbackDto == null || feedbackDto.AppointmentId == Guid.Empty || feedbackDto.Rating < 1 ||
                 feedbackDto.Rating > 5)
-                return BadRequest(new ApiResult<object>
+                return Ok(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Invalid feedback data. Please provide a valid appointment ID and rating between 1 and 5."
@@ -49,17 +49,35 @@ public class FeedbackController : ControllerBase
             var feedback = await _feedbackService.CreateFeedbackAsync(feedbackDto);
             _logger.Success($"Feedback created successfully for Appointment {feedback.AppointmentId}.");
 
-            return StatusCode(201, new ApiResult<FeedbackDTO>
+            return Ok(new ApiResult<FeedbackDTO>
             {
                 IsSuccess = true,
                 Message = "Feedback created successfully.",
                 Data = feedback
             });
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.Warn($"Unauthorized access: {ex.Message}");
+            return Ok(new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            });
+        }
         catch (KeyNotFoundException ex)
         {
             _logger.Warn($"Failed to create feedback: {ex.Message}");
-            return NotFound(new ApiResult<object>
+            return Ok(new ApiResult<object>
+            {
+                IsSuccess = false,
+                Message = ex.Message
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.Warn($"Invalid operation: {ex.Message}");
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = ex.Message
@@ -68,7 +86,7 @@ public class FeedbackController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error($"Error creating feedback: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = "An error occurred while creating feedback. Please try again later."
@@ -90,7 +108,7 @@ public class FeedbackController : ControllerBase
 
             _logger.Success($"Fetched {feedbacks.Count} feedbacks successfully.");
 
-            return Ok(new ApiResult<Pagination<FeedbackDTO>>
+            return Ok(new ApiResult<Pagination<GetFeedbackDto>>
             {
                 IsSuccess = true,
                 Message = "Feedback list retrieved successfully.",
@@ -100,7 +118,7 @@ public class FeedbackController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error($"Error while fetching feedbacks: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = "An error occurred while retrieving the feedback list. Please try again later."
@@ -109,43 +127,42 @@ public class FeedbackController : ControllerBase
     }
 
 
-    [HttpGet("{feedbackId}")]
-    public async Task<IActionResult> GetFeedbackById(Guid feedbackId)
+    [HttpGet("user")]
+    public async Task<IActionResult> GetFeedbackByUserId()
     {
         try
         {
-            _logger.Info($"Received request to get feedback with ID: {feedbackId}");
+            _logger.Info("Received request to get feedback for the current user.");
 
-            var feedback = await _feedbackService.GetFeedbackByIdAsync(feedbackId);
+            var feedbackList = await _feedbackService.GetFeedbackByUserIdAsync();
 
-            if (feedback == null)
+            if (feedbackList == null || !feedbackList.Any())
             {
-                _logger.Warn($"Feedback {feedbackId} not found.");
-                return NotFound(new ApiResult<object>
+                _logger.Warn("No feedback found for the current user.");
+                return Ok(new ApiResult<object>
                 {
                     IsSuccess = false,
-                    Message = "Feedback not found."
+                    Message = "No feedback found for this user."
                 });
             }
 
-            return Ok(new ApiResult<FeedbackDTO>
+            return Ok(new ApiResult<List<GetFeedbackDto>>
             {
                 IsSuccess = true,
                 Message = "Feedback retrieved successfully.",
-                Data = feedback
+                Data = feedbackList
             });
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error retrieving feedback {feedbackId}: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
+            _logger.Error($"Error retrieving feedback for the current user: {ex.Message}");
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
-                Message = "An error occured while retrieving feedback."
+                Message = "An error occurred while retrieving feedback."
             });
         }
     }
-
 
     [HttpPut("{feedbackId}")]
     public async Task<IActionResult> UpdateFeedback(Guid feedbackId, [FromBody] FeedbackDTO feedbackDto)
@@ -155,7 +172,7 @@ public class FeedbackController : ControllerBase
             _logger.Info($"Received request to update feedback {feedbackId}.");
 
             if (feedbackDto == null || feedbackDto.Rating < 1 || feedbackDto.Rating > 5)
-                return BadRequest(new ApiResult<object>
+                return Ok(new ApiResult<object>
                 {
                     IsSuccess = false,
                     Message = "Invalid feedback data. Rating must be between 1 and 5."
@@ -174,7 +191,7 @@ public class FeedbackController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             _logger.Warn($"Feedback {feedbackId} not found: {ex.Message}");
-            return NotFound(new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = ex.Message
@@ -183,7 +200,7 @@ public class FeedbackController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error($"Error updating feedback {feedbackId}: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = "An error occurred while updating feedback. Please try again later."
@@ -213,7 +230,7 @@ public class FeedbackController : ControllerBase
         catch (KeyNotFoundException ex)
         {
             _logger.Warn($"Feedback {feedbackId} not found: {ex.Message}");
-            return NotFound(new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = ex.Message
@@ -222,7 +239,7 @@ public class FeedbackController : ControllerBase
         catch (Exception ex)
         {
             _logger.Error($"Error deleting feedback {feedbackId}: {ex.Message}");
-            return StatusCode(500, new ApiResult<object>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = false,
                 Message = "An error occurred while deleting feedback. Please try again later."
