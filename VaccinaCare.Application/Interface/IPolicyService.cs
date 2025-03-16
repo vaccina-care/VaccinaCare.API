@@ -8,6 +8,9 @@ public interface IPolicyService
     Task<PolicyDto> CreatePolicyAsync(CreatePolicyDto policyDto);
     Task<PolicyDto> UpdatePolicyAsync(Guid id, UpdatePolicyDto policyDto);
     Task<bool> DeletePolicyAsync(Guid id);
-    Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination);
+
+    Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination,
+        string? searchTerm = null);
+
     Task<PolicyDto> GetPolicyByIdAsync(Guid id);
 }

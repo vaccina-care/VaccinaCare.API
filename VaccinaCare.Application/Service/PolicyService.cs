@@ -81,14 +81,22 @@ public class PolicyService : IPolicyService
         }
     }
 
-    public async Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination)
+    public async Task<Pagination<PolicyDto>> GetAllPolicyAsync(PaginationParameter pagination,
+        string? searchTerm = null)
     {
         try
         {
             _logger.Info(
-                $"Fetching policy with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize} ");
+                $"Fetching policies with pagination: Page {pagination.PageIndex}, Size {pagination.PageSize} ");
 
             var query = _unitOfWork.CancellationPolicyRepository.GetQueryable();
+
+            // Apply search by PolicyName if searchTerm is not empty
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var searchLower = searchTerm.ToLower();
+                query = query.Where(p => p.PolicyName.ToLower().Contains(searchLower)); // Search by PolicyName
+            }
 
             var totalPolicies = await query.CountAsync();
 
@@ -100,12 +108,12 @@ public class PolicyService : IPolicyService
 
             if (!policies.Any())
             {
-                _logger.Warn($"No policys found on page {pagination.PageIndex}.");
+                _logger.Warn($"No policies found on page {pagination.PageIndex}.");
                 return new Pagination<PolicyDto>(new List<PolicyDto>(), 0, pagination.PageIndex,
                     pagination.PageSize);
             }
 
-            _logger.Success($"Retrieved {policies.Count} feedbacks on page {pagination.PageIndex}");
+            _logger.Success($"Retrieved {policies.Count} policies on page {pagination.PageIndex}");
 
             var policyDtos = policies.Select(policy => new PolicyDto
             {
@@ -120,10 +128,11 @@ public class PolicyService : IPolicyService
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error while fetching policys: {ex.Message}");
-            throw new Exception("An error occurred while fetching feedbacks. Please try again later");
+            _logger.Error($"Error while fetching policies: {ex.Message}");
+            throw new Exception("An error occurred while fetching policies. Please try again later");
         }
     }
+
 
     public async Task<PolicyDto> GetPolicyByIdAsync(Guid id)
     {
