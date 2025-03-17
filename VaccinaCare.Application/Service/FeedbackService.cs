@@ -170,7 +170,8 @@ public class FeedbackService : IFeedbackService
                 Comments = feedback.Comments
             }).ToList();
 
-            return new Pagination<GetFeedbackDto>(feedfackDtos, totalFeedbacks, pagination.PageIndex, pagination.PageSize);
+            return new Pagination<GetFeedbackDto>(feedfackDtos, totalFeedbacks, pagination.PageIndex,
+                pagination.PageSize);
         }
         catch (Exception ex)
         {
@@ -190,8 +191,8 @@ public class FeedbackService : IFeedbackService
             var feedbacks = await _unitOfWork.FeedbackRepository.GetAllAsync();
 
             var feedbackList = feedbacks
-                    .Where(f => f.CreatedBy == userId && !f.IsDeleted)
-                    .ToList();
+                .Where(f => f.CreatedBy == userId && !f.IsDeleted)
+                .ToList();
 
             if (!feedbackList.Any())
             {

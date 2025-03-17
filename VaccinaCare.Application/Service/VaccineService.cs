@@ -443,8 +443,6 @@ public class VaccineService : IVaccineService
 
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
-        _logger.Info($"[GetNextDoseNumber] Start checking next dose for ChildID: {childId}, VaccineID: {vaccineId}");
-
         // Lấy thông tin vaccine để kiểm tra số mũi yêu cầu
         var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
         if (vaccine == null)
@@ -453,17 +451,13 @@ public class VaccineService : IVaccineService
             throw new ArgumentException($"Vaccine ID {vaccineId} không tồn tại.");
         }
 
-        // Lấy danh sách các lần tiêm trước đó
+        // Lấy danh sách các lần tiêm trước đó chỉ của trẻ hiện tại
         var records = await _unitOfWork.VaccinationRecordRepository
             .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
 
-        if (records == null || !records.Any())
-        {
-            _logger.Warn($"[GetNextDoseNumber] No vaccination records found. Returning dose 1.");
-            return 1; // Nếu chưa có lịch sử tiêm, bắt đầu từ mũi 1
-        }
+        if (records == null || !records.Any()) return 1; // Nếu chưa có lịch sử tiêm, bắt đầu từ mũi 1
 
-        // Tìm số mũi lớn nhất đã tiêm hợp lệ
+        // Tìm số mũi lớn nhất đã tiêm hợp lệ cho trẻ hiện tại
         var lastDoseNumber = records
             .Where(r => r.DoseNumber > 0 && r.DoseNumber <= vaccine.RequiredDoses) // Lọc dữ liệu hợp lệ
             .Select(r => r.DoseNumber)

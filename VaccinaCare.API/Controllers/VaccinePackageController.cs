@@ -29,24 +29,19 @@ public class VaccinePackageController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateVaccinePackage([FromBody] CreateVaccinePackageDTO dto)
     {
-        if (dto == null)
-        {
-            _logger.Warn("CreateVaccinePackage: Vaccine Package data is null");
-            return BadRequest(ApiResult<object>.Error("400 - Invalid registration data."));
-        }
+        if (dto == null) return Ok(ApiResult<object>.Error("400 - Invalid registration data."));
 
         try
         {
             var createdPackage = await _vaccinePackageService.CreateVaccinePackageAsync(dto);
             if (createdPackage == null)
-                return BadRequest(
-                    ApiResult<object>.Error("400 - Vaccine package creation failed. Please check input data."));
+                return Ok(ApiResult<object>.Error("400 - Vaccine package creation failed. Please check input data."));
 
             return Ok(ApiResult<VaccinePackageDTO>.Success(createdPackage, "Vaccine package created successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during creation."));
+            return Ok(ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
 
@@ -57,17 +52,17 @@ public class VaccinePackageController : ControllerBase
         {
             var vaccinePackages = await _vaccinePackageService.GetAllVaccinePackagesAsync();
             if (vaccinePackages == null || vaccinePackages.Count == 0)
-                return NotFound(ApiResult<object>.Error("404 - No vaccine packages available."));
+                return Ok(ApiResult<object>.Error("404 - No vaccine packages available."));
 
             return Ok(ApiResult<List<VaccinePackageDTO>>.Success(vaccinePackages,
                 "Vaccine packages retrieved successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500,
-                ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
+            return Ok(ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
+
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVaccinePackageById(Guid id)
@@ -75,24 +70,17 @@ public class VaccinePackageController : ControllerBase
         try
         {
             if (id == Guid.Empty)
-                return BadRequest("Invalid package ID.");
+                return Ok(ApiResult<object>.Error("400 - Invalid package ID."));
 
             var result = await _vaccinePackageService.GetVaccinePackageByIdAsync(id);
 
-            if (result == null)
-            {
-                _logger.Warn($"Vaccine Package with ID {id} not found.");
-                return NotFound(ApiResult<object>.Error("404 -  No vaccine package available."));
-            }
+            if (result == null) return Ok(ApiResult<object>.Error("404 - No vaccine package available."));
 
-            _logger.Success($"Get Vaccine Package with ID : {id} retrieved succesfully.");
             return Ok(ApiResult<VaccinePackageDTO>.Success(result, "Vaccine package retrieved successfully."));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error while fetching vaccine packages: {ex.Message}");
-            return StatusCode(500,
-                ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
+            return Ok(ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
 
@@ -102,24 +90,27 @@ public class VaccinePackageController : ControllerBase
         try
         {
             var isDeleted = await _vaccinePackageService.DeleteVaccinePackageByIdAsync(id);
-            if (!isDeleted) return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
+            if (!isDeleted)
+                return Ok(ApiResult<object>.Error("404 - Vaccine package not found."));
 
             return Ok(ApiResult<object>.Success(null, "Vaccine package deleted successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<object>.Error("500 - Internal server error."));
+            return Ok(ApiResult<object>.Error("500 - Internal server error."));
         }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateVaccinePackage(Guid id, [FromBody] UpdateVaccinePackageDTO dto)
     {
-        if (dto == null) return BadRequest(ApiResult<object>.Error("400 - Invalid request data."));
+        if (dto == null)
+            return Ok(ApiResult<object>.Error("400 - Invalid request data."));
 
         var updatedPackage = await _vaccinePackageService.UpdateVaccinePackageByIdAsync(id, dto);
 
-        if (updatedPackage == null) return NotFound(ApiResult<object>.Error("404 - Vaccine package not found."));
+        if (updatedPackage == null)
+            return Ok(ApiResult<object>.Error("404 - Vaccine package not found."));
 
         return Ok(ApiResult<VaccinePackageDTO>.Success(updatedPackage, "Vaccine package updated successfully."));
     }
@@ -134,17 +125,17 @@ public class VaccinePackageController : ControllerBase
         try
         {
             var result =
-                await _vaccinePackageService.GetAllVaccinesAndPackagesAsync(searchName, searchDescription,
-                    pageNumber, pageSize);
+                await _vaccinePackageService.GetAllVaccinesAndPackagesAsync(searchName, searchDescription, pageNumber,
+                    pageSize);
             if (result.Items.Count == 0)
-                return NotFound(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+                return Ok(ApiResult<object>.Error("404 - No vaccines or vaccine packages available."));
+
             return Ok(ApiResult<object>.Success(result, "Vaccines and vaccine packages retrieved successfully."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500,
-                ApiResult<object>.Error(
-                    "An unexpected error occurred while retrieving vaccines and vaccine packages."));
+            return Ok(ApiResult<object>.Error(
+                "An unexpected error occurred while retrieving vaccines and vaccine packages."));
         }
     }
 }
