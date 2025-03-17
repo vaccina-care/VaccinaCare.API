@@ -121,9 +121,7 @@ public class AppointmentService : IAppointmentService
                 .ToListAsync();
 
             foreach (var subAppt in subsequentAppointments)
-            {
                 subAppt.AppointmentDate = subAppt.AppointmentDate!.Value.Add(dateDiff);
-            }
 
             await _unitOfWork.AppointmentRepository.UpdateRange(subsequentAppointments);
             await _unitOfWork.SaveChangesAsync();
@@ -173,52 +171,88 @@ public class AppointmentService : IAppointmentService
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(request.VaccineId);
             if (vaccine == null) throw new ArgumentException($"Vaccine với ID {request.VaccineId} không tồn tại.");
 
+            _logger.Info($"Found vaccine: {vaccine.VaccineName}, Required Doses: {vaccine.RequiredDoses}");
+
             // Kiểm tra đủ điều kiện tiêm chưa
             var (isEligible, message) =
                 await _vaccineService.CanChildReceiveVaccine(request.ChildId, request.VaccineId);
             if (!isEligible)
+            {
+                _logger.Error($"Trẻ không đủ điều kiện tiêm vaccine {vaccine.VaccineName}: {message}");
                 throw new ArgumentException($"Trẻ không đủ điều kiện tiêm vaccine {vaccine.VaccineName}: {message}");
+            }
 
             // Lấy số mũi tiêm tiếp theo
             var nextDose = await _vaccineService.GetNextDoseNumber(request.ChildId, request.VaccineId);
-
             if (nextDose > vaccine.RequiredDoses)
+            {
+                _logger.Error($"Trẻ đã tiêm đủ số mũi của vaccine {vaccine.VaccineName}.");
                 throw new ArgumentException($"Trẻ đã tiêm đủ số mũi của vaccine {vaccine.VaccineName}.");
+            }
+
+            _logger.Info($"Next dose for child {request.ChildId}: {nextDose}");
 
             var now = DateTime.UtcNow;
             var blockIntervalDays = 3;
 
+            // Kiểm tra các lịch hẹn gần đây cho vaccine này
             var recentAppointmentsSameVaccine = await _unitOfWork.AppointmentRepository.GetQueryable()
                 .Include(a => a.AppointmentsVaccines)
                 .Where(a => !a.IsDeleted
                             && a.ChildId == request.ChildId
                             && a.AppointmentsVaccines.Any(av => av.VaccineId == request.VaccineId)
                             && a.AppointmentDate >= now.AddDays(-blockIntervalDays)
-                            && a.Status != AppointmentStatus.Cancelled
-                )
+                            && a.Status != AppointmentStatus.Cancelled)
                 .ToListAsync();
 
             if (recentAppointmentsSameVaccine.Any())
+            {
+                _logger.Warn($"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây.");
                 throw new ArgumentException(
                     $"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây. Vui lòng chọn ngày khác hoặc chờ đủ khoảng cách.");
+            }
+
+            // Lấy danh sách các mũi tiêm đã tiêm (dựa trên VaccinationRecord)
+            var vaccinationRecords = await _unitOfWork.VaccinationRecordRepository
+                .GetAllAsync(vr => vr.ChildId == request.ChildId && vr.VaccineId == request.VaccineId);
+
+            // Tạo danh sách các mũi tiêm đã tiêm
+            var completedDoses = vaccinationRecords
+                .Where(vr => vr.DoseNumber <= vaccine.RequiredDoses)
+                .Select(vr => vr.DoseNumber)
+                .ToList();
+
+            // Tính số mũi tiêm còn lại
+            var remainingDoses = vaccine.RequiredDoses - completedDoses.Count;
+
+            if (remainingDoses <= 0)
+            {
+                _logger.Info($"Trẻ đã tiêm đầy đủ {vaccine.RequiredDoses} mũi vaccine {vaccine.VaccineName}.");
+                throw new ArgumentException(
+                    $"Trẻ đã tiêm đủ {vaccine.RequiredDoses} mũi của vaccine {vaccine.VaccineName}.");
+            }
 
             var appointmentDate = request.StartDate;
 
+            // Kiểm tra sự tương thích giữa vaccine mới và vaccine đã đặt trước
             var bookedVaccineIds = await _unitOfWork.AppointmentsVaccineRepository
                 .GetQueryable()
                 .Where(av => !av.IsDeleted
                              && av.Appointment.ChildId == request.ChildId
-                             && av.Appointment.Status != AppointmentStatus.Cancelled
-                )
+                             && av.Appointment.Status != AppointmentStatus.Cancelled)
                 .Select(av => av.VaccineId.Value)
                 .Distinct()
                 .ToListAsync();
 
             if (!await _vaccineService.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds, appointmentDate))
+            {
+                _logger.Error($"Vaccine {vaccine.VaccineName} không thể tiêm cùng các loại vaccine đã đặt trước.");
                 throw new ArgumentException(
                     $"Vaccine {vaccine.VaccineName} không thể tiêm cùng các loại vaccine đã đặt trước.");
+            }
 
-            for (var dose = nextDose; dose <= vaccine.RequiredDoses; dose++)
+            // Tạo các appointments cho vaccine này
+            for (var dose = nextDose; dose < nextDose + remainingDoses; dose++)
             {
                 var appointment = new Appointment
                 {
@@ -241,13 +275,16 @@ public class AppointmentService : IAppointmentService
 
                 appointments.Add(appointment);
                 appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
+                _logger.Info(
+                    $"Created appointment for dose {dose} of vaccine {vaccine.VaccineName} on {appointment.AppointmentDate.Value:yyyy-MM-dd}");
             }
 
+            _logger.Info($"Total appointments created: {appointments.Count}");
 
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
-            // Lấy thông tin email của user
+            // Gửi thông tin email xác nhận
             var user = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
             if (user != null)
             {
@@ -258,12 +295,18 @@ public class AppointmentService : IAppointmentService
                 };
 
                 foreach (var appointment in appointments)
+                {
+                    _logger.Info($"Sending email confirmation for appointment ID {appointment.Id} to {user.Email}");
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment);
+                }
             }
 
-            //Push notification khi book vaccine lẻ
+            // Gửi thông báo push
             foreach (var appointment in appointments)
+            {
+                _logger.Info($"Sending push notification for appointment ID {appointment.Id}.");
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
+            }
 
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
@@ -281,13 +324,16 @@ public class AppointmentService : IAppointmentService
         }
         catch (ArgumentException ex)
         {
+            _logger.Error($"Argument error: {ex.Message}");
             throw new ArgumentException(ex.Message);
         }
         catch (Exception ex)
         {
+            _logger.Error($"Unexpected error: {ex.Message}");
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
+
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(
         CreateAppointmentPackageVaccineDto request, Guid parentId)

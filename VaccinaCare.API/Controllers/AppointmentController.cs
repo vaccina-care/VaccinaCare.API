@@ -101,10 +101,7 @@ public class AppointmentController : ControllerBase
             var updatedAppointments = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
 
             if (updatedAppointments == null)
-            {
                 return Ok(ApiResult<object>.Error("Không thể cập nhật ngày tiêm. Vui lòng kiểm tra điều kiện hợp lệ."));
-
-            }
             return Ok(ApiResult<List<AppointmentDTO>>.Success(updatedAppointments, "Cập nhật ngày tiêm thành công."));
         }
         catch (Exception ex)
@@ -112,8 +109,6 @@ public class AppointmentController : ControllerBase
             return Ok(ApiResult<object>.Error($"An unexpected error occurred during creation: {ex}"));
         }
     }
-
-
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
