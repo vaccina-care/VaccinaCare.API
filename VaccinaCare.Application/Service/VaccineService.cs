@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Reflection.PortableExecutable;
 using Microsoft.AspNetCore.Http;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -550,5 +549,24 @@ public class VaccineService : IVaccineService
 
         _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
         return true;
+    }
+    
+    public async Task<int> GetVaccineAvailable()
+    {
+        try
+        {
+            _logger.Info("Fetching available vaccines...");
+
+            var totalVaccine = await _unitOfWork.VaccineRepository.GetAllAsync();
+            int count = totalVaccine.Count(v => v.IsDeleted == false);
+
+            _logger.Info($"Successfully retrieved vaccine count : {count}");
+            return count;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error occurred while getting vaccine count: {ex.Message}");
+            return 0;
+        }
     }
 }

@@ -18,4 +18,5 @@ public interface IVaccineService
         int pageSize);
 
     Task<VaccineDto> GetVaccineById(Guid id);
+    Task<int> GetVaccineAvailable();
 }

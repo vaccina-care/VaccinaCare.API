@@ -9,6 +9,7 @@ using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
+using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
@@ -145,6 +146,33 @@ public class VaccinePackageController : ControllerBase
             return StatusCode(500,
                 ApiResult<object>.Error(
                     "An unexpected error occurred while retrieving vaccines and vaccine packages."));
+        }
+    }
+
+    [HttpGet("most-booked")]
+    public async Task<IActionResult> GetMostBookedPackage()
+    {
+        try
+        {
+            var package = await _vaccinePackageService.GetMostBookedPackageAsync();
+
+            if (package == null)
+            {
+                return Ok(ApiResult<object>.Error("No bookings found for any package"));
+            }
+
+            var response = new VaccinePackage
+            {
+                PackageName = package.PackageName,
+                Description = package.Description,
+                Price = package.Price
+            };
+
+            return Ok(ApiResult<object>.Success(response));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResult<string>.Error($"Internal Server Error: {ex.Message}"));
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
+using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.Application.Interface;
@@ -20,4 +21,5 @@ public interface IVaccinePackageService
         string? searchDescription, int pageNumber, int pageSize);
 
     Task<List<VaccinePackageDTO>> GetAllVaccinePackagesAsync();
+    Task<VaccinePackage?> GetMostBookedPackageAsync();
 }
