@@ -1,13 +1,5 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VaccinaCare.Application.Interface;
+﻿using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;

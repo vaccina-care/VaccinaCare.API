@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq.Expressions;
 using Moq;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Service;
-using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
@@ -300,7 +294,6 @@ public class VaccineServiceTest
     //}
 
     [Fact]
-    // Test case 10 : Delete Vaccine - Successfully
     public async Task DeleteVaccine_Successfully()
     {
         // Arrange
@@ -377,7 +370,6 @@ public class VaccineServiceTest
     }
 
     [Fact]
-    //Test case 11 : Delete Vaccine - Not Found
     public async Task DeleteVaccine_VaccineNotFound()
     {
         // Arrange
@@ -391,7 +383,6 @@ public class VaccineServiceTest
     }
 
     [Fact]
-    //Test case 12 : Delete Vaccine - Vaccine Already Deleted
     public async Task DeleteVaccine_VaccineAlreadyDeleted()
     {
         // Arrange
@@ -415,7 +406,6 @@ public class VaccineServiceTest
     }
 
     [Fact]
-    //Test case 13 : Delete Vaccine - Have Exception
     public async Task DeleteVaccine_ExceptionInDeletionProcess()
     {
         // Arrange
@@ -441,7 +431,6 @@ public class VaccineServiceTest
     }
 
     [Fact]
-    //Test case 14 : Delete Vaccine - Fails
     public async Task DeleteVaccine_SoftRemoveFails()
     {
         // Arrange

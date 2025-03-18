@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
-using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;

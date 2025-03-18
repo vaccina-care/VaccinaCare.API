@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Reflection.PortableExecutable;
 using Microsoft.AspNetCore.Http;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -16,7 +15,6 @@ public class VaccineService : IVaccineService
     private readonly ILoggerService _logger;
     private readonly IBlobService _blobService;
 
-
     public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger, IClaimsService claimsService,
         IBlobService blobService)
     {
@@ -25,7 +23,6 @@ public class VaccineService : IVaccineService
         _claimsService = claimsService;
         _blobService = blobService;
     }
-
 
     //CRUD Vaccines
     public async Task<PagedResult<VaccineDto>> GetVaccines(string? search, string? type, string? sortBy,
@@ -55,16 +52,19 @@ public class VaccineService : IVaccineService
                             ? queryList.OrderByDescending(v => v.VaccineName).ToList()
                             : queryList.OrderBy(v => v.VaccineName).ToList();
                         break;
+
                     case "price":
                         queryList = isDescending
                             ? queryList.OrderByDescending(v => v.Price).ToList()
                             : queryList.OrderBy(v => v.Price).ToList();
                         break;
+
                     case "type":
                         queryList = isDescending
                             ? queryList.OrderByDescending(v => v.Type).ToList()
                             : queryList.OrderBy(v => v.Type).ToList();
                         break;
+
                     default:
                         _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
                         queryList = queryList.OrderBy(v => v.VaccineName).ToList();
@@ -177,7 +177,6 @@ public class VaccineService : IVaccineService
                 return null;
             }
 
-
             var fileName = $"vaccines/{Guid.NewGuid()}{Path.GetExtension(vaccinePictureFile.FileName)}";
             using (var stream = vaccinePictureFile.OpenReadStream())
             {
@@ -186,7 +185,6 @@ public class VaccineService : IVaccineService
 
             // Lấy URL của ảnh đã upload
             var picUrl = await _blobService.GetFileUrlAsync(fileName);
-
 
             var vaccine = new Vaccine
             {
@@ -326,7 +324,6 @@ public class VaccineService : IVaccineService
         }
     }
 
-
     public async Task<VaccineDto> DeleteVaccine(Guid id)
     {
         _logger.Info($"Initiating vaccine deleted process for ID: {id}");
@@ -373,7 +370,6 @@ public class VaccineService : IVaccineService
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Success($"Vaccine with ID {id} ('{vaccine.VaccineName}') deleted successfully.");
-
 
             var deletedVaccineDTO = new VaccineDto
             {

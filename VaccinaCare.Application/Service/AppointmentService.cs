@@ -1,10 +1,8 @@
-﻿using LinqKit;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
-using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
@@ -18,7 +16,6 @@ public class AppointmentService : IAppointmentService
     private readonly IVaccineService _vaccineService;
     private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
-
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService)
@@ -40,7 +37,6 @@ public class AppointmentService : IAppointmentService
     //         throw;
     //     }
     // }
-
 
     public async Task<List<AppointmentDTO>> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
     {
@@ -334,7 +330,6 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(
         CreateAppointmentPackageVaccineDto request, Guid parentId)
     {
@@ -428,7 +423,6 @@ public class AppointmentService : IAppointmentService
                     request.PackageId);
             }
 
-
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
@@ -452,7 +446,6 @@ public class AppointmentService : IAppointmentService
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
-
 
     public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {

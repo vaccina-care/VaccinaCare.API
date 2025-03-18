@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Ultils;
-using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 
 namespace VaccinaCare.API.Controllers;
@@ -30,14 +29,13 @@ public class VaccineRecordController : ControllerBase
         {
             var result = await _vaccineRecordService.AddVaccinationRecordAsync(addVaccineRecordDto);
             return Ok(new ApiResult<VaccineRecordDto>
-                { Data = result, Message = "Vaccination record added successfully", IsSuccess = true });
+            { Data = result, Message = "Vaccination record added successfully", IsSuccess = true });
         }
         catch (Exception ex)
         {
             return Ok(ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
-
 
     [HttpGet("details/{id}")]
     [Authorize]
@@ -61,7 +59,6 @@ public class VaccineRecordController : ControllerBase
             return Ok(ApiResult<object>.Error("An unexpected error occurred while fetching the record."));
         }
     }
-
 
     // Get list of vaccination records by ChildId
     [HttpGet("{childId}")]

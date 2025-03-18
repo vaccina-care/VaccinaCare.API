@@ -44,7 +44,6 @@ public class VnPayService : IVnPayService
         return paymentUrl;
     }
 
-
     public PaymentResponseModel PaymentExecute(IQueryCollection collections)
     {
         var pay = new VnPayLibrary();

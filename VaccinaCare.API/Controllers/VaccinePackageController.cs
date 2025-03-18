@@ -1,15 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Service;
-using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Application.Ultils;
-using VaccinaCare.Domain.DTOs.ChildDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
-using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -62,7 +55,6 @@ public class VaccinePackageController : ControllerBase
             return Ok(ApiResult<object>.Error("An unexpected error occurred while retrieving vaccine packages."));
         }
     }
-
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetVaccinePackageById(Guid id)

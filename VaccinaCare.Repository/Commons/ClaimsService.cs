@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Repository.Interfaces;
 using VaccinaCare.Repository.Utils;
@@ -27,7 +27,6 @@ public class ClaimsService : IClaimsService
     public Guid GetCurrentUserId { get; }
 
     public string? IpAddress { get; }
-
 
     public async Task<CurrentUserDTO> GetCurrentUserDetailsAsync(ClaimsPrincipal user)
     {

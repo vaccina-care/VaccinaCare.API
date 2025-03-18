@@ -4,8 +4,6 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
-using VaccinaCare.Domain.DTOs.EmailDTOs;
-using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
@@ -20,7 +18,6 @@ public class AuthController : ControllerBase
     private readonly IEmailService _emailService;
     private readonly IClaimsService _claimsService;
 
-
     public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService,
         IEmailService emailService, IClaimsService claimsService)
     {
@@ -30,7 +27,6 @@ public class AuthController : ControllerBase
         _emailService = emailService;
         _claimsService = claimsService;
     }
-
 
     [HttpPost("register")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]

@@ -1,6 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Swashbuckle.AspNetCore.Annotations;
-
 namespace VaccinaCare.Domain.DTOs.UserDTOs;
 
 public class UserUpdateDtoByAdmin

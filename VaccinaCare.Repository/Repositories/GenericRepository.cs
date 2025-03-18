@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Domain;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;

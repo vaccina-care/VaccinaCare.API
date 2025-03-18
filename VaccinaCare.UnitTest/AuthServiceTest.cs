@@ -15,7 +15,6 @@
 //using Microsoft.Extensions.Configuration;
 //using VaccinaCare.Application.Ultils;
 
-
 //namespace VaccinaCare.UnitTest;
 
 //public class AuthServiceTest
@@ -65,7 +64,6 @@
 //            ImageUrl = registerRequest.ImageUrl,
 //            RoleName = RoleType.Customer
 //        };
-
 
 //        _unitOfWorkMock.Setup(u => u.UserRepository.AddAsync(It.IsAny<User>()))
 //            .ReturnsAsync((User u) => u);
@@ -117,7 +115,7 @@
 //        // Arrange
 //        var registerRequest = new RegisterRequestDTO
 //        {
-//            Email = "", // Email null 
+//            Email = "", // Email null
 //            FullName = "Alice Smith",
 //            Password = "Password123",
 //            PhoneNumber = "123456789",
@@ -315,4 +313,3 @@
 //        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
 //    }
 //}
-
