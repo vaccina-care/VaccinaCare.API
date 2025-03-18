@@ -1,4 +1,5 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;

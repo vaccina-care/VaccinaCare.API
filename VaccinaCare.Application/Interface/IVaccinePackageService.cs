@@ -1,5 +1,6 @@
 ﻿using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
+using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Interface;
 
