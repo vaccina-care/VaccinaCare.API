@@ -439,7 +439,7 @@ public class VaccineService : IVaccineService
 
     public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
     {
-        // Lấy thông tin vaccine để kiểm tra số mũi yêu cầu
+        // Fetch vaccine details to check required doses
         var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
         if (vaccine == null)
         {
@@ -447,32 +447,30 @@ public class VaccineService : IVaccineService
             throw new ArgumentException($"Vaccine ID {vaccineId} không tồn tại.");
         }
 
-        // Lấy danh sách các lần tiêm trước đó chỉ của trẻ hiện tại
+        // Get all vaccination records for the specific vaccine
         var records = await _unitOfWork.VaccinationRecordRepository
             .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
 
-        if (records == null || !records.Any()) return 1; // Nếu chưa có lịch sử tiêm, bắt đầu từ mũi 1
+        // If there are no records, start from Dose 1
+        if (!records.Any()) return 1;
 
-        // Tìm số mũi lớn nhất đã tiêm hợp lệ cho trẻ hiện tại
-        var lastDoseNumber = records
-            .Where(r => r.DoseNumber > 0 && r.DoseNumber <= vaccine.RequiredDoses) // Lọc dữ liệu hợp lệ
-            .Select(r => r.DoseNumber)
-            .DefaultIfEmpty(0) // Nếu không có giá trị hợp lệ, mặc định là 0
-            .Max();
+        // Find the highest dose number given for this vaccine
+        var lastDoseNumber = records.Max(r => r.DoseNumber);
 
+        // Next dose is simply the last administered dose +1
         var nextDose = lastDoseNumber + 1;
 
-        // Đảm bảo không vượt quá số mũi yêu cầu
+        // Ensure we do not exceed the required doses
         if (nextDose > vaccine.RequiredDoses)
         {
-            _logger.Warn(
-                $"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
-            return vaccine.RequiredDoses; // Giữ nguyên nếu đã đạt max dose
+            _logger.Warn($"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
+            return vaccine.RequiredDoses; // Cap at max required dose
         }
 
-        _logger.Info($"[GetNextDoseNumber] Last dose number: {lastDoseNumber}. Next dose should be: {nextDose}.");
+        _logger.Info($"[GetNextDoseNumber] Last dose: {lastDoseNumber}, Next dose: {nextDose}");
         return nextDose;
     }
+
 
     /// <summary>
     /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.

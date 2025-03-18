@@ -19,6 +19,41 @@ public class VaccineRecordService : IVaccineRecordService
         _logger = logger;
     }
 
+    public async Task<int> GetRemainingDoses(Guid childId, Guid vaccineId)
+    {
+        try
+        {
+            _logger.Info($"Fetching remaining doses for Child {childId} and Vaccine {vaccineId}");
+
+            // Lấy số liều đã tiêm của đúng VaccineId này
+            var existingRecords = await _unitOfWork.VaccinationRecordRepository
+                .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
+
+            int dosesTaken = existingRecords.Count;
+
+            // Lấy RequiredDoses của vaccine
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+            if (vaccine == null)
+            {
+                _logger.Error($"Vaccine với ID {vaccineId} không tồn tại.");
+                throw new Exception("Vaccine không tồn tại.");
+            }
+
+            // Tính số liều còn lại
+            int remainingDoses = vaccine.RequiredDoses - dosesTaken;
+
+            _logger.Info($"Child {childId} has taken {dosesTaken} doses of Vaccine {vaccineId}. Required: {vaccine.RequiredDoses}, Remaining: {remainingDoses}");
+
+            // Đảm bảo không trả về số âm
+            return remainingDoses > 0 ? remainingDoses : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error fetching remaining doses: {ex.Message}");
+            throw;
+        }
+    }
+
     public async Task<VaccineRecordDto> GetRecordDetailsByIdAsync(Guid recordId)
     {
         try
