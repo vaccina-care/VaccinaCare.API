@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Net.payOS;
-using System.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Interface.PaymentService;
@@ -42,7 +42,6 @@ public static class IOCContainer
         return services;
     }
 
-
     public static IServiceCollection SetupPayOs(this IServiceCollection services)
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -76,7 +75,6 @@ public static class IOCContainer
 
         return services;
     }
-
 
     private static IServiceCollection SetupDBContext(this IServiceCollection services)
     {
@@ -126,7 +124,6 @@ public static class IOCContainer
         return services;
     }
 
-
     private static IServiceCollection SetupCORS(this IServiceCollection services)
     {
         services.AddCors(opt =>
@@ -137,7 +134,6 @@ public static class IOCContainer
 
         return services;
     }
-
 
     private static IServiceCollection SetupSwagger(this IServiceCollection services)
     {
@@ -179,7 +175,6 @@ public static class IOCContainer
             // Cấu hình Swagger để sử dụng Newtonsoft.Json
             c.UseAllOfForInheritance();
         });
-
 
         return services;
     }
@@ -230,7 +225,6 @@ public static class IOCContainer
             options.AddPolicy("StaffOrCustomerPolicy", policy =>
                 policy.RequireRole("Customer", "Staff"));
         });
-
 
         return services;
     }

@@ -100,7 +100,7 @@ public class EmailService : IEmailService
         <h1 style='color: #1e1b4b; text-align: center;'>Dear {emailRequest.UserEmail},</h1>
 
         <p style='font-size: 16px;'>We regret to inform you that your VaccinaCare account has been deactivated. This action was taken due to various reasons, which may include inactivity or a request for deactivation.</p>
-        
+
         <p style='font-size: 16px;'>Here are a few things you should know:</p>
         <ul style='font-size: 16px; padding-left: 20px;'>
             <li>Your vaccination appointment history will still be available for viewing.</li>

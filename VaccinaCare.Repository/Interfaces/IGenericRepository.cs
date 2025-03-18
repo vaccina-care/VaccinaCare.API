@@ -30,5 +30,6 @@ public interface IGenericRepository<TEntity> where TEntity : BaseEntity
         params Expression<Func<TEntity, object>>[] includes);
 
     Task<bool> HardRemoveRange(List<TEntity> entities);
+
     Task<bool> HardRemove(Expression<Func<TEntity, bool>> predicate);
 }

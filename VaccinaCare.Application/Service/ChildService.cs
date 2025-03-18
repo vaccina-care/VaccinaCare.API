@@ -70,7 +70,6 @@ public class ChildService : IChildService
                 OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription
             };
 
-
             // Save to database
             await _unitOfWork.ChildRepository.AddAsync(child);
             await _unitOfWork.SaveChangesAsync();
@@ -115,7 +114,6 @@ public class ChildService : IChildService
             throw new Exception("An error occurred while creating the child profile. Please try again later.");
         }
     }
-
 
     /// <summary>
     /// GET tất cả thông tin của trẻ em thông qua Id của Parent
@@ -171,7 +169,6 @@ public class ChildService : IChildService
         }
     }
 
-
     /// <summary>
     /// Soft delete 1 trẻ em thuộc về parent dựa trên parent id
     /// </summary>
@@ -212,7 +209,6 @@ public class ChildService : IChildService
             throw new Exception("An error occurred while deleting the child profile. Please try again later.");
         }
     }
-
 
     /// <summary>
     /// Update thông tin của children, field nào có nhập thì update, không nhập thì để nguyên
@@ -284,8 +280,7 @@ public class ChildService : IChildService
             if (childDto.OtherSpecialConditionDescription != null)
                 child.OtherSpecialConditionDescription = childDto.OtherSpecialConditionDescription;
 
-            #endregion
-
+            #endregion Cập nhật các trường chỉ nếu chúng không phải là null
 
             await _unitOfWork.ChildRepository.Update(child);
             await _unitOfWork.SaveChangesAsync();

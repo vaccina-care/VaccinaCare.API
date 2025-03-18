@@ -4,33 +4,33 @@
     // Styling the container, search input, and checkbox container using inline CSS
     searchDiv.innerHTML = `
         <span style="font-size: 20px; font-weight: 900;">Search</span>
-        <input 
-            type="text" 
-            id="apiSearch" 
-            placeholder="Search APIs..." 
+        <input
+            type="text"
+            id="apiSearch"
+            placeholder="Search APIs..."
             style="
-                flex: 1 1 0%; 
-                height: 40px; 
-                width: 100%; 
-                border-radius: 8px; 
-                border: 1px solid #d1d5db; 
-                background-color: #f9fafb; 
-                padding-left: 12px; 
-                padding-right: 12px; 
-                font-size: 14px; 
-                color: #111827; 
-                transition: border-color 0.2s; 
-                outline: none; 
+                flex: 1 1 0%;
+                height: 40px;
+                width: 100%;
+                border-radius: 8px;
+                border: 1px solid #d1d5db;
+                background-color: #f9fafb;
+                padding-left: 12px;
+                padding-right: 12px;
+                font-size: 14px;
+                color: #111827;
+                transition: border-color 0.2s;
+                outline: none;
                 margin: 10px 0;
             "
-            onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 2px rgba(59, 130, 246, 0.5)';" 
+            onfocus="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 2px rgba(59, 130, 246, 0.5)';"
             onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';"
         />
         <div style="margin: 10px 0;">
             <span style="font-size: 16px; font-weight: 700;">Filter by Tag</span>
             <div id="checkboxContainer" style="
-                display: flex; 
-                flex-wrap: wrap; 
+                display: flex;
+                flex-wrap: wrap;
                 margin-top: 10px;
             "></div>
         </div>

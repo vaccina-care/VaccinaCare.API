@@ -1,12 +1,9 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
-using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Interfaces;
@@ -168,7 +165,6 @@ public class AuthService : IAuthService
             return null;
         }
     }
-
 
     public async Task<bool> LogoutAsync(Guid userId)
     {

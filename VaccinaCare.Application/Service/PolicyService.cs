@@ -1,10 +1,10 @@
-﻿using VaccinaCare.Application.Interface;
-using VaccinaCare.Domain.DTOs.PolicyDTOs;
-using VaccinaCare.Repository.Commons;
-using VaccinaCare.Domain.Entities;
-using VaccinaCare.Repository.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Domain.DTOs.PolicyDTOs;
+using VaccinaCare.Domain.Entities;
+using VaccinaCare.Repository.Commons;
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
 
@@ -132,7 +132,6 @@ public class PolicyService : IPolicyService
             throw new Exception("An error occurred while fetching policies. Please try again later");
         }
     }
-
 
     public async Task<PolicyDto> GetPolicyByIdAsync(Guid id)
     {

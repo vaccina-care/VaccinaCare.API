@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 
 #pragma warning disable CS8603 // Possible null reference return =))
+
 namespace VaccinaCare.Repository.Utils;
 
 public static class AuthenTools

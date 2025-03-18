@@ -4,7 +4,6 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
-using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -106,7 +105,6 @@ public class ChildController : ControllerBase
         }
     }
 
-
     [HttpPut("{childId}")]
     [Authorize(Policy = "CustomerPolicy")]
     [ProducesResponseType(typeof(ApiResult<ChildDto>), 200)]
@@ -121,7 +119,7 @@ public class ChildController : ControllerBase
         {
             var result = await _childService.UpdateChildrenAsync(childId, updateChildDto);
             return Ok(new ApiResult<ChildDto>
-                { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
+            { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
         }
         catch (KeyNotFoundException ex)
         {

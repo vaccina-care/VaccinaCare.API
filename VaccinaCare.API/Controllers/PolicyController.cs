@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using VaccinaCare.Application.Interface.Common;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
-using VaccinaCare.Domain.DTOs.PolicyDTOs;
+using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
-using Microsoft.AspNetCore.Authorization;
+using VaccinaCare.Domain.DTOs.PolicyDTOs;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
@@ -79,7 +79,6 @@ public class PolicyController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
-
 
     [HttpGet("{policyId}")]
     public async Task<IActionResult> GetPolicyById(Guid policyId)

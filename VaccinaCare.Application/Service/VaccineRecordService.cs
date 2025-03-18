@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using VaccinaCare.Application.Interface;
+﻿using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Ultils;
-using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
