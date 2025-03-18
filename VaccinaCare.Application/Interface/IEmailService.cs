@@ -6,6 +6,7 @@ namespace VaccinaCare.Application.Interface;
 public interface IEmailService
 {
     Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest);
+
     Task SendDeactivationNotificationAsync(EmailRequestDTO emailRequest);
 
     Task SendSingleAppointmentConfirmationAsync(EmailRequestDTO emailRequest, Appointment appointment);

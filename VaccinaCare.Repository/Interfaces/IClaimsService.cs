@@ -8,5 +8,6 @@ public interface IClaimsService
     public Guid GetCurrentUserId { get; }
 
     public string? IpAddress { get; }
+
     Task<CurrentUserDTO> GetCurrentUserDetailsAsync(ClaimsPrincipal user);
 }

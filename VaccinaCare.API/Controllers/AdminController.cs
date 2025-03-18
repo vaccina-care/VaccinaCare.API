@@ -1,12 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
-using VaccinaCare.Application.Ultils;
-using Microsoft.AspNetCore.Authorization;
-using VaccinaCare.Domain.DTOs.UserDTOs;
-using VaccinaCare.Domain.DTOs.AuthDTOs;
-using VaccinaCare.Domain.DTOs.EmailDTOs;
-using VaccinaCare.Domain.DTOs.NotificationDTOs;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.UserDTOs;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
@@ -74,7 +71,6 @@ public class AdminController : Controller
         }
     }
 
-
     [HttpPut("users/{userId}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     public async Task<IActionResult> UpdateUserInfoByAdmin(Guid userId,
@@ -93,7 +89,6 @@ public class AdminController : Controller
             return StatusCode(500, ApiResult<object>.Error("Internal server error"));
         }
     }
-
 
     [HttpDelete("users/{userId}")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
