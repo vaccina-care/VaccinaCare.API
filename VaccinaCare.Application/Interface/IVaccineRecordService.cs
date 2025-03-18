@@ -1,4 +1,4 @@
-using VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
+using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 
 namespace VaccinaCare.Application.Interface;
 

@@ -91,41 +91,24 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPut("{appointmentId}/date")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
+    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> UpdateAppointmentDate(Guid appointmentId, DateTime newDate)
     {
         try
         {
-            var (success, message) = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
+            var updatedAppointments = await _appointmentService.UpdateAppointmentDate(appointmentId, newDate);
 
-            if (!success)
-                return BadRequest(new ApiResult<object>
-                {
-                    IsSuccess = false,
-                    Message = message, // Trả về đúng message từ service
-                    Data = null
-                });
-
-            return Ok(new ApiResult<object>
-            {
-                IsSuccess = true,
-                Message = message,
-                Data = null
-            });
+            if (updatedAppointments == null)
+                return Ok(ApiResult<object>.Error("Không thể cập nhật ngày tiêm. Vui lòng kiểm tra điều kiện hợp lệ."));
+            return Ok(ApiResult<List<AppointmentDTO>>.Success(updatedAppointments, "Cập nhật ngày tiêm thành công."));
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = $"Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau. {ex.Message}",
-                Data = null
-            });
+            return Ok(ApiResult<object>.Error($"An unexpected error occurred during creation: {ex}"));
         }
     }
-
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]

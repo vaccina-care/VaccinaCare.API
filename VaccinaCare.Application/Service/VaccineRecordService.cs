@@ -3,7 +3,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
+using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
 
@@ -120,6 +120,7 @@ public class VaccineRecordService : IVaccineRecordService
             // Prepare DTO to return
             var vaccineRecordDto = new VaccineRecordDto
             {
+                Id = vaccinationRecord.Id,
                 ChildId = vaccinationRecord.ChildId,
                 VaccineId = vaccinationRecord.VaccineId,
                 VaccinationDate = vaccinationRecord.VaccinationDate,

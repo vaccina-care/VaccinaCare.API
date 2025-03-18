@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.DTOs.VaccineDTOs.VaccineRecord;
+using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
+//DONE CLEAN RETURN SCENARIOS
 [ApiController]
 [Route("api/vaccination/records")]
 public class VaccineRecordController : ControllerBase
@@ -28,31 +29,17 @@ public class VaccineRecordController : ControllerBase
         try
         {
             var result = await _vaccineRecordService.AddVaccinationRecordAsync(addVaccineRecordDto);
-
-            var apiResult = new ApiResult<VaccineRecordDto>
-            {
-                Data = result,
-                Message = "Vaccination record added successfully",
-                IsSuccess = true
-            };
-            return Ok(apiResult);
+            return Ok(new ApiResult<VaccineRecordDto>
+                { Data = result, Message = "Vaccination record added successfully", IsSuccess = true });
         }
         catch (Exception ex)
         {
-            var apiResult = new ApiResult<object>
-            {
-                Data = null,
-                Message = ex.Message,
-                IsSuccess = false
-            };
-
-            if (ex is ArgumentException || ex is InvalidOperationException) return BadRequest(apiResult);
-
-            return StatusCode(500, apiResult);
+            return Ok(ApiResult<object>.Error("An unexpected error occurred during creation."));
         }
     }
 
-    [HttpGet("{id}")]
+
+    [HttpGet("details/{id}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -71,14 +58,10 @@ public class VaccineRecordController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResult<object>
-            {
-                Data = null,
-                Message = ex.Message,
-                IsSuccess = false
-            });
+            return Ok(ApiResult<object>.Error("An unexpected error occurred while fetching the record."));
         }
     }
+
 
     // Get list of vaccination records by ChildId
     [HttpGet("{childId}")]
@@ -100,12 +83,7 @@ public class VaccineRecordController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new ApiResult<object>
-            {
-                Data = null,
-                Message = ex.Message,
-                IsSuccess = false
-            });
+            return Ok(ApiResult<object>.Error("An unexpected error occurred while fetching the records."));
         }
     }
 }
