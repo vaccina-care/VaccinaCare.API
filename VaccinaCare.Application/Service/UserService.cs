@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.Data;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -182,7 +181,7 @@ public class UserService : IUserService
         }
     }
 
-    //admin methods: 
+    //admin methods:
     public async Task<Pagination<UserDto>> GetAllUsersForAdminAsync(PaginationParameter paginationParameter,
         string? searchTerm = null)
     {

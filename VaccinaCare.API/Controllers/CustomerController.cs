@@ -16,7 +16,6 @@ public class CustomerController : ControllerBase
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
 
-
     public CustomerController(IUserService userService, IClaimsService claimsService, ILoggerService logger)
     {
         _userService = userService;

@@ -1,14 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query;
-using Microsoft.VisualBasic;
-using System.Linq;
-using System.Reflection.PortableExecutable;
-using VaccinaCare.Application.Interface;
+﻿using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Domain.Entities;
-using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -110,12 +104,9 @@ public class VaccinePackageService : IVaccinePackageService
         {
             _loggerService.Info("Fetching all Vaccine Packages...");
 
-
             var vaccinePackages = await _unitOfWork.VaccinePackageRepository.GetAllAsync();
 
-
             var allPackageDetails = await _unitOfWork.VaccinePackageDetailRepository.GetAllAsync();
-
 
             var activeVaccines = await _unitOfWork.VaccineRepository.GetAllAsync(v => !v.IsDeleted);
 

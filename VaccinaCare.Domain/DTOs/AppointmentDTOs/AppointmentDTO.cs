@@ -1,6 +1,4 @@
-﻿using VaccinaCare.Domain.Enums;
-
-namespace VaccinaCare.Domain.DTOs.AppointmentDTOs;
+﻿namespace VaccinaCare.Domain.DTOs.AppointmentDTOs;
 
 public class AppointmentDTO
 {

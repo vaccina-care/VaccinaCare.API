@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Swashbuckle.AspNetCore.Annotations;
+﻿using Swashbuckle.AspNetCore.Annotations;
 using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain.DTOs.VaccineDTOs;

@@ -146,7 +146,6 @@ public class SystemController : ControllerBase
         _logger.Success("Users seeded successfully.");
     }
 
-
     private async Task<List<Vaccine>> SeedVaccinesAndPackages()
     {
         var vaccines = new List<Vaccine>
@@ -228,7 +227,6 @@ public class SystemController : ControllerBase
                 HasDrugInteraction = false,
                 HasSpecialWarning = false
             },
-
 
             new()
             {
@@ -563,7 +561,7 @@ public class SystemController : ControllerBase
                 HasSpecialWarning = false
             }
 
-            #endregion
+            #endregion VaccineData
         };
 
         // Seed the vaccines first
@@ -599,7 +597,7 @@ public class SystemController : ControllerBase
                 }
             },
 
-            #endregion
+            #endregion Package one
 
             #region Package two
 
@@ -623,7 +621,7 @@ public class SystemController : ControllerBase
                 }
             }
 
-            #endregion
+            #endregion Package two
         };
 
         #region Calculate Package Price
@@ -647,7 +645,7 @@ public class SystemController : ControllerBase
             Console.WriteLine($"Discounted price for package '{package.PackageName}' is: {discountedPrice}");
         }
 
-        #endregion
+        #endregion Calculate Package Price
 
         // Lưu trữ vaccine packages vào cơ sở dữ liệu
         _logger.Info("Seeding vaccine packages...");

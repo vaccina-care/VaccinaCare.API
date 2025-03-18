@@ -1,13 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Interface;
-using VaccinaCare.Domain.DTOs.FeedbackDTOs;
+using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
-using Microsoft.AspNetCore.Authorization;
-using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Domain.DTOs.FeedbackDTOs;
 using VaccinaCare.Repository.Commons;
-using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -125,7 +122,6 @@ public class FeedbackController : ControllerBase
             });
         }
     }
-
 
     [HttpGet("user")]
     public async Task<IActionResult> GetFeedbackByUserId()

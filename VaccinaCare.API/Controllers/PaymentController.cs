@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.PaymentService;
 using VaccinaCare.Application.Ultils;
-using VaccinaCare.Domain.DTOs.PaymentDTOs;
 
 namespace VaccinaCare.API.Controllers;
 

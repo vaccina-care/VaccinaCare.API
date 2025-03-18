@@ -1,17 +1,12 @@
 ﻿using Moq;
-using System;
-using System.Threading.Tasks;
-using Xunit;
 using VaccinaCare.Application.Interface;
-using VaccinaCare.Application.Service;
-using VaccinaCare.Domain.Entities;
-using VaccinaCare.Repository.Interfaces;
-using System.Collections.Generic;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Domain.DTOs.NotificationDTOs;
-using VaccinaCare.Domain.Enums;
-using Org.BouncyCastle.Asn1.Ocsp;
+using VaccinaCare.Application.Service;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
+using VaccinaCare.Domain.DTOs.NotificationDTOs;
+using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.UnitTest;
 
@@ -37,7 +32,6 @@ public class ChildServiceTest
     }
 
     [Fact]
-    //Test case 1 : Create child success
     public async Task CreateChildAsync_Success()
     {
         // Arrange
@@ -121,13 +115,12 @@ public class ChildServiceTest
     }
 
     [Fact]
-    //Test case 2 : Create Child when parent does not exist
     public async Task CreateChildAsync_ShouldThrowKeyNotFoundException_WhenParentDoesNotExist()
     {
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId)).ReturnsAsync((User)null);
@@ -139,13 +132,12 @@ public class ChildServiceTest
     }
 
     [Fact]
-    //Test case 3 : Create child when save changes fails
     public async Task CreateChildAsync_ShouldThrowException_WhenSaveChangesFails()
     {
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
         var parent = new User { Id = parentId };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
@@ -160,13 +152,12 @@ public class ChildServiceTest
     }
 
     [Fact]
-    //Test case 4 : Create child when notification fails
     public async Task CreateChildAsync_ShouldFail_WhenNotificationFails()
     {
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-            { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
+        { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId))

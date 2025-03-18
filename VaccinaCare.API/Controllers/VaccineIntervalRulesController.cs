@@ -4,12 +4,10 @@ using VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs;
 
 namespace VaccinaCare.API.Controllers;
 
-using Humanizer;
 using Application.Interface.Common;
 using Application.Ultils;
-using Application.Service;
-using System.Diagnostics.Contracts;
 
+//DONE CLEAN RETURN SCENARIOS
 [ApiController]
 [Route("api/interval-rules")]
 public class VaccineIntervalRulesController : ControllerBase

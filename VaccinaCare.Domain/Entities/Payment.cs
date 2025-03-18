@@ -1,6 +1,4 @@
-﻿using VaccinaCare.Domain.Enums;
-
-namespace VaccinaCare.Domain.Entities;
+﻿namespace VaccinaCare.Domain.Entities;
 
 public partial class Payment : BaseEntity
 {

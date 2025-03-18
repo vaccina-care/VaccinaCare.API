@@ -1,11 +1,11 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.FeedbackDTOs;
-using VaccinaCare.Repository.Interfaces;
-using VaccinaCare.Domain.Enums;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
-using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
 
@@ -37,7 +37,7 @@ public class FeedbackService : IFeedbackService
     //                 Comments = feedback.Comments
     //             };
     //         }
-    //         
+    //
     //     }
     //     catch (Exception e)
     //     {
@@ -79,7 +79,6 @@ public class FeedbackService : IFeedbackService
                 _logger.Warn($"Invalid rating: {feedbackDto.Rating}. Rating must be between 1 and 5.");
                 throw new ArgumentOutOfRangeException(nameof(feedbackDto.Rating), "Rating must be between 1 and 5.");
             }
-
 
             var feedback = new Feedback
             {
@@ -170,7 +169,8 @@ public class FeedbackService : IFeedbackService
                 Comments = feedback.Comments
             }).ToList();
 
-            return new Pagination<GetFeedbackDto>(feedfackDtos, totalFeedbacks, pagination.PageIndex, pagination.PageSize);
+            return new Pagination<GetFeedbackDto>(feedfackDtos, totalFeedbacks, pagination.PageIndex,
+                pagination.PageSize);
         }
         catch (Exception ex)
         {
@@ -190,8 +190,8 @@ public class FeedbackService : IFeedbackService
             var feedbacks = await _unitOfWork.FeedbackRepository.GetAllAsync();
 
             var feedbackList = feedbacks
-                    .Where(f => f.CreatedBy == userId && !f.IsDeleted)
-                    .ToList();
+                .Where(f => f.CreatedBy == userId && !f.IsDeleted)
+                .ToList();
 
             if (!feedbackList.Any())
             {
