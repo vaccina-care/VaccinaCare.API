@@ -106,12 +106,34 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<object>.Error($"An unexpected error occurred during creation: {ex}"));
+            return Ok(ApiResult<object>.Error($"An unexpected error occurred during creation: {ex.Message}"));
+        }
+    }
+    
+    [HttpPut("{appointmentId}/status")]
+    [Authorize(Policy = "StaffPolicy")]
+    [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateAppointmentStatus(Guid appointmentId, [FromForm] UpdateAppointmentStatusRequest request)
+    {
+        try
+        {
+            var updatedAppointment = await _appointmentService.UpdateAppointmentStatus(appointmentId, request.NewStatus, request.CancellationReason);
+
+            if (updatedAppointment == null)
+                return Ok(ApiResult<object>.Error("Unable to update appointment status. Please check the validity conditions."));
+
+            return Ok(ApiResult<AppointmentDTO>.Success(updatedAppointment, "Appointment status updated successfully."));
+        }
+        catch (Exception ex)
+        {
+            return Ok(ApiResult<object>.Error(ex.Message));
         }
     }
 
     [HttpGet]
-    // [Authorize(Policy = "StaffPolicy")]
+    [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
