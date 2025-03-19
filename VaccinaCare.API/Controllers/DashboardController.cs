@@ -8,6 +8,7 @@ using VaccinaCare.Domain.Entities;
 namespace VaccinaCare.API.Controllers;
 [ApiController]
 [Route("api/dashboard")]
+[Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
     private readonly ILoggerService _logger;
@@ -22,7 +23,6 @@ public class DashboardController : Controller
     }
 
     [HttpGet("available")]
-    [Authorize(Policy = "AdminPolicy")]
     [ProducesResponseType(typeof(ApiResult<object>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -63,7 +63,7 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<string>.Error($"Internal Server Error: {ex.Message}"));
+            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
         }
     }
 }
