@@ -103,9 +103,9 @@ public class PaymentService : IPaymentService
     {
         try
         {
-            _logger.Info("Processing VNPay payment callback.");
+            _logger.Info("Processing VNPay payment callback...");
 
-            // Giải mã dữ liệu trả về từ VNPay (bao gồm các tham số trong query string)
+            // Giải mã dữ liệu trả về từ VNPay
             var response = _vnPayService.PaymentExecute(query);
 
             // Kiểm tra tính hợp lệ của phản hồi từ VNPay
@@ -119,49 +119,88 @@ public class PaymentService : IPaymentService
             var payment = await _unitOfWork.PaymentRepository
                 .FirstOrDefaultAsync(p => p.OrderId == response.OrderId);
 
-            // Nếu không tìm thấy payment record, báo lỗi
             if (payment == null)
             {
                 _logger.Error($"Payment record not found for Order ID: {response.OrderId}");
                 throw new Exception("Payment record not found.");
             }
 
-            // Tạo một PaymentTransaction mới và ghi nhận thông tin thanh toán vào database
+            // Lấy trạng thái thanh toán từ VNPay
+            string vnpResponseCode = response.VnPayResponseCode;
+            _logger.Info($"Received VNPay Response Code: {vnpResponseCode} for Order ID: {response.OrderId}");
+
+            // 🚨 Đặt mặc định Status là Failed trước khi xử lý
             var paymentTransaction = new PaymentTransaction
             {
                 PaymentId = payment.Id,
                 TransactionId = response.TransactionId,
                 Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100,
                 TransactionDate = DateTime.UtcNow,
-                ResponseCode = response.VnPayResponseCode,
-                ResponseMessage = response.Success ? "Success" : "Failed",
-                Status = response.Success ? PaymentTransactionStatus.Success : PaymentTransactionStatus.Failed
+                ResponseCode = vnpResponseCode,
+                ResponseMessage = (vnpResponseCode == "00") ? "Success" : "Failed",
+                Status = PaymentTransactionStatus.Failed // 🚨 Mặc định là Failed
             };
 
-            // Thêm transaction vào database
-            await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
-            _logger.Info(
-                $"Payment transaction recorded for Order ID: {response.OrderId}, Status: {paymentTransaction.Status}");
-
-            // Nếu thanh toán thành công, cập nhật thông tin của Payment và Appointment
-            if (response.Success)
+            // Xử lý trạng thái dựa trên ResponseCode
+            switch (vnpResponseCode)
             {
-                payment.TransactionId = response.TransactionId;
-                payment.VnpayPaymentId = response.PaymentId;
+                case "00": // ✅ Thanh toán thành công
+                    _logger.Info($"Payment successful for Order ID: {response.OrderId}");
+                    paymentTransaction.Status = PaymentTransactionStatus.Success;
 
-                var appointment = await _unitOfWork.AppointmentRepository
-                    .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
+                    // Cập nhật Payment
+                    payment.TransactionId = response.TransactionId;
+                    payment.VnpayPaymentId = response.PaymentId;
 
-                // Nếu có Appointment, cập nhật trạng thái thành Confirmed
-                if (appointment != null)
-                {
-                    appointment.Status = AppointmentStatus.Confirmed;
-                    await _unitOfWork.AppointmentRepository.Update(appointment);
-                    _logger.Success($"Appointment {appointment.Id} confirmed after successful payment.");
-                }
+                    // Cập nhật trạng thái của Appointment thành "Confirmed"
+                    var confirmedAppointment = await _unitOfWork.AppointmentRepository
+                        .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
+
+                    if (confirmedAppointment != null)
+                    {
+                        confirmedAppointment.Status = AppointmentStatus.Confirmed;
+                        await _unitOfWork.AppointmentRepository.Update(confirmedAppointment);
+                        _logger.Success($"Appointment {confirmedAppointment.Id} confirmed after successful payment.");
+                    }
+
+                    break;
+
+                case "24": // ❌ Người dùng HỦY thanh toán
+                case "09": // ❌ Giao dịch bị hủy
+                case "07": // ❌ Giao dịch bị nghi ngờ gian lận
+                case "10": // ❌ Giao dịch bị từ chối bởi ngân hàng phát hành
+                case "99": // ❌ Người dùng không thực hiện thanh toán
+                    _logger.Warn(
+                        $"Payment failed for Order ID: {response.OrderId} with Response Code: {vnpResponseCode}");
+                    paymentTransaction.Status = PaymentTransactionStatus.Failed;
+
+                    // Cập nhật trạng thái Appointment thành "Cancelled"
+                    var cancelledAppointment = await _unitOfWork.AppointmentRepository
+                        .FirstOrDefaultAsync(a => a.Id == payment.AppointmentId);
+
+                    if (cancelledAppointment != null)
+                    {
+                        cancelledAppointment.Status = AppointmentStatus.Cancelled;
+                        await _unitOfWork.AppointmentRepository.Update(cancelledAppointment);
+                        _logger.Warn(
+                            $"Appointment {cancelledAppointment.Id} has been cancelled due to failed payment.");
+                    }
+
+                    break;
+
+                default:
+                    _logger.Error($"Unknown response code: {vnpResponseCode} for Order ID: {response.OrderId}");
+                    break;
             }
 
-            // Lưu tất cả thay đổi vào database
+            // 🚨 Ghi log trước khi lưu vào database
+            _logger.Info(
+                $"Saving PaymentTransaction for Order ID: {response.OrderId} with Status: {paymentTransaction.Status}");
+
+            // Ghi nhận transaction vào database
+            await _unitOfWork.PaymentTransactionRepository.AddAsync(paymentTransaction);
+
+            // Gọi SaveChangesAsync để lưu trạng thái chính xác
             await _unitOfWork.SaveChangesAsync();
 
             return response;
