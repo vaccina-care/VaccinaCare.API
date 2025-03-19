@@ -1,4 +1,5 @@
-﻿using VaccinaCare.Application.Interface;
+﻿using Microsoft.EntityFrameworkCore;
+using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
@@ -386,6 +387,45 @@ public class VaccinePackageService : IVaccinePackageService
         {
             _loggerService.Error($"Error deleting Vaccine Package with ID {packageId}: {ex.Message}");
             return false;
+        }
+    }
+    public async Task<VaccinePackage?> GetMostBookedPackageAsync()
+    {
+        try
+        {
+            _loggerService.Info("Fetching most booked vaccine package...");
+
+            var result = await _unitOfWork.VaccinePackageRepository.GetQueryable()
+                .Join(_unitOfWork.VaccinePackageDetailRepository.GetQueryable(),
+                      vp => vp.Id,
+                      vpd => vpd.PackageId,
+                      (vp, vpd) => new { vp, vpd })
+                .Join(_unitOfWork.AppointmentsVaccineRepository.GetQueryable(),
+                      temp => temp.vpd.VaccineId,
+                      av => av.VaccineId,
+                      (temp, av) => new { temp.vp, av })
+                .GroupBy(x => x.vp)
+                .Select(g => new
+                {
+                    Package = g.Key,
+                    BookingCount = g.Count()
+                })
+                .OrderByDescending(x => x.BookingCount)
+                .FirstOrDefaultAsync();
+
+            if (result?.Package != null)
+            {
+                _loggerService.Info($"Most booked package: {result.Package.PackageName}, Count: {result.BookingCount}");
+                return result.Package;
+            }
+
+            _loggerService.Info("No bookings found for any package.");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error occurred while getting most booked package: {ex.Message}");
+            return null;
         }
     }
 }

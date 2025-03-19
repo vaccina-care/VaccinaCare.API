@@ -111,7 +111,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "StaffPolicy")]
+    // [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -155,7 +155,7 @@ public class AppointmentController : ControllerBase
         }
     }
     
-    [HttpGet("{appointmentId}")]
+    [HttpGet("details/{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
