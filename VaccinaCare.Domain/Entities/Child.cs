@@ -2,7 +2,7 @@
 
 namespace VaccinaCare.Domain.Entities;
 
-public partial class Child : BaseEntity
+public class Child : BaseEntity
 {
     public Guid? ParentId { get; set; }
     public string? FullName { get; set; }

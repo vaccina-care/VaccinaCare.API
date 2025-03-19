@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class PackageProgress : BaseEntity
+public class PackageProgress : BaseEntity
 {
     public Guid? ParentId { get; set; }
 

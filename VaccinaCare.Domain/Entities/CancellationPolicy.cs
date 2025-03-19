@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class CancellationPolicy : BaseEntity
+public class CancellationPolicy : BaseEntity
 {
     public string? PolicyName { get; set; }
     public string? Description { get; set; }

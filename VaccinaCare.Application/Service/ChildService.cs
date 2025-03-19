@@ -10,11 +10,11 @@ namespace VaccinaCare.Application.Service;
 
 public class ChildService : IChildService
 {
-    private readonly ILoggerService _loggerService;
     private readonly IClaimsService _claimsService;
-    private readonly IVaccineSuggestionService _vaccineSuggestionService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILoggerService _loggerService;
     private readonly INotificationService _notificationService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IVaccineSuggestionService _vaccineSuggestionService;
 
     public ChildService(ILoggerService loggerService, IUnitOfWork unitOfWork, IClaimsService claimsService,
         IVaccineSuggestionService vaccineSuggestionService, INotificationService notificationService)
@@ -27,7 +27,7 @@ public class ChildService : IChildService
     }
 
     /// <summary>
-    /// Cho phép Parent tạo thông tin của trẻ em
+    ///     Cho phép Parent tạo thông tin của trẻ em
     /// </summary>
     /// <param name="childDto"></param>
     /// <returns></returns>
@@ -116,7 +116,7 @@ public class ChildService : IChildService
     }
 
     /// <summary>
-    /// GET tất cả thông tin của trẻ em thông qua Id của Parent
+    ///     GET tất cả thông tin của trẻ em thông qua Id của Parent
     /// </summary>
     /// <param name="pagination"></param>
     /// <returns></returns>
@@ -170,7 +170,7 @@ public class ChildService : IChildService
     }
 
     /// <summary>
-    /// Soft delete 1 trẻ em thuộc về parent dựa trên parent id
+    ///     Soft delete 1 trẻ em thuộc về parent dựa trên parent id
     /// </summary>
     /// <param name="childId"></param>
     /// <exception cref="KeyNotFoundException"></exception>
@@ -211,7 +211,7 @@ public class ChildService : IChildService
     }
 
     /// <summary>
-    /// Update thông tin của children, field nào có nhập thì update, không nhập thì để nguyên
+    ///     Update thông tin của children, field nào có nhập thì update, không nhập thì để nguyên
     /// </summary>
     /// <param name="childId"></param>
     /// <param name="childDto"></param>

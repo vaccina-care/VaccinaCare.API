@@ -5,7 +5,7 @@ using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain;
 
-public partial class VaccinaCareDbContext : DbContext
+public class VaccinaCareDbContext : DbContext
 {
     public VaccinaCareDbContext()
     {
@@ -15,33 +15,6 @@ public partial class VaccinaCareDbContext : DbContext
         : base(options)
     {
     }
-
-    #region DbSet
-
-    public virtual DbSet<Appointment> Appointments { get; set; }
-    public virtual DbSet<AppointmentsVaccine> AppointmentsVaccines { get; set; }
-    public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
-    public virtual DbSet<Child> Children { get; set; }
-    public virtual DbSet<Feedback> Feedbacks { get; set; }
-    public virtual DbSet<VaccineIntervalRules> VaccineIntervalRules { get; set; }
-
-    public virtual DbSet<Invoice> Invoices { get; set; }
-    public virtual DbSet<Notification> Notifications { get; set; }
-    public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
-    public virtual DbSet<Payment> Payments { get; set; }
-
-    public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; }
-    public virtual DbSet<Role> Roles { get; set; }
-
-    public virtual DbSet<Vaccine> Vaccines { get; set; }
-    public virtual DbSet<User> Users { get; set; }
-    public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
-    public virtual DbSet<VaccinationRecord> VaccinationRecords { get; set; }
-    public virtual DbSet<VaccinePackage> VaccinePackages { get; set; }
-    public virtual DbSet<VaccinePackageDetail> VaccinePackageDetails { get; set; }
-    public virtual DbSet<VaccineSuggestion> VaccineSuggestions { get; set; }
-
-    #endregion DbSet
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -408,4 +381,31 @@ public partial class VaccinaCareDbContext : DbContext
             .HasForeignKey(vpd => vpd.PackageId)
             .OnDelete(DeleteBehavior.Cascade); // Enable cascading delete here
     }
+
+    #region DbSet
+
+    public virtual DbSet<Appointment> Appointments { get; set; }
+    public virtual DbSet<AppointmentsVaccine> AppointmentsVaccines { get; set; }
+    public virtual DbSet<CancellationPolicy> CancellationPolicies { get; set; }
+    public virtual DbSet<Child> Children { get; set; }
+    public virtual DbSet<Feedback> Feedbacks { get; set; }
+    public virtual DbSet<VaccineIntervalRules> VaccineIntervalRules { get; set; }
+
+    public virtual DbSet<Invoice> Invoices { get; set; }
+    public virtual DbSet<Notification> Notifications { get; set; }
+    public virtual DbSet<PackageProgress> PackageProgresses { get; set; }
+    public virtual DbSet<Payment> Payments { get; set; }
+
+    public virtual DbSet<PaymentTransaction> PaymentTransactions { get; set; }
+    public virtual DbSet<Role> Roles { get; set; }
+
+    public virtual DbSet<Vaccine> Vaccines { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<UsersVaccination> UsersVaccinationServices { get; set; }
+    public virtual DbSet<VaccinationRecord> VaccinationRecords { get; set; }
+    public virtual DbSet<VaccinePackage> VaccinePackages { get; set; }
+    public virtual DbSet<VaccinePackageDetail> VaccinePackageDetails { get; set; }
+    public virtual DbSet<VaccineSuggestion> VaccineSuggestions { get; set; }
+
+    #endregion DbSet
 }

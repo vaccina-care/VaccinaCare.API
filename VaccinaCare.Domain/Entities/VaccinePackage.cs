@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class VaccinePackage : BaseEntity
+public class VaccinePackage : BaseEntity
 {
     public string? PackageName { get; set; }
 

@@ -2,7 +2,7 @@ using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain.Entities;
 
-public partial class PaymentTransaction : BaseEntity
+public class PaymentTransaction : BaseEntity
 {
     public Guid PaymentId { get; set; } // Khóa ngoại đến Payment
     public string? TransactionId { get; set; } // mã giao dịch trả về từ VNPay

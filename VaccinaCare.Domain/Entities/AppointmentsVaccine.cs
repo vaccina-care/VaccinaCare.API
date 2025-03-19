@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class AppointmentsVaccine : BaseEntity
+public class AppointmentsVaccine : BaseEntity
 {
     public Guid? AppointmentId { get; set; }
 

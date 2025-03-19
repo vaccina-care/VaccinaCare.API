@@ -29,11 +29,11 @@ public class VnPayLibrary
         var checkSignature =
             vnPay.ValidateSignature(vnpSecureHash, hashSecret); //check Signature
         if (!checkSignature)
-            return new PaymentResponseModel()
+            return new PaymentResponseModel
             {
                 Success = false
             };
-        return new PaymentResponseModel()
+        return new PaymentResponseModel
         {
             Success = true,
             PaymentMethod = "VnPay",

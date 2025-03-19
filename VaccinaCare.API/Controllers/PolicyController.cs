@@ -12,8 +12,8 @@ namespace VaccinaCare.API.Controllers;
 [ApiController]
 public class PolicyController : ControllerBase
 {
-    private readonly IPolicyService _policyService;
     private readonly ILoggerService _logger;
+    private readonly IPolicyService _policyService;
 
     public PolicyController(IPolicyService policyService, ILoggerService logger)
     {
@@ -70,8 +70,7 @@ public class PolicyController : ControllerBase
 
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = policies.TotalCount,
-                policies = policies
+                totalCount = policies.TotalCount, policies
             }));
         }
         catch (Exception ex)

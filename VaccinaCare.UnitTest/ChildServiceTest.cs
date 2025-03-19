@@ -12,12 +12,12 @@ namespace VaccinaCare.UnitTest;
 
 public class ChildServiceTest
 {
-    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly IChildService _childService;
     private readonly Mock<IClaimsService> _claimsMock;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILoggerService> _loggerMock;
     private readonly Mock<INotificationService> _notificationService;
     private readonly Mock<IVaccineSuggestionService> _suggestionService;
-    private readonly IChildService _childService;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
     public ChildServiceTest()
     {
@@ -120,7 +120,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId)).ReturnsAsync((User)null);
@@ -137,7 +137,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
         var parent = new User { Id = parentId };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
@@ -157,7 +157,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
+            { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId))

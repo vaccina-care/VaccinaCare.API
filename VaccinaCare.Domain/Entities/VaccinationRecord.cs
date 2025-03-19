@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class VaccinationRecord : BaseEntity
+public class VaccinationRecord : BaseEntity
 {
     public Guid ChildId { get; set; }
     public Guid VaccineId { get; set; }

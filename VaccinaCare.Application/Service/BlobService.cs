@@ -8,9 +8,9 @@ namespace VaccinaCare.Application.Service;
 
 public class BlobService : IBlobService
 {
-    private readonly IMinioClient _minioClient;
     private readonly string _bucketName = "vaccinacare-bucket";
     private readonly ILoggerService _logger;
+    private readonly IMinioClient _minioClient;
 
     public BlobService(ILoggerService logger)
     {
@@ -78,20 +78,6 @@ public class BlobService : IBlobService
         }
     }
 
-    private string GetContentType(string fileName)
-    {
-        _logger.Info($"Determining content type for file: {fileName}");
-        var extension = Path.GetExtension(fileName)?.ToLower();
-        return extension switch
-        {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".pdf" => "application/pdf",
-            ".mp4" => "video/mp4",
-            _ => "application/octet-stream"
-        };
-    }
-
     public async Task<string> GetPreviewUrlAsync(string fileName)
     {
         var minioHost = Environment.GetEnvironmentVariable("MINIO_HOST") ?? "https://minio.ae-tao-fullstack-api.site";
@@ -123,5 +109,19 @@ public class BlobService : IBlobService
             _logger.Error($"Error generating file URL: {ex.Message}");
             return null;
         }
+    }
+
+    private string GetContentType(string fileName)
+    {
+        _logger.Info($"Determining content type for file: {fileName}");
+        var extension = Path.GetExtension(fileName)?.ToLower();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".pdf" => "application/pdf",
+            ".mp4" => "video/mp4",
+            _ => "application/octet-stream"
+        };
     }
 }

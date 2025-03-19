@@ -12,11 +12,11 @@ namespace VaccinaCare.API.Controllers;
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
-    private readonly ILoggerService _logger;
     private readonly IAuthService _authService;
-    private readonly INotificationService _notificationService;
-    private readonly IEmailService _emailService;
     private readonly IClaimsService _claimsService;
+    private readonly IEmailService _emailService;
+    private readonly ILoggerService _logger;
+    private readonly INotificationService _notificationService;
 
     public AuthController(ILoggerService logger, IAuthService authService, INotificationService notificationService,
         IEmailService emailService, IClaimsService claimsService)

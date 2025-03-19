@@ -1,19 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
+using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccineInternalRuleDTOs;
 
 namespace VaccinaCare.API.Controllers;
-
-using Application.Interface.Common;
-using Application.Ultils;
 
 //DONE CLEAN RETURN SCENARIOS
 [ApiController]
 [Route("api/interval-rules")]
 public class VaccineIntervalRulesController : ControllerBase
 {
-    private readonly IVaccineIntervalRulesService _vaccineIntervalRulesService;
     private readonly ILoggerService _logger;
+    private readonly IVaccineIntervalRulesService _vaccineIntervalRulesService;
 
     public VaccineIntervalRulesController(IVaccineIntervalRulesService vaccineIntervalRulesService,
         ILoggerService logger)
