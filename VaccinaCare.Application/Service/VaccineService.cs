@@ -429,42 +429,6 @@ public class VaccineService : IVaccineService
         return (true, successMessage);
     }
 
-    public async Task<int> GetNextDoseNumber(Guid childId, Guid vaccineId)
-    {
-        // Fetch vaccine details to check required doses
-        var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
-        if (vaccine == null)
-        {
-            _logger.Error($"[GetNextDoseNumber] Vaccine ID {vaccineId} not found.");
-            throw new ArgumentException($"Vaccine ID {vaccineId} không tồn tại.");
-        }
-
-        // Get all vaccination records for the specific vaccine
-        var records = await _unitOfWork.VaccinationRecordRepository
-            .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
-
-        // If there are no records, start from Dose 1
-        if (!records.Any()) return 1;
-
-        // Find the highest dose number given for this vaccine
-        var lastDoseNumber = records.Max(r => r.DoseNumber);
-
-        // Next dose is simply the last administered dose +1
-        var nextDose = lastDoseNumber + 1;
-
-        // Ensure we do not exceed the required doses
-        if (nextDose > vaccine.RequiredDoses)
-        {
-            _logger.Warn(
-                $"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
-            return vaccine.RequiredDoses; // Cap at max required dose
-        }
-
-        _logger.Info($"[GetNextDoseNumber] Last dose: {lastDoseNumber}, Next dose: {nextDose}");
-        return nextDose;
-    }
-
-
     /// <summary>
     ///     Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
     ///     - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.

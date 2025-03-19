@@ -30,7 +30,6 @@ public class AppointmentService : IAppointmentService
         _vaccineRecordService = vaccineRecordService;
     }
 
-    //single-vaccine
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
         CreateAppointmentSingleVaccineDto request,
         Guid parentId)
@@ -63,14 +62,34 @@ public class AppointmentService : IAppointmentService
                 return new List<AppointmentDTO>();
             }
 
-            // PHASE 5: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
+            // PHASE 5: KIỂM TRA TÍNH ĐỦ ĐIỀU KIỆN TIÊM VACCINE
+            var (isEligible, eligibilityMessage) =
+                await _vaccineService.CanChildReceiveVaccine(request.ChildId, request.VaccineId);
+            if (!isEligible)
+            {
+                _logger.Warn(eligibilityMessage);
+                return new List<AppointmentDTO>();
+            }
+
+            // PHASE 6: KIỂM TRA TÍNH TƯƠNG THÍCH CỦA VACCINE
+            var bookedVaccineIds =
+                new List<Guid>(); // List of vaccines already booked by the child (this might need to be fetched from the database)
+            var isCompatible =
+                await _vaccineService.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds, request.StartDate);
+            if (!isCompatible)
+            {
+                _logger.Warn($"Vaccine {request.VaccineId} is not compatible with one or more booked vaccines.");
+                return new List<AppointmentDTO>();
+            }
+
+            // PHASE 7: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
             var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
             var completedDoses = hasPreviousRecords ? vaccine.RequiredDoses - remainingDoses : 0;
 
             _logger.Info(
                 $"Total required doses: {vaccine.RequiredDoses}, Completed: {completedDoses}, Creating {remainingDoses} appointments.");
 
-            // PHASE 6: TẠO DANH SÁCH CÁC LỊCH HẸN CÒN LẠI
+            // PHASE 8: TẠO DANH SÁCH CÁC LỊCH HẸN CÒN LẠI
             var appointments = new List<Appointment>();
             var appointmentDate = request.StartDate;
 
@@ -103,13 +122,31 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info($"Total {appointments.Count} appointments created.");
 
-            // PHASE 7: LƯU CÁC LỊCH HẸN VÀO DATABASE
+            // PHASE 9: LƯU CÁC LỊCH HẸN VÀO DATABASE
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info("Appointments saved to the database.");
 
-            // PHASE 8: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
+            // PHASE 10: GỬI EMAIL CHO USER
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
+            if (user != null)
+            {
+                var emailRequest = new EmailRequestDTO
+                {
+                    UserEmail = user.Email,
+                    UserName = user.FullName
+                };
+
+                // Send email for each appointment
+                foreach (var appointment in appointments)
+                {
+                    await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment,
+                        request.VaccineId);
+                }
+            }
+
+            // PHASE 11: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
@@ -135,6 +172,7 @@ public class AppointmentService : IAppointmentService
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
+
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(
         CreateAppointmentPackageVaccineDto request, Guid parentId)
