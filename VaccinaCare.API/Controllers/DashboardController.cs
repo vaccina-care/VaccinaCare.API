@@ -6,16 +6,18 @@ using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.API.Controllers;
+
 [ApiController]
 [Route("api/dashboard")]
 [Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
     private readonly ILoggerService _logger;
-    private readonly IVaccineService _vaccineService;
     private readonly IVaccinePackageService _vaccinePackageService;
+    private readonly IVaccineService _vaccineService;
 
-    public DashboardController(ILoggerService logger, IVaccineService vaccineService, IVaccinePackageService vaccinePackageService)
+    public DashboardController(ILoggerService logger, IVaccineService vaccineService,
+        IVaccinePackageService vaccinePackageService)
     {
         _logger = logger;
         _vaccineService = vaccineService;
@@ -30,7 +32,7 @@ public class DashboardController : Controller
     {
         try
         {
-            int count = await _vaccineService.GetVaccineAvailable();
+            var count = await _vaccineService.GetVaccineAvailable();
 
             return Ok(ApiResult<int>.Success(count, "Available vaccines retrieved successfully."));
         }
@@ -47,10 +49,7 @@ public class DashboardController : Controller
         {
             var package = await _vaccinePackageService.GetMostBookedPackageAsync();
 
-            if (package == null)
-            {
-                return Ok(ApiResult<object>.Error("No bookings found for any package"));
-            }
+            if (package == null) return Ok(ApiResult<object>.Error("No bookings found for any package"));
 
             var response = new VaccinePackage
             {

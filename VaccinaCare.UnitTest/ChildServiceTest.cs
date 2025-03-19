@@ -1,5 +1,4 @@
 ﻿using Moq;
-using System.Linq.Expressions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Service;
@@ -13,12 +12,12 @@ namespace VaccinaCare.UnitTest;
 
 public class ChildServiceTest
 {
-    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly ChildService _childService;
     private readonly Mock<IClaimsService> _claimsMock;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ILoggerService> _loggerMock;
     private readonly Mock<INotificationService> _notificationService;
     private readonly Mock<IVaccineSuggestionService> _suggestionService;
-    private readonly ChildService _childService;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
     public ChildServiceTest()
     {
@@ -123,7 +122,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId)).ReturnsAsync((User)null);
@@ -141,7 +140,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
+            { FullName = "John Doe", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)), Gender = true };
         var parent = new User { Id = parentId };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
@@ -162,7 +161,7 @@ public class ChildServiceTest
         // Arrange
         var parentId = Guid.NewGuid();
         var childDto = new CreateChildDto
-        { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
+            { FullName = "Test Child", DateOfBirth = DateOnly.FromDateTime(new DateTime(2015, 5, 20)) };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.UserRepository.GetByIdAsync(parentId))
@@ -178,6 +177,7 @@ public class ChildServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(async () => { await _childService.CreateChildAsync(childDto); });
     }
+
     [Fact]
     //Test case 5: Get Children When Have Error
     public async Task GetChildrenByParentAsync_ShouldThrowException_WhenUnexpectedErrorOccurs()
@@ -194,8 +194,10 @@ public class ChildServiceTest
         var exception = await Assert.ThrowsAsync<Exception>(() => _childService.GetChildrenByParentAsync());
 
         Assert.Equal("An error occurred while fetching children. Please try again later.", exception.Message);
-        _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Error while fetching children"))), Times.Once);
+        _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Error while fetching children"))),
+            Times.Once);
     }
+
     [Fact]
     //Test case 6: Delete Successfully
     public async Task DeleteChildrenByParentIdAsync_ShouldDeleteSuccessfully_WhenChildExistsAndBelongsToParent()
@@ -208,7 +210,7 @@ public class ChildServiceTest
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(parentId);
         _unitOfWorkMock.Setup(u => u.ChildRepository.GetByIdAsync(childId)).ReturnsAsync(child);
         _unitOfWorkMock.Setup(u => u.ChildRepository.SoftRemove(It.IsAny<Child>()))
-               .ReturnsAsync(true);
+            .ReturnsAsync(true);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
         // Act
@@ -219,6 +221,7 @@ public class ChildServiceTest
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
         _loggerMock.Verify(l => l.Success(It.Is<string>(msg => msg.Contains("successfully deleted"))), Times.Once);
     }
+
     [Fact]
     //Test case 7: Delete Children Does Not Exist
     public async Task DeleteChildrenByParentIdAsync_ShouldThrowKeyNotFoundException_WhenChildDoesNotExist()
@@ -235,6 +238,7 @@ public class ChildServiceTest
 
         _loggerMock.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("not found or does not belong"))), Times.Once);
     }
+
     [Fact]
     //Test case 8: Delete Childen When Child Does Not Be Long To Parent
     public async Task DeleteChildrenByParentIdAsync_ShouldThrowKeyNotFoundException_WhenChildDoesNotBelongToParent()
@@ -253,6 +257,7 @@ public class ChildServiceTest
 
         _loggerMock.Verify(l => l.Warn(It.Is<string>(msg => msg.Contains("not found or does not belong"))), Times.Once);
     }
+
     [Fact]
     //Test case 9: Delete Children When Unexpected Error
     public async Task DeleteChildrenByParentIdAsync_ShouldThrowException_WhenUnexpectedErrorOccurs()
@@ -269,8 +274,10 @@ public class ChildServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() => _childService.DeleteChildrenByParentIdAsync(childId));
 
-        _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Error deleting child profile"))), Times.Once);
+        _loggerMock.Verify(l => l.Error(It.Is<string>(msg => msg.Contains("Error deleting child profile"))),
+            Times.Once);
     }
+
     [Fact]
     //Test case 10: Update Children Successfully
     public async Task UpdateChildrenAsync_ShouldUpdateSuccessfully_WhenValidDataProvided()
@@ -295,6 +302,7 @@ public class ChildServiceTest
         Assert.Equal(childDto.FullName, result.FullName);
         Assert.Equal(childDto.Gender, result.Gender);
     }
+
     [Fact]
     //Test case 11: Update Children When Parent Does Not Exist
     public async Task UpdateChildrenAsync_ShouldThrowKeyNotFoundException_WhenParentDoesNotExist()
@@ -310,6 +318,7 @@ public class ChildServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _childService.UpdateChildrenAsync(childId, childDto));
     }
+
     [Fact]
     //Test case 12: Update Children When Children Does Not Exist
     public async Task UpdateChildrenAsync_ShouldThrowKeyNotFoundException_WhenChildDoesNotExist()
@@ -326,6 +335,7 @@ public class ChildServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _childService.UpdateChildrenAsync(childId, childDto));
     }
+
     [Fact]
     //Test case 13: Update Children When Children Does Not Be Long To Parent
     public async Task UpdateChildrenAsync_ShouldThrowKeyNotFoundException_WhenChildDoesNotBelongToParent()
@@ -344,6 +354,7 @@ public class ChildServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<KeyNotFoundException>(() => _childService.UpdateChildrenAsync(childId, childDto));
     }
+
     [Fact]
     //Test case 14: Update Children When Some Fields Are Null
     public async Task UpdateChildrenAsync_ShouldUpdatePartially_WhenSomeFieldsAreNull()

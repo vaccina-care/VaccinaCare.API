@@ -13,13 +13,13 @@ namespace VaccinaCare.Application.Service;
 
 public class AppointmentService : IAppointmentService
 {
+    private readonly IClaimsService _claimsService;
     private readonly IEmailService _emailService;
     private readonly ILoggerService _logger;
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IVaccineRecordService _vaccineRecordService;
     private readonly IVaccineService _vaccineService;
-    private readonly IClaimsService _claimsService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
@@ -45,16 +45,11 @@ public class AppointmentService : IAppointmentService
                 .ThenInclude(av => av.Vaccine) // Include thông tin vaccine
                 .FirstOrDefaultAsync(a => a.Id == appointmentId);
 
-            if (appointment == null)
-            {
-                throw new Exception("Appointment not found.");
-            }
+            if (appointment == null) throw new Exception("Appointment not found.");
 
             // Kiểm tra trạng thái hiện tại của appointment
             if (appointment.Status != AppointmentStatus.Confirmed)
-            {
                 throw new Exception("Appointment can only be updated if it is in Confirmed status.");
-            }
 
             // Xử lý cập nhật trạng thái
             switch (newStatus)
@@ -67,7 +62,7 @@ public class AppointmentService : IAppointmentService
                     {
                         var addVaccineRecordDto = new AddVaccineRecordDto
                         {
-                            ChildId = appointment.ChildId ,
+                            ChildId = appointment.ChildId,
                             VaccineId = appointmentVaccine.VaccineId ?? throw new Exception("VaccineId is missing"),
                             VaccinationDate = appointment.AppointmentDate ?? DateTime.UtcNow,
                             DoseNumber = appointmentVaccine.DoseNumber ?? 1,
@@ -224,10 +219,8 @@ public class AppointmentService : IAppointmentService
 
                 // Send email for each appointment
                 foreach (var appointment in appointments)
-                {
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment,
                         request.VaccineId);
-                }
             }
 
             // PHASE 11: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
@@ -553,11 +546,9 @@ public class AppointmentService : IAppointmentService
 
             // Apply search filter if a search term is provided
             if (!string.IsNullOrEmpty(searchTerm))
-            {
                 query = query.Where(a =>
                     a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) ||
                     a.AppointmentDate.ToString().Contains(searchTerm));
-            }
 
             // Apply pagination
             var totalCount = await query.CountAsync();

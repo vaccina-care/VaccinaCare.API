@@ -1,23 +1,20 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
 using Moq;
-using System.Linq.Expressions;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Service;
-using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.FeedbackDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
-using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.UnitTest;
 
 public class FeedbackServiceTest
 {
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<ILoggerService> _loggerMock;
     private readonly Mock<IClaimsService> _claimsMock;
     private readonly FeedbackService _feedbackService;
+    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
     public FeedbackServiceTest()
     {
@@ -38,7 +35,7 @@ public class FeedbackServiceTest
 
         var feedbackDto = new FeedbackDTO { AppointmentId = appointmentId, Rating = 5, Comments = "Great service!" };
         var appointment = new Appointment
-        { Id = appointmentId, ParentId = userId, Status = AppointmentStatus.Completed };
+            { Id = appointmentId, ParentId = userId, Status = AppointmentStatus.Completed };
         var feedback = new Feedback
         {
             Id = Guid.NewGuid(),
@@ -87,7 +84,7 @@ public class FeedbackServiceTest
 
         var feedbackDto = new FeedbackDTO { AppointmentId = appointmentId, Rating = 5, Comments = "Great service!" };
         var appointment = new Appointment
-        { Id = appointmentId, ParentId = otherUserId, Status = AppointmentStatus.Completed };
+            { Id = appointmentId, ParentId = otherUserId, Status = AppointmentStatus.Completed };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(appointmentId)).ReturnsAsync(appointment);
@@ -124,7 +121,7 @@ public class FeedbackServiceTest
         var feedbackDto = new FeedbackDTO { AppointmentId = appointmentId, Rating = invalidRating };
         var userId = Guid.NewGuid();
         var appointment = new Appointment
-        { Id = appointmentId, ParentId = userId, Status = AppointmentStatus.Completed };
+            { Id = appointmentId, ParentId = userId, Status = AppointmentStatus.Completed };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetByIdAsync(appointmentId)).ReturnsAsync(appointment);
@@ -141,16 +138,24 @@ public class FeedbackServiceTest
 
         var feedbackList = new List<Feedback>
         {
-            new Feedback { Id = Guid.NewGuid(), CreatedBy = userId, AppointmentId = Guid.NewGuid(), Rating = 5, Comments = "Great service!" },
-            new Feedback { Id = Guid.NewGuid(), CreatedBy = userId, AppointmentId = Guid.NewGuid(), Rating = 4, Comments = "Good service!" }
+            new()
+            {
+                Id = Guid.NewGuid(), CreatedBy = userId, AppointmentId = Guid.NewGuid(), Rating = 5,
+                Comments = "Great service!"
+            },
+            new()
+            {
+                Id = Guid.NewGuid(), CreatedBy = userId, AppointmentId = Guid.NewGuid(), Rating = 4,
+                Comments = "Good service!"
+            }
         };
 
         // Mock GetCurrentUserId để trả về đúng userId
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
 
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(),
-                                                            It.IsAny<Expression<Func<Feedback, object>>[]>()))
-               .ReturnsAsync(feedbackList);
+                It.IsAny<Expression<Func<Feedback, object>>[]>()))
+            .ReturnsAsync(feedbackList);
 
         // Act
         var result = await _feedbackService.GetFeedbackByUserIdAsync();
@@ -159,7 +164,7 @@ public class FeedbackServiceTest
         Assert.NotNull(result);
         Assert.Equal(feedbackList.Count, result.Count);
 
-        for (int i = 0; i < feedbackList.Count; i++)
+        for (var i = 0; i < feedbackList.Count; i++)
         {
             Assert.Equal(feedbackList[i].Id, result[i].Id);
             Assert.Equal(feedbackList[i].AppointmentId, result[i].AppointmentId);
@@ -177,7 +182,8 @@ public class FeedbackServiceTest
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.FeedbackRepository
-            .GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(), It.IsAny<Expression<Func<Feedback, object>>[]>()))
+                .GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(),
+                    It.IsAny<Expression<Func<Feedback, object>>[]>()))
             .ReturnsAsync(new List<Feedback>());
 
         // Act
@@ -198,13 +204,15 @@ public class FeedbackServiceTest
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.FeedbackRepository
-            .GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(), It.IsAny<Expression<Func<Feedback, object>>[]>()))
+                .GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(),
+                    It.IsAny<Expression<Func<Feedback, object>>[]>()))
             .ThrowsAsync(new Exception("Database error"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() => _feedbackService.GetFeedbackByUserIdAsync());
         Assert.Equal("Database error", exception.Message);
     }
+
     [Fact]
     // Test case 10: Get feedback when comments are null
     public async Task GetFeedbackByUserIdAsync_ShouldReturnFeedbackList_WhenSomeCommentsAreNull()
@@ -212,15 +220,15 @@ public class FeedbackServiceTest
         // Arrange
         var userId = Guid.NewGuid();
         var feedbackList = new List<Feedback>
-    {
-        new Feedback { Id = Guid.NewGuid(), CreatedBy = userId, Rating = 5, Comments = "Great service!" },
-        new Feedback { Id = Guid.NewGuid(), CreatedBy = userId, Rating = 4, Comments = null }
-    };
+        {
+            new() { Id = Guid.NewGuid(), CreatedBy = userId, Rating = 5, Comments = "Great service!" },
+            new() { Id = Guid.NewGuid(), CreatedBy = userId, Rating = 4, Comments = null }
+        };
 
         _claimsMock.Setup(c => c.GetCurrentUserId).Returns(userId);
         _unitOfWorkMock.Setup(u => u.FeedbackRepository.GetAllAsync(It.IsAny<Expression<Func<Feedback, bool>>>(),
-                                                          It.IsAny<Expression<Func<Feedback, object>>[]>()))
-             .ReturnsAsync(feedbackList);
+                It.IsAny<Expression<Func<Feedback, object>>[]>()))
+            .ReturnsAsync(feedbackList);
 
         // Act
         var result = await _feedbackService.GetFeedbackByUserIdAsync();

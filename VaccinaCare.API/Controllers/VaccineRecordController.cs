@@ -36,7 +36,7 @@ public class VaccineRecordController : ControllerBase
             return Ok(ApiResult<object>.Error($"Error updating reaction details: {ex.Message}"));
         }
     }
-    
+
     [HttpPut("reaction-details")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
@@ -55,7 +55,7 @@ public class VaccineRecordController : ControllerBase
             return Ok(ApiResult<object>.Error($"Error updating reaction details: {ex.Message}"));
         }
     }
-    
+
     [HttpGet("details/{id}")]
     [Authorize]
     [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
