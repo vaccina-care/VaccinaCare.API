@@ -496,7 +496,7 @@ public class VaccineService : IVaccineService
         _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
         return true;
     }
-    
+
     public async Task<int> GetVaccineAvailable()
     {
         try
@@ -504,7 +504,7 @@ public class VaccineService : IVaccineService
             _logger.Info("Fetching available vaccines...");
 
             var totalVaccine = await _unitOfWork.VaccineRepository.GetAllAsync();
-            int count = totalVaccine.Count(v => v.IsDeleted == false);
+            var count = totalVaccine.Count(v => v.IsDeleted == false);
 
             _logger.Info($"Successfully retrieved vaccine count : {count}");
             return count;

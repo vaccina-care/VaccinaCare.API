@@ -389,6 +389,7 @@ public class VaccinePackageService : IVaccinePackageService
             return false;
         }
     }
+
     public async Task<VaccinePackage?> GetMostBookedPackageAsync()
     {
         try
@@ -397,13 +398,13 @@ public class VaccinePackageService : IVaccinePackageService
 
             var result = await _unitOfWork.VaccinePackageRepository.GetQueryable()
                 .Join(_unitOfWork.VaccinePackageDetailRepository.GetQueryable(),
-                      vp => vp.Id,
-                      vpd => vpd.PackageId,
-                      (vp, vpd) => new { vp, vpd })
+                    vp => vp.Id,
+                    vpd => vpd.PackageId,
+                    (vp, vpd) => new { vp, vpd })
                 .Join(_unitOfWork.AppointmentsVaccineRepository.GetQueryable(),
-                      temp => temp.vpd.VaccineId,
-                      av => av.VaccineId,
-                      (temp, av) => new { temp.vp, av })
+                    temp => temp.vpd.VaccineId,
+                    av => av.VaccineId,
+                    (temp, av) => new { temp.vp, av })
                 .GroupBy(x => x.vp)
                 .Select(g => new
                 {

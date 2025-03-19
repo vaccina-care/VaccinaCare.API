@@ -109,22 +109,27 @@ public class AppointmentController : ControllerBase
             return Ok(ApiResult<object>.Error($"An unexpected error occurred during creation: {ex.Message}"));
         }
     }
-    
+
     [HttpPut("{appointmentId}/status")]
     [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> UpdateAppointmentStatus(Guid appointmentId, [FromForm] UpdateAppointmentStatusRequest request)
+    public async Task<IActionResult> UpdateAppointmentStatus(Guid appointmentId,
+        [FromForm] UpdateAppointmentStatusRequest request)
     {
         try
         {
-            var updatedAppointment = await _appointmentService.UpdateAppointmentStatus(appointmentId, request.NewStatus, request.CancellationReason);
+            var updatedAppointment =
+                await _appointmentService.UpdateAppointmentStatus(appointmentId, request.NewStatus,
+                    request.CancellationReason);
 
             if (updatedAppointment == null)
-                return Ok(ApiResult<object>.Error("Unable to update appointment status. Please check the validity conditions."));
+                return Ok(ApiResult<object>.Error(
+                    "Unable to update appointment status. Please check the validity conditions."));
 
-            return Ok(ApiResult<AppointmentDTO>.Success(updatedAppointment, "Appointment status updated successfully."));
+            return Ok(ApiResult<AppointmentDTO>.Success(updatedAppointment,
+                "Appointment status updated successfully."));
         }
         catch (Exception ex)
         {
@@ -137,7 +142,8 @@ public class AppointmentController : ControllerBase
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAllAppointments([FromQuery] PaginationParameter pagination, [FromQuery] string? searchTerm = null)
+    public async Task<IActionResult> GetAllAppointments([FromQuery] PaginationParameter pagination,
+        [FromQuery] string? searchTerm = null)
     {
         try
         {
@@ -151,9 +157,10 @@ public class AppointmentController : ControllerBase
         }
         catch (Exception e)
         {
-            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {e.Message}"));        }
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {e.Message}"));
+        }
     }
-    
+
     [HttpGet("{childId}")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -176,7 +183,7 @@ public class AppointmentController : ControllerBase
             return Ok(ApiResult<object>.Error("Lỗi hệ thống. Vui lòng thử lại sau."));
         }
     }
-    
+
     [HttpGet("details/{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]

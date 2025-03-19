@@ -4,7 +4,6 @@ using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.VaccinePackageDTOs;
 using VaccinaCare.Domain.Entities;
-using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -140,10 +139,7 @@ public class VaccinePackageController : ControllerBase
         {
             var package = await _vaccinePackageService.GetMostBookedPackageAsync();
 
-            if (package == null)
-            {
-                return Ok(ApiResult<object>.Error("No bookings found for any package"));
-            }
+            if (package == null) return Ok(ApiResult<object>.Error("No bookings found for any package"));
 
             var response = new VaccinePackage
             {

@@ -33,7 +33,26 @@ public class VaccineRecordController : ControllerBase
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<object>.Error("An unexpected error occurred during creation."));
+            return Ok(ApiResult<object>.Error($"Error updating reaction details: {ex.Message}"));
+        }
+    }
+
+    [HttpPut("reaction-details")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResult<VaccineRecordDto>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> UpdateReactionDetails([FromBody] UpdateVaccineRecorđto updateReactionDto)
+    {
+        try
+        {
+            var result = await _vaccineRecordService.UpdateReactionDetails(updateReactionDto);
+            return Ok(new ApiResult<VaccineRecordDto>
+                { Data = result, Message = "Reaction details updated successfully", IsSuccess = true });
+        }
+        catch (Exception ex)
+        {
+            return Ok(ApiResult<object>.Error($"Error updating reaction details: {ex.Message}"));
         }
     }
 
