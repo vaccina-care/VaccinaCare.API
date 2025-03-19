@@ -37,10 +37,11 @@ public class AppointmentService : IAppointmentService
     {
         try
         {
+            // PHASE 1: BẮT ĐẦU QUÁ TRÌNH TẠO LỊCH TIÊM
             _logger.Info(
                 $"[Start] Generating appointments for vaccine {request.VaccineId} for child {request.ChildId}");
 
-            // Lấy thông tin vaccine
+            // PHASE 2: LẤY THÔNG TIN VACCINE
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(request.VaccineId);
             if (vaccine == null)
             {
@@ -50,11 +51,11 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info($"Vaccine {vaccine.VaccineName} requires {vaccine.RequiredDoses} doses.");
 
-            // Lấy số liều còn lại
+            // PHASE 3: KIỂM TRA SỐ LIỀU CÒN LẠI CỦA TRẺ
             var remainingDoses = await _vaccineRecordService.GetRemainingDoses(request.ChildId, request.VaccineId);
             _logger.Info($"Child {request.ChildId} has {remainingDoses} doses remaining.");
 
-            // Nếu đã tiêm đủ, không tạo lịch
+            // PHASE 4: NẾU ĐÃ TIÊM ĐỦ, KHÔNG TẠO LỊCH
             if (remainingDoses <= 0)
             {
                 _logger.Info(
@@ -62,13 +63,14 @@ public class AppointmentService : IAppointmentService
                 return new List<AppointmentDTO>();
             }
 
-            // Kiểm tra nếu chưa từng tiêm vaccine này
+            // PHASE 5: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
             var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
             var completedDoses = hasPreviousRecords ? vaccine.RequiredDoses - remainingDoses : 0;
 
             _logger.Info(
                 $"Total required doses: {vaccine.RequiredDoses}, Completed: {completedDoses}, Creating {remainingDoses} appointments.");
 
+            // PHASE 6: TẠO DANH SÁCH CÁC LỊCH HẸN CÒN LẠI
             var appointments = new List<Appointment>();
             var appointmentDate = request.StartDate;
 
@@ -101,13 +103,13 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info($"Total {appointments.Count} appointments created.");
 
-            // Lưu vào Database
+            // PHASE 7: LƯU CÁC LỊCH HẸN VÀO DATABASE
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info("Appointments saved to the database.");
 
-            // Trả về danh sách DTO
+            // PHASE 8: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
