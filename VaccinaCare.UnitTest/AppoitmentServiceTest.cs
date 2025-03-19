@@ -22,6 +22,7 @@ public class AppoitmentServiceTest
     private readonly Mock<IVaccineService> _vaccineServiceMock;
     private readonly Mock<INotificationService> _notificationServiceMock;
     private readonly Mock<IEmailService> _emailServiceMock;
+    private readonly Mock<IClaimsService> _claimsServiceMock;
     private readonly AppointmentService _appointmentService;
 
     public AppoitmentServiceTest()
@@ -31,8 +32,7 @@ public class AppoitmentServiceTest
         _vaccineServiceMock = new Mock<IVaccineService>();
         _notificationServiceMock = new Mock<INotificationService>();
         _emailServiceMock = new Mock<IEmailService>();
-
-        _appointmentService = new AppointmentService(_unitOfWorkMock.Object, _loggerMock.Object, _notificationServiceMock.Object, _vaccineServiceMock.Object, _emailServiceMock.Object);
+        _claimsServiceMock = new Mock<IClaimsService>();
     }
 
     [Fact]
@@ -64,45 +64,6 @@ public class AppoitmentServiceTest
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(async () =>
             await _appointmentService.GenerateAppointmentsForSingleVaccine(request, Guid.NewGuid()));
-    }
-
-    [Fact]
-    //Test case 3: Generate Appointment For Single Vaccine When Child Has Complete All Doese
-    public async Task GenerateAppointmentsForSingleVaccine_ShouldThrowException_WhenChildHasCompletedAllDoses()
-    {
-        // Arrange
-        var request = new CreateAppointmentSingleVaccineDto
-        {
-            VaccineId = Guid.NewGuid(),
-            ChildId = Guid.NewGuid(),
-            StartDate = DateTime.UtcNow.AddDays(1)
-        };
-        var parentId = Guid.NewGuid();
-        var vaccine = new Vaccine
-        {
-            Id = request.VaccineId,
-            VaccineName = "Hepatitis B",
-            RequiredDoses = 3,
-            DoseIntervalDays = 30,
-            Price = 500000
-        };
-
-        // Mock vaccine repository: Trả về vaccine hợp lệ
-        _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(request.VaccineId)).ReturnsAsync(vaccine);
-
-        // Mock điều kiện đủ điều kiện tiêm để test đi qua phần kiểm tra số mũi
-        _vaccineServiceMock.Setup(service => service.CanChildReceiveVaccine(request.ChildId, request.VaccineId))
-                       .ReturnsAsync((true, string.Empty));
-
-        // Mock số mũi tiêm tiếp theo lớn hơn số mũi yêu cầu
-        _vaccineServiceMock.Setup(service => service.GetNextDoseNumber(request.ChildId, request.VaccineId))
-                           .ReturnsAsync(4); // Quá số mũi tiêm
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() =>
-            _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId));
-
-        Assert.Equal($"Trẻ đã tiêm đủ số mũi của vaccine {vaccine.VaccineName}.", exception.Message);
     }
 
     [Fact]

@@ -19,11 +19,11 @@ namespace VaccinaCare.UnitTest;
 
 public class VaccineServiceTest
 {
-    private readonly Mock<ILoggerService> _loggerMock;
-    private readonly IVaccineService _vaccineService;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IClaimsService> _claimsMock;
     private readonly Mock<IBlobService> _lobMock;
+    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly IVaccineService _vaccineService;
 
     public VaccineServiceTest()
     {

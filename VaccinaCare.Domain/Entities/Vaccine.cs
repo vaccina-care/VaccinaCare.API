@@ -3,7 +3,7 @@ using VaccinaCare.Domain.Enums;
 
 namespace VaccinaCare.Domain.Entities;
 
-public partial class Vaccine : BaseEntity
+public class Vaccine : BaseEntity
 {
     [Column(TypeName = "nvarchar(255)")] public string? VaccineName { get; set; }
 

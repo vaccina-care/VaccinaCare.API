@@ -12,9 +12,9 @@ namespace VaccinaCare.API.Controllers;
 [Route("api/vaccines")]
 public class VaccineController : ControllerBase
 {
+    private readonly ILoggerService _logger;
     private readonly IVaccineService _vaccineService;
     private readonly IVaccineSuggestionService _vaccineSuggestionService;
-    private readonly ILoggerService _logger;
 
     public VaccineController(IVaccineService vaccineService, ILoggerService logger,
         IVaccineSuggestionService vaccineSuggestionService)

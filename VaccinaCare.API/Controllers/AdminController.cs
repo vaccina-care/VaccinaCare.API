@@ -13,9 +13,9 @@ namespace VaccinaCare.API.Controllers;
 [Authorize(Policy = "AdminPolicy")]
 public class AdminController : Controller
 {
-    private readonly IUserService _userService;
     private readonly IAuthService _authService;
     private readonly ILoggerService _logger;
+    private readonly IUserService _userService;
 
     public AdminController(IUserService userService, IAuthService authService, ILoggerService loggerService)
     {
@@ -34,8 +34,7 @@ public class AdminController : Controller
             var users = await _userService.GetAllUsersForAdminAsync(paginationParameter, searchTerm);
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = users.TotalCount,
-                users = users
+                totalCount = users.TotalCount, users
             }));
         }
         catch (Exception ex)

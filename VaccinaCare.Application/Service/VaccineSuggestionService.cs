@@ -8,9 +8,9 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccineSuggestionService : IVaccineSuggestionService
 {
+    private readonly IAppointmentService _appointmentService;
     private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IAppointmentService _appointmentService;
 
     public VaccineSuggestionService(ILoggerService logger, IUnitOfWork unitOfWork,
         IAppointmentService appointmentService)
@@ -21,7 +21,7 @@ public class VaccineSuggestionService : IVaccineSuggestionService
     }
 
     /// <summary>
-    /// Sau khi tư vấn, staff sẽ cho Parent 1 list các vaccine để chích và User sẽ xài List này để book Appointment
+    ///     Sau khi tư vấn, staff sẽ cho Parent 1 list các vaccine để chích và User sẽ xài List này để book Appointment
     /// </summary>
     /// <param name="childId"></param>
     /// <param name="vaccineIds"></param>

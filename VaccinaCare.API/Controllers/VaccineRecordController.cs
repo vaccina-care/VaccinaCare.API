@@ -29,7 +29,7 @@ public class VaccineRecordController : ControllerBase
         {
             var result = await _vaccineRecordService.AddVaccinationRecordAsync(addVaccineRecordDto);
             return Ok(new ApiResult<VaccineRecordDto>
-            { Data = result, Message = "Vaccination record added successfully", IsSuccess = true });
+                { Data = result, Message = "Vaccination record added successfully", IsSuccess = true });
         }
         catch (Exception ex)
         {

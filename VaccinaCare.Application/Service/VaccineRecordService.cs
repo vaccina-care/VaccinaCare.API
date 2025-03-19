@@ -8,15 +8,69 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccineRecordService : IVaccineRecordService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VaccineRecordService(IUnitOfWork unitOfWork, IClaimsService claimsService, ILoggerService logger)
     {
         _unitOfWork = unitOfWork;
         _claimsService = claimsService;
         _logger = logger;
+    }
+
+    public async Task<int> GetRemainingDoses(Guid childId, Guid vaccineId)
+    {
+        try
+        {
+            _logger.Info($"[GetRemainingDoses] Checking remaining doses for Child {childId} - Vaccine {vaccineId}");
+
+            // Lấy danh sách các lần tiêm của vaccine này
+            var existingRecords = await _unitOfWork.VaccinationRecordRepository
+                .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
+
+            if (!existingRecords.Any())
+            {
+                _logger.Info(
+                    $"[GetRemainingDoses] Child {childId} chưa có lịch sử tiêm Vaccine {vaccineId}. Cần tiêm đủ số mũi.");
+                return (await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId))?.RequiredDoses ?? 0;
+            }
+
+            // Lấy mũi tiêm có số thứ tự lớn nhất
+            int maxDoseNumber = existingRecords.Max(vr => vr.DoseNumber);
+
+            _logger.Info(
+                $"[GetRemainingDoses] Child {childId} đã tiêm đến mũi số {maxDoseNumber} của vaccine {vaccineId}.");
+
+            // Lấy RequiredDoses từ bảng Vaccine
+            var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+            if (vaccine == null)
+            {
+                _logger.Error($"[GetRemainingDoses] Vaccine với ID {vaccineId} không tồn tại.");
+                throw new Exception("Vaccine không tồn tại.");
+            }
+
+            int requiredDoses = vaccine.RequiredDoses;
+
+            // Nếu đã tiêm đủ mũi, trả về 0
+            if (maxDoseNumber >= requiredDoses)
+            {
+                _logger.Info(
+                    $"[GetRemainingDoses] Child {childId} đã tiêm đủ {requiredDoses} mũi của vaccine {vaccineId}. Không cần tạo thêm appointment.");
+                return 0;
+            }
+
+            // Tính số mũi còn lại
+            int remainingDoses = requiredDoses - maxDoseNumber;
+            _logger.Info($"[GetRemainingDoses] Child {childId} còn lại {remainingDoses} mũi cần tiêm.");
+
+            return remainingDoses;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"[GetRemainingDoses] Lỗi khi lấy số mũi còn lại: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<VaccineRecordDto> GetRecordDetailsByIdAsync(Guid recordId)

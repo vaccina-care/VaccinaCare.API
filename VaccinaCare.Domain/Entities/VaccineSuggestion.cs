@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class VaccineSuggestion : BaseEntity
+public class VaccineSuggestion : BaseEntity
 {
     public Guid? ChildId { get; set; }
 

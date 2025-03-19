@@ -10,9 +10,9 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccinePackageService : IVaccinePackageService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoggerService _loggerService;
     private readonly IClaimsService _claimsService;
+    private readonly ILoggerService _loggerService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VaccinePackageService(IUnitOfWork unitOfWork, ILoggerService loggerService, IClaimsService claimsService)
     {

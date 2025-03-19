@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -14,11 +13,11 @@ namespace VaccinaCare.Application.Service;
 
 public class PaymentService : IPaymentService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoggerService _logger;
-    private readonly IEmailService _emailService;
-    private readonly IVnPayService _vnPayService;
     private readonly IConfiguration _configuration;
+    private readonly IEmailService _emailService;
+    private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IVnPayService _vnPayService;
 
     public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
         IVnPayService vnPayService, VaccinaCareDbContext dbContext, IConfiguration configuration)

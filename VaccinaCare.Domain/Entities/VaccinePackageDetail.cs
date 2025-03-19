@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class VaccinePackageDetail : BaseEntity
+public class VaccinePackageDetail : BaseEntity
 {
     public Guid? PackageId { get; set; }
 

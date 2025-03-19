@@ -14,11 +14,11 @@ namespace VaccinaCare.Application.Service;
 
 public class UserService : IUserService
 {
-    private readonly ILoggerService _logger;
     private readonly IBlobService _blobService;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly IEmailService _emailService;
+    private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public UserService(ILoggerService logger, IUnitOfWork unitOfWork, IBlobService blobService,
         IClaimsService claimsService, IEmailService emailService)

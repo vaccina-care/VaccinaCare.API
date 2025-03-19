@@ -2,7 +2,7 @@
 
 namespace VaccinaCare.Domain.Entities;
 
-public partial class User : BaseEntity
+public class User : BaseEntity
 {
     public string? FullName { get; set; }
     public string? Email { get; set; }
