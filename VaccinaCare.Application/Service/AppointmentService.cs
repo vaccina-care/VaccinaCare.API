@@ -5,6 +5,7 @@ using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
+using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.Application.Service;
@@ -172,7 +173,6 @@ public class AppointmentService : IAppointmentService
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
-
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(
         CreateAppointmentPackageVaccineDto request, Guid parentId)
@@ -451,6 +451,55 @@ public class AppointmentService : IAppointmentService
         catch (Exception e)
         {
             _logger.Error($"Error fetching appointments for child ID {childId}: {e.Message}");
+            throw;
+        }
+    }
+
+    public async Task<Pagination<AppointmentDTO>> GetAllAppointments(PaginationParameter pagination,
+        string? searchTerm = null)
+    {
+        try
+        {
+            // Build the query to include vaccine details
+            var query = _unitOfWork.AppointmentRepository.GetQueryable()
+                .Include(a => a.AppointmentsVaccines) // Include vaccines for each appointment
+                .ThenInclude(av => av.Vaccine)
+                .AsQueryable();
+
+            // Apply search filter if a search term is provided
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(a =>
+                    a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) || 
+                    a.AppointmentDate.ToString().Contains(searchTerm));
+            }
+
+            // Apply pagination
+            var totalCount = await query.CountAsync();
+            var appointments = await query
+                .Skip((pagination.PageIndex - 1) * pagination.PageSize)
+                .Take(pagination.PageSize)
+                .ToListAsync();
+
+            // Map Appointment to AppointmentDTO
+            var appointmentDTOs = appointments.Select(app => new AppointmentDTO
+            {
+                AppointmentId = app.Id,
+                ChildId = app.ChildId,
+                AppointmentDate = app.AppointmentDate ?? DateTime.MinValue,
+                Status = app.Status.ToString(),
+                VaccineName = app.AppointmentsVaccines?.FirstOrDefault()?.Vaccine?.VaccineName ?? string.Empty,
+                DoseNumber = app.AppointmentsVaccines?.FirstOrDefault()?.DoseNumber ?? 0,
+                TotalPrice = app.AppointmentsVaccines?.Sum(av => av.TotalPrice) ?? 0,
+                Notes = app.Notes
+            }).ToList();
+
+            // Return paginated result
+            return new Pagination<AppointmentDTO>(appointmentDTOs, totalCount, pagination.PageIndex, pagination.PageSize);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
             throw;
         }
     }

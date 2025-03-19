@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.API.Controllers;
@@ -109,6 +111,28 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "StaffPolicy")]
+    [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
+    [ProducesResponseType(typeof(ApiResult<object>), 400)]
+    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    public async Task<IActionResult> GetAllAppointments([FromQuery] PaginationParameter pagination, [FromQuery] string? searchTerm = null)
+    {
+        try
+        {
+            // Get paginated appointments
+            var appointments = await _appointmentService.GetAllAppointments(pagination, searchTerm);
+
+            return Ok(ApiResult<object>.Success(new
+            {
+                totalCount = appointments.TotalCount, appointments
+            }));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {e.Message}"));        }
+    }
+    
+    [HttpGet("{childId}")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -130,7 +154,7 @@ public class AppointmentController : ControllerBase
             return Ok(ApiResult<object>.Error("Lỗi hệ thống. Vui lòng thử lại sau."));
         }
     }
-
+    
     [HttpGet("{appointmentId}")]
     [ProducesResponseType(typeof(ApiResult<AppointmentDTO>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
