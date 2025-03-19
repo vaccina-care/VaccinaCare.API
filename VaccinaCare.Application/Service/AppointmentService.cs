@@ -18,10 +18,11 @@ public class AppointmentService : IAppointmentService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IVaccineRecordService _vaccineRecordService;
     private readonly IVaccineService _vaccineService;
+    private readonly IClaimsService _claimsService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
-        IVaccineRecordService vaccineRecordService)
+        IVaccineRecordService vaccineRecordService, IClaimsService claimsService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
@@ -29,6 +30,7 @@ public class AppointmentService : IAppointmentService
         _vaccineService = vaccineService;
         _emailService = emailService;
         _vaccineRecordService = vaccineRecordService;
+        _claimsService = claimsService;
     }
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
@@ -460,6 +462,7 @@ public class AppointmentService : IAppointmentService
     {
         try
         {
+            var userId = _claimsService.GetCurrentUserId;
             // Build the query to include vaccine details
             var query = _unitOfWork.AppointmentRepository.GetQueryable()
                 .Include(a => a.AppointmentsVaccines) // Include vaccines for each appointment
@@ -470,7 +473,7 @@ public class AppointmentService : IAppointmentService
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 query = query.Where(a =>
-                    a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) || 
+                    a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) ||
                     a.AppointmentDate.ToString().Contains(searchTerm));
             }
 
@@ -485,6 +488,7 @@ public class AppointmentService : IAppointmentService
             var appointmentDTOs = appointments.Select(app => new AppointmentDTO
             {
                 AppointmentId = app.Id,
+                UserId = app.ParentId,
                 ChildId = app.ChildId,
                 AppointmentDate = app.AppointmentDate ?? DateTime.MinValue,
                 Status = app.Status.ToString(),
@@ -495,7 +499,8 @@ public class AppointmentService : IAppointmentService
             }).ToList();
 
             // Return paginated result
-            return new Pagination<AppointmentDTO>(appointmentDTOs, totalCount, pagination.PageIndex, pagination.PageSize);
+            return new Pagination<AppointmentDTO>(appointmentDTOs, totalCount, pagination.PageIndex,
+                pagination.PageSize);
         }
         catch (Exception e)
         {

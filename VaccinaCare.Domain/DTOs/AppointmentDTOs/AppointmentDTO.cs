@@ -4,6 +4,7 @@ public class AppointmentDTO
 {
     public Guid AppointmentId { get; set; }
     public Guid ChildId { get; set; }
+    public Guid UserId { get; set; }
     public DateTime AppointmentDate { get; set; }
     public string Status { get; set; }
     public string VaccineName { get; set; }
