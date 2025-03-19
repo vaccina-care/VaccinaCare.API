@@ -12,8 +12,8 @@ namespace VaccinaCare.API.Controllers;
 public class AppointmentController : ControllerBase
 {
     private readonly IAppointmentService _appointmentService;
-    private readonly ILoggerService _logger;
     private readonly IClaimsService _claimsService;
+    private readonly ILoggerService _logger;
     private readonly IPaymentService _paymentService;
 
     public AppointmentController(IAppointmentService appointmentService, ILoggerService logger,

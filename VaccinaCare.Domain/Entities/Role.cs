@@ -2,7 +2,7 @@
 
 namespace VaccinaCare.Domain.Entities;
 
-public partial class Role : BaseEntity
+public class Role : BaseEntity
 {
     public RoleType RoleName { get; set; }
 

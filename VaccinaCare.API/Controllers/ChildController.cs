@@ -119,7 +119,7 @@ public class ChildController : ControllerBase
         {
             var result = await _childService.UpdateChildrenAsync(childId, updateChildDto);
             return Ok(new ApiResult<ChildDto>
-            { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
+                { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
         }
         catch (KeyNotFoundException ex)
         {

@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class Feedback : BaseEntity
+public class Feedback : BaseEntity
 {
     public Guid? AppointmentId { get; set; }
     public Guid? UserId { get; set; }

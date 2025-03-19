@@ -22,7 +22,7 @@ public class FeedbackController : ControllerBase
     }
 
     /// <summary>
-    /// User tạo feedback cho appointment đã hoàn thành
+    ///     User tạo feedback cho appointment đã hoàn thành
     /// </summary>
     [HttpPost]
     [Authorize(Policy = "CustomerPolicy")]
@@ -205,7 +205,7 @@ public class FeedbackController : ControllerBase
     }
 
     /// <summary>
-    /// Xóa feedback (User & Admin đều có quyền xóa)
+    ///     Xóa feedback (User & Admin đều có quyền xóa)
     /// </summary>
     [HttpDelete("{feedbackId}")]
     [Authorize]

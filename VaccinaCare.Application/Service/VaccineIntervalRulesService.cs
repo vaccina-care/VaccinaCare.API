@@ -8,9 +8,9 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoggerService _logerService;
     private readonly IClaimsService _claimsService;
+    private readonly ILoggerService _logerService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VaccineIntervalRulesService(IUnitOfWork unitOfWork, ILoggerService logerService,
         IClaimsService claimsService)
@@ -23,7 +23,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
     public async Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(
         VaccineIntervalRulesDTO vaccineIntervalRulesDTO)
     {
-        _logerService.Info($"Creating Vaccine Interval Rules: ");
+        _logerService.Info("Creating Vaccine Interval Rules: ");
 
         if (vaccineIntervalRulesDTO.VaccineId == Guid.Empty)
             throw new ArgumentException("VaccineId cannot be empty.");
@@ -63,7 +63,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
     {
         try
         {
-            _logerService.Info($"Fetching all Vaccine Interval Rules....");
+            _logerService.Info("Fetching all Vaccine Interval Rules....");
 
             var vaccineIntervalRules = await _unitOfWork.VaccineIntervalRulesRepository.GetAllAsync();
 

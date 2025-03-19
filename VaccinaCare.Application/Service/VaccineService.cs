@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
@@ -10,10 +9,10 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccineService : IVaccineService
 {
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly IBlobService _blobService;
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
-    private readonly IBlobService _blobService;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VaccineService(IUnitOfWork unitOfWork, ILoggerService logger, IClaimsService claimsService,
         IBlobService blobService)
@@ -28,79 +27,72 @@ public class VaccineService : IVaccineService
     public async Task<PagedResult<VaccineDto>> GetVaccines(string? search, string? type, string? sortBy,
         bool isDescending, int page, int pageSize)
     {
-        try
-        {
-            var query = await _unitOfWork.VaccineRepository.GetAllAsync();
-            var queryList = query.ToList();
+        var query = await _unitOfWork.VaccineRepository.GetAllAsync();
+        var queryList = query.ToList();
 
-            // Filtering
-            if (!string.IsNullOrWhiteSpace(search))
+        // Filtering
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.Trim().ToLower();
+            queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(type))
+            queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
+        //Sorting
+
+        if (!string.IsNullOrWhiteSpace(sortBy))
+            switch (sortBy.ToLower())
             {
-                var searchLower = search.Trim().ToLower();
-                queryList = queryList.Where(v => v.VaccineName.ToLower().Contains(searchLower)).ToList();
+                case "vaccinename":
+                    queryList = isDescending
+                        ? queryList.OrderByDescending(v => v.VaccineName).ToList()
+                        : queryList.OrderBy(v => v.VaccineName).ToList();
+                    break;
+
+                case "price":
+                    queryList = isDescending
+                        ? queryList.OrderByDescending(v => v.Price).ToList()
+                        : queryList.OrderBy(v => v.Price).ToList();
+                    break;
+
+                case "type":
+                    queryList = isDescending
+                        ? queryList.OrderByDescending(v => v.Type).ToList()
+                        : queryList.OrderBy(v => v.Type).ToList();
+                    break;
+
+                default:
+                    _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
+                    queryList = queryList.OrderBy(v => v.VaccineName).ToList();
+                    break;
             }
 
-            if (!string.IsNullOrWhiteSpace(type))
-                queryList = queryList.Where(v => v.Type.ToLower().Contains(type.Trim().ToLower())).ToList();
-            //Sorting
+        // Pagination
+        var totalItems = queryList.Count();
+        var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            if (!string.IsNullOrWhiteSpace(sortBy))
-                switch (sortBy.ToLower())
-                {
-                    case "vaccinename":
-                        queryList = isDescending
-                            ? queryList.OrderByDescending(v => v.VaccineName).ToList()
-                            : queryList.OrderBy(v => v.VaccineName).ToList();
-                        break;
-
-                    case "price":
-                        queryList = isDescending
-                            ? queryList.OrderByDescending(v => v.Price).ToList()
-                            : queryList.OrderBy(v => v.Price).ToList();
-                        break;
-
-                    case "type":
-                        queryList = isDescending
-                            ? queryList.OrderByDescending(v => v.Type).ToList()
-                            : queryList.OrderBy(v => v.Type).ToList();
-                        break;
-
-                    default:
-                        _logger.Warn($"Unknown sort parameter: {sortBy}. Sorting by default (VaccineName).");
-                        queryList = queryList.OrderBy(v => v.VaccineName).ToList();
-                        break;
-                }
-
-            // Pagination
-            var totalItems = queryList.Count();
-            var vaccines = queryList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            // Mapping to DTOs
-            var vaccineDTOs = vaccines.Select(v => new VaccineDto
-            {
-                Id = v.Id,
-                VaccineName = v.VaccineName,
-                Description = v.Description,
-                PicUrl = v.PicUrl,
-                Type = v.Type,
-                Price = v.Price,
-                RequiredDoses = v.RequiredDoses,
-                DoseIntervalDays = v.DoseIntervalDays,
-                ForBloodType = v.ForBloodType,
-                AvoidChronic = v.AvoidChronic,
-                AvoidAllergy = v.AvoidAllergy,
-                HasDrugInteraction = v.HasDrugInteraction,
-                HasSpecialWarning = v.HasSpecialWarning
-            }).ToList();
-
-            var result = new PagedResult<VaccineDto>(vaccineDTOs, totalItems, page, pageSize);
-
-            return result;
-        }
-        catch (Exception)
+        // Mapping to DTOs
+        var vaccineDTOs = vaccines.Select(v => new VaccineDto
         {
-            throw;
-        }
+            Id = v.Id,
+            VaccineName = v.VaccineName,
+            Description = v.Description,
+            PicUrl = v.PicUrl,
+            Type = v.Type,
+            Price = v.Price,
+            RequiredDoses = v.RequiredDoses,
+            DoseIntervalDays = v.DoseIntervalDays,
+            ForBloodType = v.ForBloodType,
+            AvoidChronic = v.AvoidChronic,
+            AvoidAllergy = v.AvoidAllergy,
+            HasDrugInteraction = v.HasDrugInteraction,
+            HasSpecialWarning = v.HasSpecialWarning
+        }).ToList();
+
+        var result = new PagedResult<VaccineDto>(vaccineDTOs, totalItems, page, pageSize);
+
+        return result;
     }
 
     public async Task<VaccineDto> GetVaccineById(Guid id)
@@ -396,7 +388,7 @@ public class VaccineService : IVaccineService
     }
 
     /// <summary>
-    /// Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
+    ///     Kiểm tra trẻ có đủ điều kiện để tiêm vaccine không.
     /// </summary>
     public async Task<(bool isEligible, string message)> CanChildReceiveVaccine(Guid childId, Guid vaccineId)
     {
@@ -463,7 +455,8 @@ public class VaccineService : IVaccineService
         // Ensure we do not exceed the required doses
         if (nextDose > vaccine.RequiredDoses)
         {
-            _logger.Warn($"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
+            _logger.Warn(
+                $"[GetNextDoseNumber] Child {childId} has already received all {vaccine.RequiredDoses} doses.");
             return vaccine.RequiredDoses; // Cap at max required dose
         }
 
@@ -473,12 +466,12 @@ public class VaccineService : IVaccineService
 
 
     /// <summary>
-    /// Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
-    /// - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
-    /// - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
-    ///   kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
-    /// - Nếu khoảng cách không đủ → trả về false.
-    /// - Nếu tất cả kiểm tra hợp lệ → trả về true.
+    ///     Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    ///     - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
+    ///     - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
+    ///     kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
+    ///     - Nếu khoảng cách không đủ → trả về false.
+    ///     - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
     public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
         DateTime appointmentDate)

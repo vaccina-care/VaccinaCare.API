@@ -22,44 +22,6 @@ public class EmailService : IEmailService
         _unitOfWork = unitOfWork;
     }
 
-    private async Task SendEmailAsync(EmailDTO request)
-    {
-        var email = new MimeMessage();
-
-        // Read environment variables
-        var emailUserName = Environment.GetEnvironmentVariable("EMAIL_USERNAME");
-        var emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
-        var emailHost = Environment.GetEnvironmentVariable("EMAIL_HOST");
-
-        if (string.IsNullOrEmpty(emailUserName) || string.IsNullOrEmpty(emailPassword) ||
-            string.IsNullOrEmpty(emailHost))
-            throw new InvalidOperationException("Email configuration is missing in environment variables.");
-
-        email.From.Add(MailboxAddress.Parse(emailUserName));
-        email.To.Add(MailboxAddress.Parse(request.To));
-        email.Subject = request.Subject;
-        email.Body = new TextPart(TextFormat.Html)
-        {
-            Text = request.Body
-        };
-
-        using var smtp = new SmtpClient();
-        try
-        {
-            await smtp.ConnectAsync(emailHost, 587, SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(emailUserName, emailPassword);
-            await smtp.SendAsync(email);
-        }
-        catch (Exception ex)
-        {
-            _logger.Error($"Error sending email: {ex.Message}");
-        }
-        finally
-        {
-            await smtp.DisconnectAsync(true);
-        }
-    }
-
     public async Task SendWelcomeNewUserAsync(EmailRequestDTO emailRequest)
     {
         // Create a welcome email
@@ -219,5 +181,43 @@ public class EmailService : IEmailService
         };
 
         await SendEmailAsync(email);
+    }
+
+    private async Task SendEmailAsync(EmailDTO request)
+    {
+        var email = new MimeMessage();
+
+        // Read environment variables
+        var emailUserName = Environment.GetEnvironmentVariable("EMAIL_USERNAME");
+        var emailPassword = Environment.GetEnvironmentVariable("EMAIL_PASSWORD");
+        var emailHost = Environment.GetEnvironmentVariable("EMAIL_HOST");
+
+        if (string.IsNullOrEmpty(emailUserName) || string.IsNullOrEmpty(emailPassword) ||
+            string.IsNullOrEmpty(emailHost))
+            throw new InvalidOperationException("Email configuration is missing in environment variables.");
+
+        email.From.Add(MailboxAddress.Parse(emailUserName));
+        email.To.Add(MailboxAddress.Parse(request.To));
+        email.Subject = request.Subject;
+        email.Body = new TextPart(TextFormat.Html)
+        {
+            Text = request.Body
+        };
+
+        using var smtp = new SmtpClient();
+        try
+        {
+            await smtp.ConnectAsync(emailHost, 587, SecureSocketOptions.StartTls);
+            await smtp.AuthenticateAsync(emailUserName, emailPassword);
+            await smtp.SendAsync(email);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error sending email: {ex.Message}");
+        }
+        finally
+        {
+            await smtp.DisconnectAsync(true);
+        }
     }
 }

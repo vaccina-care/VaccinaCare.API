@@ -1,6 +1,6 @@
 ﻿namespace VaccinaCare.Domain.Entities;
 
-public partial class Payment : BaseEntity
+public class Payment : BaseEntity
 {
     public Guid AppointmentId { get; set; } // Liên kết với Appointment
 

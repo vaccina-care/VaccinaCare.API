@@ -8,9 +8,9 @@ namespace VaccinaCare.Application.Service;
 
 public class VaccineRecordService : IVaccineRecordService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public VaccineRecordService(IUnitOfWork unitOfWork, IClaimsService claimsService, ILoggerService logger)
     {
@@ -39,11 +39,11 @@ public class VaccineRecordService : IVaccineRecordService
             var existingRecords = await _unitOfWork.VaccinationRecordRepository
                 .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId); // ✅ Đảm bảo đúng dữ liệu
 
-            int dosesTaken = existingRecords.Count;
+            var dosesTaken = existingRecords.Count;
             _logger.Info($"Child {childId} đã tiêm {dosesTaken} liều của vaccine {vaccine.VaccineName}.");
 
             // 3️⃣ Tính số liều còn lại
-            int remainingDoses = vaccine.RequiredDoses - dosesTaken;
+            var remainingDoses = vaccine.RequiredDoses - dosesTaken;
 
             if (remainingDoses <= 0)
             {

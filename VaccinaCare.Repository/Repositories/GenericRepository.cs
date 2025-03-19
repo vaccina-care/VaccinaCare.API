@@ -8,10 +8,10 @@ namespace VaccinaCare.Repository.Repositories;
 
 public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEntity : BaseEntity
 {
-    private readonly DbSet<TEntity> _dbSet;
-    private readonly VaccinaCareDbContext _dbContext;
-    private readonly ICurrentTime _timeService;
     private readonly IClaimsService _claimsService;
+    private readonly VaccinaCareDbContext _dbContext;
+    private readonly DbSet<TEntity> _dbSet;
+    private readonly ICurrentTime _timeService;
 
     public GenericRepository(VaccinaCareDbContext context, ICurrentTime timeService, IClaimsService claimsService)
     {
@@ -23,20 +23,13 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
 
     public async Task<TEntity> AddAsync(TEntity entity)
     {
-        try
-        {
-            entity.CreatedAt = _timeService.GetCurrentTime();
-            //var user = await _dbContext.Users.FindAsync(_claimsService.GetCurrentUserId);
-            //if (user == null) throw new Exception("This user is no longer existed");
-            entity.CreatedBy = _claimsService.GetCurrentUserId;
-            var result = await _dbSet.AddAsync(entity);
-            //await _dbContext.SaveChangesAsync();
-            return result.Entity;
-        }
-        catch (Exception)
-        {
-            throw;
-        }
+        entity.CreatedAt = _timeService.GetCurrentTime();
+        //var user = await _dbContext.Users.FindAsync(_claimsService.GetCurrentUserId);
+        //if (user == null) throw new Exception("This user is no longer existed");
+        entity.CreatedBy = _claimsService.GetCurrentUserId;
+        var result = await _dbSet.AddAsync(entity);
+        //await _dbContext.SaveChangesAsync();
+        return result.Entity;
     }
 
     // riêng hàm này đã sửa để adapt theo Unit Of Work
@@ -56,15 +49,8 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     {
         IQueryable<TEntity> query = _dbSet;
 
-        if (predicate != null)
-        {
-            query = query.Where(predicate); // ✅ Bảo đảm áp dụng bộ lọc
-        }
-
-        foreach (var include in includes) 
-        {
-            query = query.Include(include);
-        }
+        if (predicate != null) query = query.Where(predicate);
+        foreach (var include in includes) query = query.Include(include);
 
         return query.ToListAsync();
     }

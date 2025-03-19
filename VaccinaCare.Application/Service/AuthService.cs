@@ -12,9 +12,9 @@ namespace VaccinaCare.Application.Service;
 
 public class AuthService : IAuthService
 {
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IEmailService _emailService;
     private readonly ILoggerService _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AuthService(IUnitOfWork unitOfWork, ILoggerService logger, IEmailService emailService)
     {

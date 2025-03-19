@@ -12,9 +12,9 @@ namespace VaccinaCare.API.Controllers;
 [Route("api/users")]
 public class CustomerController : ControllerBase
 {
-    private readonly IUserService _userService;
     private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
+    private readonly IUserService _userService;
 
     public CustomerController(IUserService userService, IClaimsService claimsService, ILoggerService logger)
     {

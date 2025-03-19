@@ -11,12 +11,12 @@ namespace VaccinaCare.Application.Service;
 
 public class AppointmentService : IAppointmentService
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly ILoggerService _logger;
-    private readonly IVaccineService _vaccineService;
-    private readonly IVaccineRecordService _vaccineRecordService;
-    private readonly INotificationService _notificationService;
     private readonly IEmailService _emailService;
+    private readonly ILoggerService _logger;
+    private readonly INotificationService _notificationService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IVaccineRecordService _vaccineRecordService;
+    private readonly IVaccineService _vaccineService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
@@ -51,7 +51,7 @@ public class AppointmentService : IAppointmentService
             _logger.Info($"Vaccine {vaccine.VaccineName} requires {vaccine.RequiredDoses} doses.");
 
             // Lấy số liều còn lại
-            int remainingDoses = await _vaccineRecordService.GetRemainingDoses(request.ChildId, request.VaccineId);
+            var remainingDoses = await _vaccineRecordService.GetRemainingDoses(request.ChildId, request.VaccineId);
             _logger.Info($"Child {request.ChildId} has {remainingDoses} doses remaining.");
 
             // Nếu đã tiêm đủ, không tạo lịch
@@ -63,8 +63,8 @@ public class AppointmentService : IAppointmentService
             }
 
             // Kiểm tra nếu chưa từng tiêm vaccine này
-            bool hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
-            int completedDoses = hasPreviousRecords ? (vaccine.RequiredDoses - remainingDoses) : 0;
+            var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
+            var completedDoses = hasPreviousRecords ? vaccine.RequiredDoses - remainingDoses : 0;
 
             _logger.Info(
                 $"Total required doses: {vaccine.RequiredDoses}, Completed: {completedDoses}, Creating {remainingDoses} appointments.");
@@ -105,7 +105,7 @@ public class AppointmentService : IAppointmentService
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.Info($"Appointments saved to the database.");
+            _logger.Info("Appointments saved to the database.");
 
             // Trả về danh sách DTO
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
