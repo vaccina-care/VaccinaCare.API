@@ -44,13 +44,9 @@ public class AppointmentController : ControllerBase
 
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
-        catch (ArgumentException ex)
-        {
-            return Ok(ApiResult<object>.Error(ex.Message));
-        }
         catch (Exception ex)
         {
-            return Ok(ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
+            return Ok(ApiResult<object>.Error(ex.Message));
         }
     }
 
