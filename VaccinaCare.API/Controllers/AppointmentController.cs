@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Data.Entity.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -38,22 +39,32 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
-                return Ok(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
+            {
+                _logger.Warn("Dữ liệu đầu vào không hợp lệ.");
+                return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
+            }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
-
+        
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
-        catch (ArgumentException ex)
+        catch (DbUpdateException dbEx)
         {
-            return Ok(ApiResult<object>.Error(ex.Message));
+            _logger.Error($"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}");
+            return StatusCode(500, ApiResult<object>.Error("Lỗi hệ thống khi lưu lịch hẹn. Vui lòng thử lại."));
+        }
+        catch (ArgumentException argEx)
+        {
+            _logger.Warn($"Validation error: {argEx.Message}");
+            return BadRequest(ApiResult<object>.Error(argEx.Message));
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
+            _logger.Error($"Unexpected error: {ex.Message}");
+            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
-
+    
     [HttpPost("booking/package-vaccines")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]

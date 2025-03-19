@@ -9,21 +9,89 @@ namespace VaccinaCare.Application.Service;
 public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 {
     private readonly IClaimsService _claimsService;
-    private readonly ILoggerService _logerService;
+    private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
 
-    public VaccineIntervalRulesService(IUnitOfWork unitOfWork, ILoggerService logerService,
+    public VaccineIntervalRulesService(IUnitOfWork unitOfWork, ILoggerService logger,
         IClaimsService claimsService)
     {
         _unitOfWork = unitOfWork;
-        _logerService = logerService;
+        _logger = logger;
         _claimsService = claimsService;
     }
+    
+    /// <summary>
+    ///     Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
+    ///     - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
+    ///     - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
+    ///     kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
+    ///     - Nếu khoảng cách không đủ → trả về false.
+    ///     - Nếu tất cả kiểm tra hợp lệ → trả về true.
+    /// </summary>
+    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+        DateTime appointmentDate)
+    {
+        _logger.Info(
+            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
 
+        foreach (var bookedVaccineId in bookedVaccineIds)
+        {
+            _logger.Info(
+                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
+
+            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
+            var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                .FirstOrDefaultAsync(r =>
+                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
+
+            // Nếu có quy tắc xác định
+            if (rule != null)
+            {
+                _logger.Info(
+                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
+
+                // Nếu hai loại vaccine không thể tiêm chung, trả về false
+                if (!rule.CanBeGivenTogether)
+                {
+                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
+                    return false;
+                }
+
+                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
+                if (rule.MinIntervalDays > 0)
+                {
+                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
+                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                        .FirstOrDefaultAsync(a =>
+                            a.VaccineId == bookedVaccineId &&
+                            a.Appointment.AppointmentDate.HasValue &&
+                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
+
+                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
+                    if (lastAppointment != null)
+                    {
+                        _logger.Info(
+                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                _logger.Info(
+                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
+            }
+        }
+
+        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
+        return true;
+    }
+    
     public async Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(
         VaccineIntervalRulesDTO vaccineIntervalRulesDTO)
     {
-        _logerService.Info("Creating Vaccine Interval Rules: ");
+        _logger.Info("Creating Vaccine Interval Rules: ");
 
         if (vaccineIntervalRulesDTO.VaccineId == Guid.Empty)
             throw new ArgumentException("VaccineId cannot be empty.");
@@ -54,7 +122,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
         catch (Exception ex)
         {
-            _logerService.Error($"Error in CreateVaccineIntervalRuleAsync: {ex.Message}");
+            _logger.Error($"Error in CreateVaccineIntervalRuleAsync: {ex.Message}");
             throw;
         }
     }
@@ -63,7 +131,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
     {
         try
         {
-            _logerService.Info("Fetching all Vaccine Interval Rules....");
+            _logger.Info("Fetching all Vaccine Interval Rules....");
 
             var vaccineIntervalRules = await _unitOfWork.VaccineIntervalRulesRepository.GetAllAsync();
 
@@ -76,12 +144,12 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
                 MinIntervalDays = v.MinIntervalDays
             }).ToList();
 
-            _logerService.Info($"Fetched {result.Count} Vaccine Interval Rules successfully.");
+            _logger.Info($"Fetched {result.Count} Vaccine Interval Rules successfully.");
             return result;
         }
         catch (Exception ex)
         {
-            _logerService.Error($"Error fetching Vaccine Interval Rules: {ex.Message}");
+            _logger.Error($"Error fetching Vaccine Interval Rules: {ex.Message}");
             throw;
         }
     }
@@ -91,42 +159,42 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
     {
         try
         {
-            _logerService.Info($"Updating Vaccine Interval Rule with ID: {id}");
+            _logger.Info($"Updating Vaccine Interval Rule with ID: {id}");
 
             if (updateDto == null)
             {
-                _logerService.Warn("Update data is null.");
+                _logger.Warn("Update data is null.");
                 throw new ArgumentNullException(nameof(updateDto), "Update data can be null.");
             }
 
             var vaccineIntervalRule = await _unitOfWork.VaccineIntervalRulesRepository.GetByIdAsync(id);
             if (vaccineIntervalRule == null)
             {
-                _logerService.Warn($"Vaccine Interval Rule with ID {id} not found.");
+                _logger.Warn($"Vaccine Interval Rule with ID {id} not found.");
                 return null;
             }
 
             if (updateDto.VaccineId == Guid.Empty || updateDto.RelatedVaccineId == Guid.Empty)
             {
-                _logerService.Warn("VaccineId or RelatedVaccineId is empty.");
+                _logger.Warn("VaccineId or RelatedVaccineId is empty.");
                 throw new ArgumentException("VaccineId and RelatedVaccineId cannot be empty.");
             }
 
             if (updateDto.VaccineId == updateDto.RelatedVaccineId)
             {
-                _logerService.Warn("VaccineId and RelatedVaccineId cannot be the same.");
+                _logger.Warn("VaccineId and RelatedVaccineId cannot be the same.");
                 throw new ArgumentException("A vaccine cannot have an interval rule wiht itseft.");
             }
 
             if (updateDto.MinIntervalDays < 0)
             {
-                _logerService.Info("MinIntervalDay cannot be neagative.");
+                _logger.Info("MinIntervalDay cannot be neagative.");
                 throw new ArgumentException("MinIntervalDay must be a non-negative.");
             }
 
             if (updateDto.CanBeGivenTogether && updateDto.MinIntervalDays > 0)
             {
-                _logerService.Warn("If vaccines can be give together, MinIntervalDays should be 0.");
+                _logger.Warn("If vaccines can be give together, MinIntervalDays should be 0.");
                 throw new ArgumentException("If CanBeGivenTogether is true, MinIntervalDays must be 0.");
             }
 
@@ -138,7 +206,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
             await _unitOfWork.VaccineIntervalRulesRepository.Update(vaccineIntervalRule);
             await _unitOfWork.SaveChangesAsync();
 
-            _logerService.Info($"Update vaccine interval rule with id {id} successfully.");
+            _logger.Info($"Update vaccine interval rule with id {id} successfully.");
 
             return new VaccineIntervalRulesDTO
             {
@@ -150,33 +218,33 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         }
         catch (Exception ex)
         {
-            _logerService.Error($"Error updating vaccine interval rule: {ex.Message}");
+            _logger.Error($"Error updating vaccine interval rule: {ex.Message}");
             throw;
         }
     }
 
     public async Task<bool> DeleteVaccineIntervalRuleAsync(Guid id)
     {
-        _logerService.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");
+        _logger.Info($"Attempting to delete Vaccine Interval Rule wiht ID: {id}");
         try
         {
             var vaccineIntervalRule = await _unitOfWork.VaccineIntervalRulesRepository.GetByIdAsync(id);
 
             if (vaccineIntervalRule == null)
             {
-                _logerService.Warn($"Vaccine Interlval Rule with ID {id} not found.");
+                _logger.Warn($"Vaccine Interlval Rule with ID {id} not found.");
                 return false;
             }
 
             await _unitOfWork.VaccineIntervalRulesRepository.SoftRemove(vaccineIntervalRule);
             await _unitOfWork.SaveChangesAsync();
 
-            _logerService.Info($"Successfully deleted Vaccine Interval Rule with ID: {id}");
+            _logger.Info($"Successfully deleted Vaccine Interval Rule with ID: {id}");
             return true;
         }
         catch (Exception ex)
         {
-            _logerService.Error($"Error deleting Vaccine Interval Rule with ID {id}: {ex.Message}");
+            _logger.Error($"Error deleting Vaccine Interval Rule with ID {id}: {ex.Message}");
             return false;
         }
     }

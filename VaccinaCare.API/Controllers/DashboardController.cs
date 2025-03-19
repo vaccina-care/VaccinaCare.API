@@ -12,22 +12,17 @@ namespace VaccinaCare.API.Controllers;
 [Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
-    private readonly ILoggerService _logger;
     private readonly IVaccinePackageService _vaccinePackageService;
     private readonly IVaccineService _vaccineService;
 
-    public DashboardController(ILoggerService logger, IVaccineService vaccineService,
+    public DashboardController(IVaccineService vaccineService,
         IVaccinePackageService vaccinePackageService)
     {
-        _logger = logger;
         _vaccineService = vaccineService;
         _vaccinePackageService = vaccinePackageService;
     }
 
-    [HttpGet("available")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    [HttpGet("vaccines/available")]
     public async Task<IActionResult> GetAvailableVaccines()
     {
         try
@@ -42,7 +37,7 @@ public class DashboardController : Controller
         }
     }
 
-    [HttpGet("most-booked")]
+    [HttpGet("vaccines/packages/most-booked")]
     public async Task<IActionResult> GetMostBookedPackage()
     {
         try

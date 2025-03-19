@@ -18,12 +18,14 @@ public class AppointmentService : IAppointmentService
     private readonly ILoggerService _logger;
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IVaccineIntervalRulesService _vaccineIntervalRules;
     private readonly IVaccineRecordService _vaccineRecordService;
     private readonly IVaccineService _vaccineService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
-        IVaccineRecordService vaccineRecordService, IClaimsService claimsService)
+        IVaccineRecordService vaccineRecordService, IClaimsService claimsService,
+        IVaccineIntervalRulesService vaccineIntervalRules)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
@@ -32,6 +34,7 @@ public class AppointmentService : IAppointmentService
         _emailService = emailService;
         _vaccineRecordService = vaccineRecordService;
         _claimsService = claimsService;
+        _vaccineIntervalRules = vaccineIntervalRules;
     }
 
     public async Task<AppointmentDTO> UpdateAppointmentStatus(Guid appointmentId, AppointmentStatus newStatus,
@@ -108,7 +111,6 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
         CreateAppointmentSingleVaccineDto request,
         Guid parentId)
@@ -151,15 +153,58 @@ public class AppointmentService : IAppointmentService
             }
 
             // PHASE 6: KIỂM TRA TÍNH TƯƠNG THÍCH CỦA VACCINE
-            var bookedVaccineIds =
-                new List<Guid>(); // List of vaccines already booked by the child (this might need to be fetched from the database)
+            // Lấy danh sách các vaccine đã được đặt lịch trước đó của trẻ
+            var bookedVaccineIds = await _unitOfWork.AppointmentsVaccineRepository
+                .GetAllAsync(av =>
+                    av.Appointment.ChildId == request.ChildId && av.Appointment.Status != AppointmentStatus.Cancelled)
+                .ContinueWith(task => task.Result.Select(av => av.VaccineId.Value).Distinct().ToList());
+
+            _logger.Info($"Child {request.ChildId} has booked vaccines: {string.Join(", ", bookedVaccineIds)}");
+
+            // Kiểm tra tính tương thích của vaccine với danh sách vaccine đã đặt lịch
             var isCompatible =
-                await _vaccineService.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds, request.StartDate);
+                await _vaccineIntervalRules.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds,
+                    request.StartDate);
+
+            // Nếu không tương thích, kiểm tra xem startDate có thỏa mãn khoảng cách tối thiểu giữa các mũi tiêm không
             if (!isCompatible)
             {
-                _logger.Warn($"Vaccine {request.VaccineId} is not compatible with one or more booked vaccines.");
-                return new List<AppointmentDTO>();
+                // Kiểm tra các vaccine đã đặt lịch trước đó có yêu cầu khoảng cách tối thiểu giữa các mũi tiêm
+                foreach (var bookedVaccineId in bookedVaccineIds)
+                {
+                    var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                        .FirstOrDefaultAsync(r =>
+                            (r.VaccineId == request.VaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                            (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == request.VaccineId));
+
+                    if (rule != null && rule.MinIntervalDays > 0)
+                    {
+                        // Lấy lịch hẹn gần nhất của vaccine đã đặt trước đó
+                        var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                            .FirstOrDefaultAsync(a =>
+                                a.VaccineId == bookedVaccineId &&
+                                a.Appointment.AppointmentDate.HasValue &&
+                                a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > request.StartDate);
+
+                        // Nếu lịch tiêm vi phạm khoảng cách tối thiểu
+                        if (lastAppointment != null)
+                        {
+                            _logger.Info(
+                                $"Vaccine {request.VaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
+                            return new List<AppointmentDTO>();
+                        }
+                        else
+                        {
+                            _logger.Info(
+                                $"Start date for vaccine {request.VaccineId} is valid as it is {rule.MinIntervalDays} days after last appointment.");
+                        }
+                    }
+                }
             }
+
+            _logger.Info(
+                $"[CheckVaccineCompatibility] Vaccine {request.VaccineId} is compatible with all booked vaccines.");
+
 
             // PHASE 7: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
             var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
