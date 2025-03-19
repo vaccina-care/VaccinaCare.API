@@ -3,6 +3,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
+using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
@@ -55,11 +56,27 @@ public class AppointmentService : IAppointmentService
                 throw new Exception("Appointment can only be updated if it is in Confirmed status.");
             }
 
-            // Cập nhật trạng thái bằng switch-case
+            // Xử lý cập nhật trạng thái
             switch (newStatus)
             {
                 case AppointmentStatus.Completed:
                     appointment.Status = AppointmentStatus.Completed;
+
+                    // Thêm record tiêm chủng vào hồ sơ của trẻ
+                    foreach (var appointmentVaccine in appointment.AppointmentsVaccines)
+                    {
+                        var addVaccineRecordDto = new AddVaccineRecordDto
+                        {
+                            ChildId = appointment.ChildId ,
+                            VaccineId = appointmentVaccine.VaccineId ?? throw new Exception("VaccineId is missing"),
+                            VaccinationDate = appointment.AppointmentDate ?? DateTime.UtcNow,
+                            DoseNumber = appointmentVaccine.DoseNumber ?? 1,
+                            ReactionDetails = null
+                        };
+
+                        await _vaccineRecordService.AddVaccinationRecordAsync(addVaccineRecordDto);
+                    }
+
                     break;
 
                 case AppointmentStatus.Cancelled:

@@ -19,6 +19,55 @@ public class VaccineRecordService : IVaccineRecordService
         _logger = logger;
     }
 
+    public async Task<VaccineRecordDto> UpdateReactionDetails(UpdateVaccineRecorđto updateVaccineRecorDto)
+    {
+        try
+        {
+            // Lấy bản ghi tiêm chủng từ database dựa trên ChildId, VaccineId, DoseNumber
+            var vaccinationRecord = await _unitOfWork.VaccinationRecordRepository
+                .FirstOrDefaultAsync(vr => vr.ChildId == updateVaccineRecorDto.ChildId
+                                           && vr.VaccineId == updateVaccineRecorDto.VaccineId
+                                           && vr.DoseNumber == updateVaccineRecorDto.DoseNumber);
+
+            if (vaccinationRecord == null)
+            {
+                throw new Exception("Vaccination record not found.");
+            }
+
+            // Kiểm tra nếu ReactionDetails đã tồn tại
+            if (!string.IsNullOrWhiteSpace(vaccinationRecord.ReactionDetails))
+            {
+                throw new Exception("Reaction details have already been recorded and cannot be changed.");
+            }
+
+            // Cập nhật ReactionDetails
+            vaccinationRecord.ReactionDetails = updateVaccineRecorDto.ReactionDetails;
+
+            // Lưu thay đổi vào database
+            await _unitOfWork.VaccinationRecordRepository.Update(vaccinationRecord);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Info($"Reaction details updated for VaccinationRecord ID: {vaccinationRecord.Id}");
+
+            // Trả về DTO đã cập nhật
+            return new VaccineRecordDto
+            {
+                Id = vaccinationRecord.Id,
+                ChildId = vaccinationRecord.ChildId,
+                VaccineId = vaccinationRecord.VaccineId,
+                VaccinationDate = vaccinationRecord.VaccinationDate,
+                ReactionDetails = vaccinationRecord.ReactionDetails,
+                DoseNumber = vaccinationRecord.DoseNumber
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Error updating reaction details: {e.Message}");
+            throw;
+        }
+    }
+
+
     public async Task<int> GetRemainingDoses(Guid childId, Guid vaccineId)
     {
         try
