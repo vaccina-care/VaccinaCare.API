@@ -160,6 +160,10 @@ public class PaymentService : IPaymentService
                     _logger.Success($"Appointment {appointment.Id} confirmed after successful payment.");
                 }
             }
+            else
+            {
+                
+            }
 
             // Lưu tất cả thay đổi vào database
             await _unitOfWork.SaveChangesAsync();

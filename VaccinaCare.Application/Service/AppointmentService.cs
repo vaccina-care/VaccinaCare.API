@@ -33,6 +33,70 @@ public class AppointmentService : IAppointmentService
         _claimsService = claimsService;
     }
 
+    public async Task<AppointmentDTO> UpdateAppointmentStatus(Guid appointmentId, AppointmentStatus newStatus,
+        string? cancellationReason = null)
+    {
+        try
+        {
+            var appointment = await _unitOfWork.AppointmentRepository
+                .GetQueryable()
+                .Include(a => a.AppointmentsVaccines)
+                .ThenInclude(av => av.Vaccine) // Include thông tin vaccine
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+            if (appointment == null)
+            {
+                throw new Exception("Appointment not found.");
+            }
+
+            // Kiểm tra trạng thái hiện tại của appointment
+            if (appointment.Status != AppointmentStatus.Confirmed)
+            {
+                throw new Exception("Appointment can only be updated if it is in Confirmed status.");
+            }
+
+            // Cập nhật trạng thái bằng switch-case
+            switch (newStatus)
+            {
+                case AppointmentStatus.Completed:
+                    appointment.Status = AppointmentStatus.Completed;
+                    break;
+
+                case AppointmentStatus.Cancelled:
+                    appointment.Status = AppointmentStatus.Cancelled;
+                    appointment.CancellationReason = cancellationReason;
+                    break;
+
+                default:
+                    throw new Exception("Invalid status update. You can only update to Completed or Cancelled.");
+            }
+
+            // Lưu thay đổi vào database
+            await _unitOfWork.AppointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Trả về dữ liệu cập nhật
+            return new AppointmentDTO
+            {
+                AppointmentId = appointment.Id,
+                ChildId = appointment.ChildId,
+                UserId = appointment.ParentId,
+                AppointmentDate = appointment.AppointmentDate ?? DateTime.MinValue,
+                Status = appointment.Status.ToString(),
+                VaccineName = appointment.AppointmentsVaccines.FirstOrDefault()?.Vaccine?.VaccineName ?? "Unknown",
+                DoseNumber = appointment.AppointmentsVaccines.FirstOrDefault()?.DoseNumber ?? 0,
+                TotalPrice = appointment.AppointmentsVaccines.FirstOrDefault()?.TotalPrice ?? 0,
+                Notes = appointment.Notes ?? string.Empty
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Error updating appointment status: {e.Message}");
+            throw;
+        }
+    }
+
+
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
         CreateAppointmentSingleVaccineDto request,
         Guid parentId)
@@ -409,6 +473,7 @@ public class AppointmentService : IAppointmentService
             return null;
         }
     }
+
 
     public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {

@@ -162,22 +162,4 @@ public class VaccineController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during deletion."));
         }
     }
-    [HttpGet("available")]
-    [Authorize(Policy = "AdminPolicy")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAvailableVaccines()
-    {
-        try
-        {
-            int count = await _vaccineService.GetVaccineAvailable();
-
-            return Ok(ApiResult<int>.Success(count, "Available vaccines retrieved successfully."));
-        }
-        catch (Exception ex)
-        {
-            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
-        }
-    }
 }
