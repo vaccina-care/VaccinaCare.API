@@ -19,7 +19,8 @@ public class AppointmentService : IAppointmentService
     private readonly IEmailService _emailService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
-        INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService, IVaccineRecordService vaccineRecordService)
+        INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
+        IVaccineRecordService vaccineRecordService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
@@ -31,14 +32,15 @@ public class AppointmentService : IAppointmentService
 
     //single-vaccine
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
-    CreateAppointmentSingleVaccineDto request,
-    Guid parentId)
+        CreateAppointmentSingleVaccineDto request,
+        Guid parentId)
     {
         try
         {
-            _logger.Info($"[Start] Generating appointments for vaccine {request.VaccineId} for child {request.ChildId}");
+            _logger.Info(
+                $"[Start] Generating appointments for vaccine {request.VaccineId} for child {request.ChildId}");
 
-            // Fetch vaccine details
+            // Lấy thông tin vaccine
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(request.VaccineId);
             if (vaccine == null)
             {
@@ -48,27 +50,29 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info($"Vaccine {vaccine.VaccineName} requires {vaccine.RequiredDoses} doses.");
 
-            // Fetch remaining doses based on vaccination records
+            // Lấy số liều còn lại
             int remainingDoses = await _vaccineRecordService.GetRemainingDoses(request.ChildId, request.VaccineId);
-
             _logger.Info($"Child {request.ChildId} has {remainingDoses} doses remaining.");
 
-            // If no remaining doses, return empty list
+            // Nếu đã tiêm đủ, không tạo lịch
             if (remainingDoses <= 0)
             {
-                _logger.Info($"Child {request.ChildId} đã hoàn thành tất cả các mũi tiêm cho vaccine {vaccine.VaccineName}.");
+                _logger.Info(
+                    $"Child {request.ChildId} đã hoàn thành tất cả các mũi tiêm cho vaccine {vaccine.VaccineName}.");
                 return new List<AppointmentDTO>();
             }
 
-            // Create appointments for remaining doses
+            // Kiểm tra nếu chưa từng tiêm vaccine này
+            bool hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
+            int completedDoses = hasPreviousRecords ? (vaccine.RequiredDoses - remainingDoses) : 0;
+
+            _logger.Info(
+                $"Total required doses: {vaccine.RequiredDoses}, Completed: {completedDoses}, Creating {remainingDoses} appointments.");
+
             var appointments = new List<Appointment>();
             var appointmentDate = request.StartDate;
-            int totalDoses = vaccine.RequiredDoses;
-            int completedDoses = totalDoses - remainingDoses;
 
-            _logger.Info($"Total doses required: {totalDoses}, Doses completed: {completedDoses}, Generating appointments from dose {completedDoses + 1} to {totalDoses}.");
-
-            for (var dose = completedDoses + 1; dose <= totalDoses; dose++)
+            for (var dose = completedDoses + 1; dose <= vaccine.RequiredDoses; dose++)
             {
                 _logger.Info($"Creating appointment for dose {dose} on {appointmentDate}");
 
@@ -79,31 +83,31 @@ public class AppointmentService : IAppointmentService
                     AppointmentDate = appointmentDate,
                     Status = AppointmentStatus.Pending,
                     VaccineType = VaccineType.SingleDose,
-                    Notes = $"Mũi {dose}/{totalDoses} - {vaccine.VaccineName}",
+                    Notes = $"Mũi {dose}/{vaccine.RequiredDoses} - {vaccine.VaccineName}",
                     AppointmentsVaccines = new List<AppointmentsVaccine>
-                {
-                    new()
                     {
-                        VaccineId = request.VaccineId,
-                        DoseNumber = dose,
-                        TotalPrice = vaccine.Price
+                        new()
+                        {
+                            VaccineId = request.VaccineId,
+                            DoseNumber = dose,
+                            TotalPrice = vaccine.Price
+                        }
                     }
-                }
                 };
 
                 appointments.Add(appointment);
-                appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays); // Increment date by dose interval
+                appointmentDate = appointmentDate.AddDays(vaccine.DoseIntervalDays);
             }
 
             _logger.Info($"Total {appointments.Count} appointments created.");
 
-            // Save appointments to the database
+            // Lưu vào Database
             await _unitOfWork.AppointmentRepository.AddRangeAsync(appointments);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info($"Appointments saved to the database.");
 
-            // Return DTOs for created appointments
+            // Trả về danh sách DTO
             var appointmentDTOs = appointments.Select(a => new AppointmentDTO
             {
                 AppointmentId = a.Id,
@@ -129,8 +133,6 @@ public class AppointmentService : IAppointmentService
             throw new Exception("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
         }
     }
-
-
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForPackageVaccine(
         CreateAppointmentPackageVaccineDto request, Guid parentId)

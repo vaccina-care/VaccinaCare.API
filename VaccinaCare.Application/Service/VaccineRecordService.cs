@@ -25,13 +25,7 @@ public class VaccineRecordService : IVaccineRecordService
         {
             _logger.Info($"Fetching remaining doses for Child {childId} and Vaccine {vaccineId}");
 
-            // Lấy số liều đã tiêm của đúng VaccineId này
-            var existingRecords = await _unitOfWork.VaccinationRecordRepository
-                .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId);
-
-            int dosesTaken = existingRecords.Count;
-
-            // Lấy RequiredDoses của vaccine
+            // 1️⃣ Lấy thông tin vaccine
             var vaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
             if (vaccine == null)
             {
@@ -39,20 +33,35 @@ public class VaccineRecordService : IVaccineRecordService
                 throw new Exception("Vaccine không tồn tại.");
             }
 
-            // Tính số liều còn lại
+            _logger.Info($"Vaccine {vaccine.VaccineName} requires {vaccine.RequiredDoses} doses.");
+
+            // 2️⃣ Chỉ lấy số liều đã tiêm của đúng VaccineId này
+            var existingRecords = await _unitOfWork.VaccinationRecordRepository
+                .GetAllAsync(vr => vr.ChildId == childId && vr.VaccineId == vaccineId); // ✅ Đảm bảo đúng dữ liệu
+
+            int dosesTaken = existingRecords.Count;
+            _logger.Info($"Child {childId} đã tiêm {dosesTaken} liều của vaccine {vaccine.VaccineName}.");
+
+            // 3️⃣ Tính số liều còn lại
             int remainingDoses = vaccine.RequiredDoses - dosesTaken;
 
-            _logger.Info($"Child {childId} has taken {dosesTaken} doses of Vaccine {vaccineId}. Required: {vaccine.RequiredDoses}, Remaining: {remainingDoses}");
+            if (remainingDoses <= 0)
+            {
+                _logger.Info($"Child {childId} đã hoàn thành tất cả các mũi tiêm cho vaccine {vaccine.VaccineName}.");
+                return 0;
+            }
 
-            // Đảm bảo không trả về số âm
-            return remainingDoses > 0 ? remainingDoses : 0;
+            _logger.Info($"Child {childId} cần {remainingDoses} liều nữa của vaccine {vaccine.VaccineName}.");
+
+            return remainingDoses;
         }
         catch (Exception ex)
         {
-            _logger.Error($"Error fetching remaining doses: {ex.Message}");
+            _logger.Error($"Lỗi khi lấy số liều còn lại: {ex.Message}");
             throw;
         }
     }
+
 
     public async Task<VaccineRecordDto> GetRecordDetailsByIdAsync(Guid recordId)
     {

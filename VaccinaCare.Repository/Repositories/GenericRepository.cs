@@ -51,15 +51,24 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
         await _dbSet.AddRangeAsync(entities);
     }
 
-    public Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate = null,
+    public Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> predicate,
         params Expression<Func<TEntity, object>>[] includes)
     {
         IQueryable<TEntity> query = _dbSet;
 
-        foreach (var include in includes) query = query.Include(include);
+        if (predicate != null)
+        {
+            query = query.Where(predicate); // ✅ Bảo đảm áp dụng bộ lọc
+        }
+
+        foreach (var include in includes) 
+        {
+            query = query.Include(include);
+        }
 
         return query.ToListAsync();
     }
+
 
     public async Task<TEntity?> GetByIdAsync(Guid id, params Expression<Func<TEntity, object>>[] includes)
     {
