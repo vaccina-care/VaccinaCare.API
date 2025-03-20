@@ -119,6 +119,7 @@ public class BlobService : IBlobService
         {
             ".jpg" or ".jpeg" => "image/jpeg",
             ".png" => "image/png",
+            ".gif" => "image/gif",
             ".pdf" => "application/pdf",
             ".mp4" => "video/mp4",
             _ => "application/octet-stream"
