@@ -245,6 +245,7 @@ public class UserService : IUserService
                     FullName = u.FullName,
                     Email = u.Email,
                     RoleName = u.RoleName,
+                    PhoneNumber = u.PhoneNumber,
                     CreatedAt = u.CreatedAt
                 }).ToList();
 
