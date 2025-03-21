@@ -1,28 +1,26 @@
-﻿using VaccinaCare.Application.Interface.Common;
-using Moq;
-using VaccinaCare.Application.Service;
-using VaccinaCare.Repository.Interfaces;
+﻿using System.Linq.Expressions;
 using Microsoft.Extensions.Configuration;
-using VaccinaCare.Application.Ultils;
+using Moq;
 using VaccinaCare.Application.Interface;
+using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Service;
+using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AuthDTOs;
+using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
-using System.Linq.Expressions;
-using VaccinaCare.Domain.DTOs.EmailDTOs;
-using Microsoft.AspNetCore.Identity;
-
+using VaccinaCare.Repository.Interfaces;
 
 namespace VaccinaCare.UnitTest;
 
 public class AuthServiceTest
 {
-    private readonly Mock<ILoggerService> _loggerMock;
     private readonly AuthService _authService;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IEmailService> _emailServiceMock;
-    private readonly Mock<IConfiguration> _mockConfiguration = new Mock<IConfiguration>();
+    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly Mock<IConfiguration> _mockConfiguration = new();
     private readonly Mock<PasswordHasher> _passwordHasherMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
 
     public AuthServiceTest()
     {
@@ -68,7 +66,7 @@ public class AuthServiceTest
 
 
         _unitOfWorkMock.Setup(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()))
-        .ReturnsAsync((User)null);
+            .ReturnsAsync((User)null);
 
         _unitOfWorkMock.Setup(u => u.UserRepository.AddAsync(It.IsAny<User>()))
             .ReturnsAsync((User u) => u);
@@ -87,7 +85,8 @@ public class AuthServiceTest
         Assert.Equal(registerRequest.FullName, result.FullName);
         Assert.Equal(RoleType.Customer, result.RoleName);
 
-        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()),
+            Times.Once);
         _unitOfWorkMock.Verify(u => u.UserRepository.AddAsync(It.IsAny<User>()), Times.Once);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Once);
         _emailServiceMock.Verify(e => e.SendWelcomeNewUserAsync(It.IsAny<EmailRequestDTO>()), Times.Once);
@@ -121,16 +120,17 @@ public class AuthServiceTest
         // Assert
         Assert.Null(result);
 
-        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()),
+            Times.Once);
         _unitOfWorkMock.Verify(u => u.UserRepository.AddAsync(It.IsAny<User>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         _emailServiceMock.Verify(e => e.SendWelcomeNewUserAsync(It.IsAny<EmailRequestDTO>()), Times.Never);
     }
 
     [Theory]
-    [InlineData(null)] 
+    [InlineData(null)]
     [InlineData("")]
-    [InlineData("   ")] 
+    [InlineData("   ")]
     //Test case 3: Create Account When Missing Email
     public async Task RegisterAsync_ShouldReturnNull_WhenEmailIsMissing(string? email)
     {
@@ -153,7 +153,8 @@ public class AuthServiceTest
         // Assert
         Assert.Null(result);
 
-        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()),
+            Times.Never);
         _unitOfWorkMock.Verify(u => u.UserRepository.AddAsync(It.IsAny<User>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         _emailServiceMock.Verify(e => e.SendWelcomeNewUserAsync(It.IsAny<EmailRequestDTO>()), Times.Never);
@@ -161,7 +162,7 @@ public class AuthServiceTest
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")] 
+    [InlineData("")]
     [InlineData("   ")]
     //Test case 4: Create Account When Missing Password
     public async Task RegisterAsync_ShouldReturnNull_WhenPasswordIsMissing(string? password)
@@ -185,7 +186,8 @@ public class AuthServiceTest
         // Assert
         Assert.Null(result);
 
-        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()),
+            Times.Never);
         _unitOfWorkMock.Verify(u => u.UserRepository.AddAsync(It.IsAny<User>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         _emailServiceMock.Verify(e => e.SendWelcomeNewUserAsync(It.IsAny<EmailRequestDTO>()), Times.Never);
@@ -219,7 +221,8 @@ public class AuthServiceTest
         Assert.Null(result);
 
         // Kiểm tra không truy vấn database
-        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()), Times.Never);
+        _unitOfWorkMock.Verify(u => u.UserRepository.FirstOrDefaultAsync(It.IsAny<Expression<Func<User, bool>>>()),
+            Times.Never);
         _unitOfWorkMock.Verify(u => u.UserRepository.AddAsync(It.IsAny<User>()), Times.Never);
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
         _emailServiceMock.Verify(e => e.SendWelcomeNewUserAsync(It.IsAny<EmailRequestDTO>()), Times.Never);
@@ -240,7 +243,8 @@ public class AuthServiceTest
         // Assert
         Assert.Null(result);
 
-        _loggerMock.Verify(l => l.Warn("Login attempt failed: Missing email or password. Both fields are required."), Times.Once);
+        _loggerMock.Verify(l => l.Warn("Login attempt failed: Missing email or password. Both fields are required."),
+            Times.Once);
     }
 
     [Fact]
@@ -260,7 +264,8 @@ public class AuthServiceTest
 
         // Assert
         Assert.Null(result);
-        _loggerMock.Verify(l => l.Warn($"Login attempt failed: No active user found with email: {loginRequest.Email}."), Times.Once);
+        _loggerMock.Verify(l => l.Warn($"Login attempt failed: No active user found with email: {loginRequest.Email}."),
+            Times.Once);
     }
 
     [Fact]
@@ -312,7 +317,6 @@ public class AuthServiceTest
         var exception = await Assert.ThrowsAsync<Exception>(() => _authService.LogoutAsync(userId));
 
         Assert.Equal(expectedErrorMessage, exception.Message);
-
     }
 
     [Fact]
@@ -336,4 +340,3 @@ public class AuthServiceTest
         _unitOfWorkMock.Verify(u => u.SaveChangesAsync(), Times.Never);
     }
 }
-

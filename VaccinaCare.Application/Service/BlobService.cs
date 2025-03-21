@@ -3,6 +3,9 @@ using Minio.DataModel.Args;
 using Minio.Exceptions;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace VaccinaCare.Application.Service;
 
@@ -11,6 +14,7 @@ public class BlobService : IBlobService
     private readonly string _bucketName = "vaccinacare-bucket";
     private readonly ILoggerService _logger;
     private readonly IMinioClient _minioClient;
+    private readonly long _maxFileSize; // Kích thước tối đa cho phép (bytes)
 
     public BlobService(ILoggerService logger)
     {
@@ -20,6 +24,17 @@ public class BlobService : IBlobService
                        "minio.ae-tao-fullstack-api.site:9000";
         var accessKey = Environment.GetEnvironmentVariable("MINIO_ACCESS_KEY");
         var secretKey = Environment.GetEnvironmentVariable("MINIO_SECRET_KEY");
+        
+        // Lấy giới hạn kích thước từ config hoặc mặc định là 10MB
+        var maxFileSizeStr = Environment.GetEnvironmentVariable("MAX_FILE_SIZE_MB");
+        if (long.TryParse(maxFileSizeStr, out long configSize))
+        {
+            _maxFileSize = configSize * 1024 * 1024; // Chuyển đổi MB sang bytes
+        }
+        else
+        {
+            _maxFileSize = 10 * 1024 * 1024; // Mặc định 10MB
+        }
 
         try
         {
@@ -42,6 +57,14 @@ public class BlobService : IBlobService
 
         try
         {
+            // Kiểm tra kích thước file
+            if (fileStream.Length > _maxFileSize)
+            {
+                var maxFileSizeMB = _maxFileSize / (1024 * 1024);
+                _logger.Error($"File '{fileName}' size ({fileStream.Length / (1024 * 1024)} MB) exceeds the maximum allowed size ({maxFileSizeMB} MB)");
+                throw new FileTooLargeException(fileName, fileStream.Length, _maxFileSize);
+            }
+
             var beArgs = new BucketExistsArgs().WithBucket(_bucketName);
             var found = await _minioClient.BucketExistsAsync(beArgs);
             _logger.Info($"Checking if bucket '{_bucketName}' exists: {found}");
@@ -69,6 +92,11 @@ public class BlobService : IBlobService
         catch (MinioException minioEx)
         {
             _logger.Error($"MinIO Error during upload: {minioEx.Message}");
+            throw;
+        }
+        catch (FileTooLargeException)
+        {
+            // Chỉ ghi log lỗi, ném ngoại lệ để xử lý ở tầng cao hơn
             throw;
         }
         catch (Exception ex)
@@ -119,9 +147,26 @@ public class BlobService : IBlobService
         {
             ".jpg" or ".jpeg" => "image/jpeg",
             ".png" => "image/png",
+            ".gif" => "image/gif",
             ".pdf" => "application/pdf",
             ".mp4" => "video/mp4",
             _ => "application/octet-stream"
         };
+    }
+}
+
+// Tạo exception riêng để xử lý lỗi file quá lớn
+public class FileTooLargeException : Exception
+{
+    public string FileName { get; }
+    public long FileSize { get; }
+    public long MaxAllowedSize { get; }
+
+    public FileTooLargeException(string fileName, long fileSize, long maxAllowedSize)
+        : base($"File '{fileName}' size ({fileSize / (1024 * 1024)} MB) exceeds the maximum allowed size ({maxAllowedSize / (1024 * 1024)} MB)")
+    {
+        FileName = fileName;
+        FileSize = fileSize;
+        MaxAllowedSize = maxAllowedSize;
     }
 }

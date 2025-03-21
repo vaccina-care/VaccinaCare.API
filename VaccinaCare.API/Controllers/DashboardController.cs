@@ -6,31 +6,28 @@ using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.API.Controllers;
+
 [ApiController]
 [Route("api/dashboard")]
+[Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
-    private readonly ILoggerService _logger;
-    private readonly IVaccineService _vaccineService;
     private readonly IVaccinePackageService _vaccinePackageService;
+    private readonly IVaccineService _vaccineService;
 
-    public DashboardController(ILoggerService logger, IVaccineService vaccineService, IVaccinePackageService vaccinePackageService)
+    public DashboardController(IVaccineService vaccineService,
+        IVaccinePackageService vaccinePackageService)
     {
-        _logger = logger;
         _vaccineService = vaccineService;
         _vaccinePackageService = vaccinePackageService;
     }
 
-    [HttpGet("available")]
-    [Authorize(Policy = "AdminPolicy")]
-    [ProducesResponseType(typeof(ApiResult<object>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
+    [HttpGet("vaccines/available")]
     public async Task<IActionResult> GetAvailableVaccines()
     {
         try
         {
-            int count = await _vaccineService.GetVaccineAvailable();
+            var count = await _vaccineService.GetVaccineAvailable();
 
             return Ok(ApiResult<int>.Success(count, "Available vaccines retrieved successfully."));
         }
@@ -40,17 +37,14 @@ public class DashboardController : Controller
         }
     }
 
-    [HttpGet("most-booked")]
+    [HttpGet("vaccines/packages/most-booked")]
     public async Task<IActionResult> GetMostBookedPackage()
     {
         try
         {
             var package = await _vaccinePackageService.GetMostBookedPackageAsync();
 
-            if (package == null)
-            {
-                return Ok(ApiResult<object>.Error("No bookings found for any package"));
-            }
+            if (package == null) return Ok(ApiResult<object>.Error("No bookings found for any package"));
 
             var response = new VaccinePackage
             {
@@ -63,7 +57,7 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ApiResult<string>.Error($"Internal Server Error: {ex.Message}"));
+            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
         }
     }
 }

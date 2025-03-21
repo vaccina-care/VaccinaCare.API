@@ -1,4 +1,5 @@
 ﻿using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.Application.Interface;
@@ -12,6 +13,9 @@ public interface IAppointmentService
         Guid parentId);
 
     Task<List<AppointmentDTO>> UpdateAppointmentDate(Guid appointmentId, DateTime newDate);
+
+    Task<AppointmentDTO> UpdateAppointmentStatus(Guid appointmentId, AppointmentStatus newStatus,
+        string? cancellationReason = null);
 
     Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId);
 

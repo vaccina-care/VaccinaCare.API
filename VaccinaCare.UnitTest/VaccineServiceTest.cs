@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Moq;
 using VaccinaCare.Application.Interface;
@@ -61,7 +56,7 @@ public class VaccineServiceTest
         var fileMock = new Mock<IFormFile>();
         var content = "Fake image content";
         var fileName = "testImage.jpg";
-        var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
+        var stream = new MemoryStream(Encoding.UTF8.GetBytes(content));
 
         fileMock.Setup(_ => _.OpenReadStream()).Returns(stream);
         fileMock.Setup(_ => _.FileName).Returns(fileName);
@@ -70,7 +65,7 @@ public class VaccineServiceTest
         var mockFile = fileMock.Object;
 
         _unitOfWorkMock.Setup(u => u.VaccineRepository.AddAsync(It.IsAny<Vaccine>()))
-       .ReturnsAsync((Vaccine v) => v);
+            .ReturnsAsync((Vaccine v) => v);
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
         _lobMock.Setup(b => b.UploadFileAsync(It.IsAny<string>(), It.IsAny<Stream>()))
             .Returns(Task.CompletedTask);
@@ -187,7 +182,7 @@ public class VaccineServiceTest
         IFormFile? vaccinePictureFile = null;
 
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId))
-                       .ReturnsAsync((Vaccine?)null);
+            .ReturnsAsync((Vaccine?)null);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<KeyNotFoundException>(
@@ -224,7 +219,7 @@ public class VaccineServiceTest
         IFormFile? vaccinePictureFile = null;
 
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId))
-                       .ReturnsAsync(existingVaccine);
+            .ReturnsAsync(existingVaccine);
         _unitOfWorkMock.Setup(u => u.VaccineRepository.Update(It.IsAny<Vaccine>())).Verifiable();
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -267,7 +262,7 @@ public class VaccineServiceTest
         IFormFile? vaccinePictureFile = null;
 
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(vaccineId))
-                       .ReturnsAsync(existingVaccine);
+            .ReturnsAsync(existingVaccine);
         _unitOfWorkMock.Setup(u => u.VaccineRepository.Update(It.IsAny<Vaccine>())).Verifiable();
         _unitOfWorkMock.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -343,7 +338,7 @@ public class VaccineServiceTest
         var vaccine = new Vaccine
         {
             Id = vaccineId,
-            VaccineName = "Pfizer", 
+            VaccineName = "Pfizer",
             Description = "Effective against COVID-19",
             PicUrl = "testpicurl.jpg",
             Type = "COVID-19",

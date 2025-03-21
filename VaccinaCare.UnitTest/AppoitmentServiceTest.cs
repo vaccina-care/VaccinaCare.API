@@ -1,29 +1,24 @@
-﻿using VaccinaCare.Repository.Interfaces;
-using VaccinaCare.Domain.Entities;
-using VaccinaCare.Domain.Enums;
-using Moq;
-using VaccinaCare.Application.Interface.Common;
+﻿using Moq;
 using VaccinaCare.Application.Interface;
+using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Service;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
-using Moq.EntityFrameworkCore;
+using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
+using VaccinaCare.Repository.Interfaces;
 //using System.Data.Entity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Routing;
-using Castle.Components.DictionaryAdapter.Xml;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 
 namespace VaccinaCare.UnitTest;
 
 public class AppoitmentServiceTest
 {
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<ILoggerService> _loggerMock;
-    private readonly Mock<IVaccineService> _vaccineServiceMock;
-    private readonly Mock<INotificationService> _notificationServiceMock;
-    private readonly Mock<IEmailService> _emailServiceMock;
-    private readonly Mock<IClaimsService> _claimsServiceMock;
     private readonly AppointmentService _appointmentService;
+    private readonly Mock<IClaimsService> _claimsServiceMock;
+    private readonly Mock<IEmailService> _emailServiceMock;
+    private readonly Mock<ILoggerService> _loggerMock;
+    private readonly Mock<INotificationService> _notificationServiceMock;
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IVaccineService> _vaccineServiceMock;
 
     public AppoitmentServiceTest()
     {
@@ -40,7 +35,8 @@ public class AppoitmentServiceTest
     public async Task GenerateAppointmentsForSingleVaccine_ShouldThrowException_WhenVaccineNotFound()
     {
         // Arrange
-        var request = new CreateAppointmentSingleVaccineDto { VaccineId = Guid.NewGuid(), ChildId = Guid.NewGuid(), StartDate = DateTime.UtcNow };
+        var request = new CreateAppointmentSingleVaccineDto
+            { VaccineId = Guid.NewGuid(), ChildId = Guid.NewGuid(), StartDate = DateTime.UtcNow };
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(request.VaccineId))
             .ReturnsAsync((Vaccine)null);
 
@@ -54,7 +50,8 @@ public class AppoitmentServiceTest
     public async Task GenerateAppointmentsForSingleVaccine_ShouldThrowException_WhenChildNotEligible()
     {
         // Arrange
-        var request = new CreateAppointmentSingleVaccineDto { VaccineId = Guid.NewGuid(), ChildId = Guid.NewGuid(), StartDate = DateTime.UtcNow };
+        var request = new CreateAppointmentSingleVaccineDto
+            { VaccineId = Guid.NewGuid(), ChildId = Guid.NewGuid(), StartDate = DateTime.UtcNow };
         var vaccine = new Vaccine { Id = request.VaccineId, VaccineName = "Test Vaccine", RequiredDoses = 2 };
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(request.VaccineId))
             .ReturnsAsync(vaccine);
@@ -81,7 +78,7 @@ public class AppoitmentServiceTest
 
         // Mock vaccine repository gây lỗi hệ thống
         _unitOfWorkMock.Setup(u => u.VaccineRepository.GetByIdAsync(request.VaccineId))
-                       .ThrowsAsync(new Exception("Unexpected error"));
+            .ThrowsAsync(new Exception("Unexpected error"));
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
@@ -131,8 +128,13 @@ public class AppoitmentServiceTest
         // Arrange
         var appointmentId = Guid.NewGuid();
         var childId = Guid.NewGuid();
-        var appointment = new Appointment { Id = appointmentId, ChildId = childId, AppointmentDate = DateTime.UtcNow.AddDays(5) };
-        var previousAppointment = new Appointment { Id = Guid.NewGuid(), ChildId = childId, AppointmentDate = DateTime.UtcNow.AddDays(2), Status = AppointmentStatus.Pending };
+        var appointment = new Appointment
+            { Id = appointmentId, ChildId = childId, AppointmentDate = DateTime.UtcNow.AddDays(5) };
+        var previousAppointment = new Appointment
+        {
+            Id = Guid.NewGuid(), ChildId = childId, AppointmentDate = DateTime.UtcNow.AddDays(2),
+            Status = AppointmentStatus.Pending
+        };
 
         _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetQueryable())
             .Returns(new List<Appointment> { appointment, previousAppointment }.AsQueryable());
@@ -150,7 +152,11 @@ public class AppoitmentServiceTest
     {
         // Arrange
         var appointmentId = Guid.NewGuid();
-        var appointment = new Appointment { Id = appointmentId, AppointmentDate = DateTime.UtcNow.AddDays(5), AppointmentsVaccines = new List<AppointmentsVaccine>() };
+        var appointment = new Appointment
+        {
+            Id = appointmentId, AppointmentDate = DateTime.UtcNow.AddDays(5),
+            AppointmentsVaccines = new List<AppointmentsVaccine>()
+        };
 
         _unitOfWorkMock.Setup(u => u.AppointmentRepository.GetQueryable())
             .Returns(new List<Appointment> { appointment }.AsQueryable());
@@ -174,7 +180,7 @@ public class AppoitmentServiceTest
             AppointmentDate = DateTime.UtcNow.AddDays(5),
             AppointmentsVaccines = new List<AppointmentsVaccine>
             {
-                new AppointmentsVaccine { VaccineId = Guid.NewGuid() }
+                new() { VaccineId = Guid.NewGuid() }
             }
         };
 
@@ -204,6 +210,4 @@ public class AppoitmentServiceTest
 
         Assert.Equal("Child not found.", exception.Message);
     }
-
 }
-

@@ -3,6 +3,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
+using VaccinaCare.Domain.DTOs.VaccineRecordDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
@@ -12,17 +13,19 @@ namespace VaccinaCare.Application.Service;
 
 public class AppointmentService : IAppointmentService
 {
+    private readonly IClaimsService _claimsService;
     private readonly IEmailService _emailService;
     private readonly ILoggerService _logger;
     private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IVaccineIntervalRulesService _vaccineIntervalRules;
     private readonly IVaccineRecordService _vaccineRecordService;
     private readonly IVaccineService _vaccineService;
-    private readonly IClaimsService _claimsService;
 
     public AppointmentService(IUnitOfWork unitOfWork, ILoggerService loggerService,
         INotificationService notificationService, IVaccineService vaccineService, IEmailService emailService,
-        IVaccineRecordService vaccineRecordService, IClaimsService claimsService)
+        IVaccineRecordService vaccineRecordService, IClaimsService claimsService,
+        IVaccineIntervalRulesService vaccineIntervalRules)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
@@ -31,6 +34,81 @@ public class AppointmentService : IAppointmentService
         _emailService = emailService;
         _vaccineRecordService = vaccineRecordService;
         _claimsService = claimsService;
+        _vaccineIntervalRules = vaccineIntervalRules;
+    }
+
+    public async Task<AppointmentDTO> UpdateAppointmentStatus(Guid appointmentId, AppointmentStatus newStatus,
+        string? cancellationReason = null)
+    {
+        try
+        {
+            var appointment = await _unitOfWork.AppointmentRepository
+                .GetQueryable()
+                .Include(a => a.AppointmentsVaccines)
+                .ThenInclude(av => av.Vaccine) // Include thông tin vaccine
+                .FirstOrDefaultAsync(a => a.Id == appointmentId);
+
+            if (appointment == null) throw new Exception("Appointment not found.");
+
+            // Kiểm tra trạng thái hiện tại của appointment
+            if (appointment.Status != AppointmentStatus.Confirmed)
+                throw new Exception("Appointment can only be updated if it is in Confirmed status.");
+
+            // Xử lý cập nhật trạng thái
+            switch (newStatus)
+            {
+                case AppointmentStatus.Completed:
+                    appointment.Status = AppointmentStatus.Completed;
+
+                    // Thêm record tiêm chủng vào hồ sơ của trẻ
+                    foreach (var appointmentVaccine in appointment.AppointmentsVaccines)
+                    {
+                        var addVaccineRecordDto = new AddVaccineRecordDto
+                        {
+                            ChildId = appointment.ChildId,
+                            VaccineId = appointmentVaccine.VaccineId ?? throw new Exception("VaccineId is missing"),
+                            VaccinationDate = appointment.AppointmentDate ?? DateTime.UtcNow,
+                            DoseNumber = appointmentVaccine.DoseNumber ?? 1,
+                            ReactionDetails = null
+                        };
+
+                        await _vaccineRecordService.AddVaccinationRecordAsync(addVaccineRecordDto);
+                    }
+
+                    break;
+
+                case AppointmentStatus.Cancelled:
+                    appointment.Status = AppointmentStatus.Cancelled;
+                    appointment.CancellationReason = cancellationReason;
+                    break;
+
+                default:
+                    throw new Exception("Invalid status update. You can only update to Completed or Cancelled.");
+            }
+
+            // Lưu thay đổi vào database
+            await _unitOfWork.AppointmentRepository.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Trả về dữ liệu cập nhật
+            return new AppointmentDTO
+            {
+                AppointmentId = appointment.Id,
+                ChildId = appointment.ChildId,
+                UserId = appointment.ParentId,
+                AppointmentDate = appointment.AppointmentDate ?? DateTime.MinValue,
+                Status = appointment.Status.ToString(),
+                VaccineName = appointment.AppointmentsVaccines.FirstOrDefault()?.Vaccine?.VaccineName ?? "Unknown",
+                DoseNumber = appointment.AppointmentsVaccines.FirstOrDefault()?.DoseNumber ?? 0,
+                TotalPrice = appointment.AppointmentsVaccines.FirstOrDefault()?.TotalPrice ?? 0,
+                Notes = appointment.Notes ?? string.Empty
+            };
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Error updating appointment status: {e.Message}");
+            throw;
+        }
     }
 
     public async Task<List<AppointmentDTO>> GenerateAppointmentsForSingleVaccine(
@@ -75,15 +153,58 @@ public class AppointmentService : IAppointmentService
             }
 
             // PHASE 6: KIỂM TRA TÍNH TƯƠNG THÍCH CỦA VACCINE
-            var bookedVaccineIds =
-                new List<Guid>(); // List of vaccines already booked by the child (this might need to be fetched from the database)
+            // Lấy danh sách các vaccine đã được đặt lịch trước đó của trẻ
+            var bookedVaccineIds = await _unitOfWork.AppointmentsVaccineRepository
+                .GetAllAsync(av =>
+                    av.Appointment.ChildId == request.ChildId && av.Appointment.Status != AppointmentStatus.Cancelled)
+                .ContinueWith(task => task.Result.Select(av => av.VaccineId.Value).Distinct().ToList());
+
+            _logger.Info($"Child {request.ChildId} has booked vaccines: {string.Join(", ", bookedVaccineIds)}");
+
+            // Kiểm tra tính tương thích của vaccine với danh sách vaccine đã đặt lịch
             var isCompatible =
-                await _vaccineService.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds, request.StartDate);
+                await _vaccineIntervalRules.CheckVaccineCompatibility(request.VaccineId, bookedVaccineIds,
+                    request.StartDate);
+
+            // Nếu không tương thích, kiểm tra xem startDate có thỏa mãn khoảng cách tối thiểu giữa các mũi tiêm không
             if (!isCompatible)
             {
-                _logger.Warn($"Vaccine {request.VaccineId} is not compatible with one or more booked vaccines.");
-                return new List<AppointmentDTO>();
+                // Kiểm tra các vaccine đã đặt lịch trước đó có yêu cầu khoảng cách tối thiểu giữa các mũi tiêm
+                foreach (var bookedVaccineId in bookedVaccineIds)
+                {
+                    var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                        .FirstOrDefaultAsync(r =>
+                            (r.VaccineId == request.VaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                            (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == request.VaccineId));
+
+                    if (rule != null && rule.MinIntervalDays > 0)
+                    {
+                        // Lấy lịch hẹn gần nhất của vaccine đã đặt trước đó
+                        var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                            .FirstOrDefaultAsync(a =>
+                                a.VaccineId == bookedVaccineId &&
+                                a.Appointment.AppointmentDate.HasValue &&
+                                a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > request.StartDate);
+
+                        // Nếu lịch tiêm vi phạm khoảng cách tối thiểu
+                        if (lastAppointment != null)
+                        {
+                            _logger.Info(
+                                $"Vaccine {request.VaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
+                            return new List<AppointmentDTO>();
+                        }
+                        else
+                        {
+                            _logger.Info(
+                                $"Start date for vaccine {request.VaccineId} is valid as it is {rule.MinIntervalDays} days after last appointment.");
+                        }
+                    }
+                }
             }
+
+            _logger.Info(
+                $"[CheckVaccineCompatibility] Vaccine {request.VaccineId} is compatible with all booked vaccines.");
+
 
             // PHASE 7: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
             var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
@@ -143,10 +264,8 @@ public class AppointmentService : IAppointmentService
 
                 // Send email for each appointment
                 foreach (var appointment in appointments)
-                {
                     await _emailService.SendSingleAppointmentConfirmationAsync(emailRequest, appointment,
                         request.VaccineId);
-                }
             }
 
             // PHASE 11: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
@@ -410,6 +529,7 @@ public class AppointmentService : IAppointmentService
         }
     }
 
+
     public async Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId)
     {
         try
@@ -471,11 +591,9 @@ public class AppointmentService : IAppointmentService
 
             // Apply search filter if a search term is provided
             if (!string.IsNullOrEmpty(searchTerm))
-            {
                 query = query.Where(a =>
                     a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) ||
                     a.AppointmentDate.ToString().Contains(searchTerm));
-            }
 
             // Apply pagination
             var totalCount = await query.CountAsync();
