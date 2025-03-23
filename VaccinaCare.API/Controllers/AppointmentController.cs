@@ -149,7 +149,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Policy = "StaffPolicy")]
+    // [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -185,13 +185,13 @@ public class AppointmentController : ControllerBase
             var appointments = await _appointmentService.GetListlAppointmentsByChildIdAsync(childId);
 
             if (appointments == null || !appointments.Any())
-                return Ok(ApiResult<object>.Error("Không có lịch hẹn nào cho trẻ này."));
+                return BadRequest(ApiResult<object>.Error("Không có lịch hẹn nào cho trẻ này."));
 
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointments, "Lấy danh sách lịch hẹn thành công."));
         }
         catch (Exception e)
         {
-            return Ok(ApiResult<object>.Error("Lỗi hệ thống. Vui lòng thử lại sau."));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {e.Message}"));
         }
     }
 
