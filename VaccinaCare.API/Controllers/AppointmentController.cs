@@ -5,6 +5,7 @@ using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.DTOs.AppointmentDTOs;
+using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
 using VaccinaCare.Repository.Interfaces;
 
@@ -149,21 +150,23 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-    // [Authorize(Policy = "StaffPolicy")]
+// [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
-    public async Task<IActionResult> GetAllAppointments([FromQuery] PaginationParameter pagination,
-        [FromQuery] string? searchTerm = null)
+    public async Task<IActionResult> GetAllAppointments(
+        [FromQuery] PaginationParameter pagination,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] AppointmentStatus? status = null)
     {
         try
         {
-            // Get paginated appointments
-            var appointments = await _appointmentService.GetAllAppointments(pagination, searchTerm);
+            var appointments = await _appointmentService.GetAllAppointments(pagination, searchTerm, status);
 
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = appointments.TotalCount, appointments
+                totalCount = appointments.TotalCount,
+                appointments = appointments
             }));
         }
         catch (Exception e)

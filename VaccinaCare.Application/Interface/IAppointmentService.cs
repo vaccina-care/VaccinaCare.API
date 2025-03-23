@@ -19,8 +19,10 @@ public interface IAppointmentService
 
     Task<List<AppointmentDTO>> GetListlAppointmentsByChildIdAsync(Guid childId);
 
-    Task<Pagination<AppointmentDTO>> GetAllAppointments(PaginationParameter pagination,
-        string? searchTerm = null);
+    Task<Pagination<AppointmentDTO>> GetAllAppointments(
+        PaginationParameter pagination,
+        string? searchTerm = null,
+        AppointmentStatus? status = null);
 
     Task<AppointmentDTO> GetAppointmentDetailsByIdAsync(Guid appointmentId);
 }

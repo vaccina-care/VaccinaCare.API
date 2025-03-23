@@ -574,25 +574,34 @@ public class AppointmentService : IAppointmentService
         }
     }
 
-    public async Task<Pagination<AppointmentDTO>> GetAllAppointments(PaginationParameter pagination,
-        string? searchTerm = null)
+    public async Task<Pagination<AppointmentDTO>> GetAllAppointments(
+        PaginationParameter pagination,
+        string? searchTerm = null,
+        AppointmentStatus? status = null)
     {
         try
         {
-            var userId = _claimsService.GetCurrentUserId;
-            // Build the query to include vaccine details
             var query = _unitOfWork.AppointmentRepository.GetQueryable()
-                .Include(a => a.AppointmentsVaccines) // Include vaccines for each appointment
+                .Include(a => a.AppointmentsVaccines)
                 .ThenInclude(av => av.Vaccine)
+                .Include(a => a.Child)
                 .AsQueryable();
 
-            // Apply search filter if a search term is provided
+            // Filter by status if provided
+            if (status.HasValue)
+            {
+                query = query.Where(a => a.Status == status.Value);
+            }
+
+            // Apply search filter if provided
             if (!string.IsNullOrEmpty(searchTerm))
+            {
                 query = query.Where(a =>
                     a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) ||
-                    a.AppointmentDate.ToString().Contains(searchTerm));
+                    a.AppointmentDate.ToString().Contains(searchTerm) ||
+                    a.Child.FullName.Contains(searchTerm));
+            }
 
-            // Apply pagination
             var totalCount = await query.CountAsync();
             var appointments = await query
                 .Skip((pagination.PageIndex - 1) * pagination.PageSize)
@@ -603,7 +612,6 @@ public class AppointmentService : IAppointmentService
 
             foreach (var app in appointments)
             {
-                var child = await _unitOfWork.ChildRepository.GetByIdAsync(app.ChildId);
                 var user = await _unitOfWork.UserRepository.GetByIdAsync(app.ParentId);
 
                 appointmentDTOs.Add(new AppointmentDTO
@@ -612,7 +620,7 @@ public class AppointmentService : IAppointmentService
                     UserId = app.ParentId,
                     UserName = user?.FullName ?? "Unknown",
                     ChildId = app.ChildId,
-                    ChildName = child?.FullName ?? "Unknown",
+                    ChildName = app.Child?.FullName ?? "Unknown", // Use included Child directly
                     AppointmentDate = app.AppointmentDate ?? DateTime.MinValue,
                     Status = app.Status.ToString(),
                     VaccineName = app.AppointmentsVaccines?.FirstOrDefault()?.Vaccine?.VaccineName ?? string.Empty,
@@ -622,7 +630,6 @@ public class AppointmentService : IAppointmentService
                 });
             }
 
-            // Return paginated result
             return new Pagination<AppointmentDTO>(appointmentDTOs, totalCount, pagination.PageIndex,
                 pagination.PageSize);
         }
