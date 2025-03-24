@@ -5,6 +5,7 @@ using MimeKit;
 using MimeKit.Text;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Domain.DTOs.AppointmentDTOs;
 using VaccinaCare.Domain.DTOs.EmailDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
@@ -192,6 +193,54 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(email);
     }
+    
+    public async Task SendRescheduledAppointmentNotificationAsync(EmailRequestDTO emailRequest, List<AppointmentDTO> appointments)
+{
+    var emailBody = $@"
+    <div style='font-family: Arial, sans-serif; line-height: 1.8; color: #333;'>
+        <h1 style='color: #1e1b4b; text-align: center; font-size: 24px;'>Appointment Reschedule Confirmation</h1>
+        <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserEmail}</strong>,</p>
+        <p style='font-size: 16px; line-height: 1.6;'>Your appointment(s) have been successfully rescheduled. Below is the updated schedule:</p>
+        <table style='width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #f8f8f8;'>
+            <thead>
+                <tr style='background-color: #1e1b4b; color: white;'>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Vaccine Name</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Dose</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>New Appointment Date</th>
+                    <th style='padding: 10px; border: 1px solid #ddd;'>Status</th>
+                </tr>
+            </thead>
+            <tbody>";
+
+    foreach (var appointment in appointments)
+    {
+        emailBody += $@"
+            <tr>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.VaccineName}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.DoseNumber}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.AppointmentDate:yyyy-MM-dd HH:mm}</td>
+                <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.Status}</td>
+            </tr>";
+    }
+
+    emailBody += $@"
+            </tbody>
+        </table>
+        <p style='font-size: 16px; margin-top: 20px;'>If you have any questions or need further assistance, please contact our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
+        <p style='font-size: 16px;'>Thank you for using VaccinaCare.</p>
+        <p style='font-size: 16px; margin-top: 30px;'>Best regards,<br>
+        <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
+    </div>";
+
+    var email = new EmailDTO
+    {
+        To = emailRequest.UserEmail,
+        Subject = "Appointment Reschedule Confirmation - VaccinaCare",
+        Body = emailBody
+    };
+
+    await SendEmailAsync(email);
+}
 
     private async Task SendEmailAsync(EmailDTO request)
     {
