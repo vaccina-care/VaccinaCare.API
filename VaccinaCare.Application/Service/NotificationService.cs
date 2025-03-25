@@ -156,13 +156,13 @@ public class NotificationService : INotificationService
         }
     }
 
-    public async Task<Notification> PushPaymentSuccessNotification(Guid userId, NotificationForUserDTO notificationDTO)
+    public async Task<NotificationForAppointmentDTO> PushPaymentSuccessNotification(Guid userId, Guid appointmentId)
     {
         try
         {
             if (userId == Guid.Empty)
             {
-                _logger.Warn($"Invalid payment notification data for user {userId}");
+                _logger.Warn($"Invalid payment notificatsion data for user {userId}");
                 throw new ArgumentException("User ID are required.");
             }
 
@@ -172,14 +172,23 @@ public class NotificationService : INotificationService
                 Content = "Your payment has been successfully processed. Thank you!",
                 IsRead = false,
                 UserId = userId,
-                Type = NotificationType.ByUser
+                AppointmentId = appointmentId,
+                Type = NotificationType.ByUser,
+                Role = "User"
             };
 
             await _unitOfWork.NotificationRepository.AddAsync(notification);
             await _unitOfWork.SaveChangesAsync();
 
             _logger.Info($"Payment success notification sent to user {userId} : {notification.Title}");
-            return notification;
+
+            return new NotificationForAppointmentDTO
+            {
+                Title = notification.Title,
+                Content = notification.Content,
+                IsRead = notification.IsRead,
+                AppointmentId = notification.AppointmentId.GetValueOrDefault()
+            };
         }
         catch (Exception ex)
         {

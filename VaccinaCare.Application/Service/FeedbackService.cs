@@ -216,6 +216,32 @@ public class FeedbackService : IFeedbackService
         }
     }
 
+    public async Task<double> GetOverallRatingAsync()
+    {
+        try
+        {
+            _logger.Info("Fetching overall rating from feedbacks.");
+
+            var feedbacks = await _unitOfWork.FeedbackRepository.GetQueryable().ToListAsync();
+
+            if (!feedbacks.Any())
+            {
+                _logger.Warn("No feedbacks found. Returning default rating: 0.");
+                return 0;
+            }
+
+            double averageRating = feedbacks.Average(f => f.Rating.GetValueOrDefault());
+
+            _logger.Success($"Overall rating calculated: {averageRating}");
+            return Math.Round(averageRating, 2);
+        }
+        catch(Exception ex)
+        {
+            _logger.Error($"Error while calculating overall rating: {ex.Message}");
+            throw new Exception("An error occurred while calculating the overall rating. Please try again later.");
+        }
+    }
+
     public async Task<FeedbackDTO> UpdateFeedbackAsync(Guid feedbackId, FeedbackDTO feedbackDto)
     {
         try
