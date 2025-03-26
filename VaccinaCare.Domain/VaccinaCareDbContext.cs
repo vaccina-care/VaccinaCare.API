@@ -245,7 +245,7 @@ public class VaccinaCareDbContext : DbContext
         modelBuilder.Entity<Feedback>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__Feedback__6A4BEDF6E20C695E");
-            entity.Property(e => e.Comments).HasColumnType("text");
+            entity.Property(e => e.Comments).HasColumnType("nvarchar(max)");
         });
 
         modelBuilder.Entity<Invoice>(entity =>
