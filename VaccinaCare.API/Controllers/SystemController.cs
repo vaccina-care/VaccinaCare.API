@@ -708,14 +708,12 @@ public class SystemController : ControllerBase
         {
             new()
             {
-                PolicyName = "Standard Cancellation Policy",
+                PolicyName = "Standard Re-Schedule Policy",
                 Description =
                     "Customers are required to make 100% payment for the appointment at the time of booking. " +
-                    "Once the payment has been made, cancellation is no longer possible. " +
-                    "However, rescheduling is available, provided that the rescheduling request is made at least 24 hours in advance of the scheduled appointment. " +
-                    "We kindly ask for your understanding and cooperation with this policy to ensure smooth operations for all our valued customers.",
-                CancellationDeadline =
-                    24,
+                    "Rescheduling is available at any time without additional fees. " +
+                    "We appreciate your cooperation with this policy to ensure smooth operations for all our valued customers.",
+                CancellationDeadline = 0,
                 PenaltyFee = 0m
             }
         };

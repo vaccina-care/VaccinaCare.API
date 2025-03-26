@@ -33,10 +33,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
             // Get current vaccine name
             var currentVaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
-            if (currentVaccine == null)
-            {
-                return (false, $"Vaccine with id {vaccineId} not found");
-            }
+            if (currentVaccine == null) return (false, $"Vaccine with id {vaccineId} not found");
 
             foreach (var bookedVaccineId in bookedVaccineIds)
             {
@@ -56,7 +53,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
                 {
                     if (!rule.CanBeGivenTogether)
                     {
-                        string errorMessage =
+                        var errorMessage =
                             $"Vaccine {currentVaccine.VaccineName} cannot be given together with {bookedVaccine.VaccineName}.";
                         _logger.Info(errorMessage);
                         return (false, errorMessage);
@@ -72,7 +69,7 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
 
                         if (lastAppointment != null)
                         {
-                            string errorMessage =
+                            var errorMessage =
                                 $"Vaccine {currentVaccine.VaccineName} must be scheduled at least {rule.MinIntervalDays} days after {bookedVaccine.VaccineName}. Appointment denied.";
                             _logger.Info(errorMessage);
                             return (false, errorMessage);

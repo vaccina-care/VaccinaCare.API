@@ -109,7 +109,7 @@ public class FeedbackController : ControllerBase
             {
                 IsSuccess = true,
                 Message = "Feedback list retrieved successfully.",
-                Data = new 
+                Data = new
                 {
                     Feedbacks = feedbacks,
                     totalCount = feedbacks.TotalCount

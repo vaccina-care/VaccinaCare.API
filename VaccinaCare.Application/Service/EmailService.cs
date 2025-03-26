@@ -193,10 +193,11 @@ public class EmailService : IEmailService
 
         await SendEmailAsync(email);
     }
-    
-    public async Task SendRescheduledAppointmentNotificationAsync(EmailRequestDTO emailRequest, List<AppointmentDTO> appointments)
-{
-    var emailBody = $@"
+
+    public async Task SendRescheduledAppointmentNotificationAsync(EmailRequestDTO emailRequest,
+        List<AppointmentDTO> appointments)
+    {
+        var emailBody = $@"
     <div style='font-family: Arial, sans-serif; line-height: 1.8; color: #333;'>
         <h1 style='color: #1e1b4b; text-align: center; font-size: 24px;'>Appointment Reschedule Confirmation</h1>
         <p style='font-size: 18px; margin-top: 20px;'>Dear <strong>{emailRequest.UserEmail}</strong>,</p>
@@ -212,18 +213,16 @@ public class EmailService : IEmailService
             </thead>
             <tbody>";
 
-    foreach (var appointment in appointments)
-    {
-        emailBody += $@"
+        foreach (var appointment in appointments)
+            emailBody += $@"
             <tr>
                 <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.VaccineName}</td>
                 <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.DoseNumber}</td>
                 <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.AppointmentDate:yyyy-MM-dd HH:mm}</td>
                 <td style='padding: 10px; border: 1px solid #ddd; text-align: center;'>{appointment.Status}</td>
             </tr>";
-    }
 
-    emailBody += $@"
+        emailBody += @"
             </tbody>
         </table>
         <p style='font-size: 16px; margin-top: 20px;'>If you have any questions or need further assistance, please contact our support team at <a href='mailto:support@vaccinacare.com' style='color: #1e1b4b;'>support@vaccinacare.com</a>.</p>
@@ -232,15 +231,15 @@ public class EmailService : IEmailService
         <span style='color: #1e1b4b; font-weight: bold;'>The VaccinaCare Team</span></p>
     </div>";
 
-    var email = new EmailDTO
-    {
-        To = emailRequest.UserEmail,
-        Subject = "Appointment Reschedule Confirmation - VaccinaCare",
-        Body = emailBody
-    };
+        var email = new EmailDTO
+        {
+            To = emailRequest.UserEmail,
+            Subject = "Appointment Reschedule Confirmation - VaccinaCare",
+            Body = emailBody
+        };
 
-    await SendEmailAsync(email);
-}
+        await SendEmailAsync(email);
+    }
 
     private async Task SendEmailAsync(EmailDTO request)
     {

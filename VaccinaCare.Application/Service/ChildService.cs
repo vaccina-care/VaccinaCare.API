@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Minio.Helper;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
@@ -333,7 +332,7 @@ public class ChildService : IChildService
         catch (Exception ex)
         {
             _loggerService.Error($"Error occured while getting children profile count: {ex.Message}");
-            return 0;   
+            return 0;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -16,12 +17,13 @@ public class PaymentService : IPaymentService
     private readonly IConfiguration _configuration;
     private readonly IEmailService _emailService;
     private readonly ILoggerService _logger;
+    private readonly INotificationService _notificationService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IVnPayService _vnPayService;
-    private readonly INotificationService _notificationService;
 
     public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
-        IVnPayService vnPayService, VaccinaCareDbContext dbContext, IConfiguration configuration, INotificationService notificationService)
+        IVnPayService vnPayService, VaccinaCareDbContext dbContext, IConfiguration configuration,
+        INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
@@ -29,6 +31,55 @@ public class PaymentService : IPaymentService
         _vnPayService = vnPayService;
         _configuration = configuration;
         _notificationService = notificationService;
+    }
+
+    public async Task<PaymentTransactionSummaryDto> GetPaymentTransactionSummaryAsync(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        PaymentTransactionStatus? status = null)
+    {
+        try
+        {
+            // Start with the base query
+            IQueryable<PaymentTransaction> query = _unitOfWork.PaymentTransactionRepository.GetQueryable();
+
+            // Apply filters if provided
+            if (startDate.HasValue) query = query.Where(pt => pt.TransactionDate >= startDate.Value);
+
+            if (endDate.HasValue)
+                // Make sure to include the entire end date
+                query = query.Where(pt => pt.TransactionDate <= endDate.Value.AddDays(1).AddSeconds(-1));
+
+            if (status.HasValue) query = query.Where(pt => pt.Status == status.Value);
+
+            // Include payment to access appointment information
+            query = query.Include(pt => pt.Payment)
+                .ThenInclude(p => p.Appointment);
+
+            // Execute the query and get the results
+            var transactions = await query.ToListAsync();
+
+            // Calculate the summary
+            var summary = new PaymentTransactionSummaryDto
+            {
+                TotalAmount = transactions.Sum(pt => pt.Amount ?? 0),
+                TotalTransactions = transactions.Count,
+
+                // Count unique appointments
+                TotalCompletedAppointments = transactions
+                    .Select(pt => pt.Payment?.AppointmentId)
+                    .Where(id => id.HasValue)
+                    .Distinct()
+                    .Count()
+            };
+
+            return summary;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error getting payment transaction summary: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context)
@@ -128,7 +179,7 @@ public class PaymentService : IPaymentService
             }
 
             // Lấy trạng thái thanh toán từ VNPay
-            string vnpResponseCode = response.VnPayResponseCode;
+            var vnpResponseCode = response.VnPayResponseCode;
             _logger.Info($"Received VNPay Response Code: {vnpResponseCode} for Order ID: {response.OrderId}");
 
             // 🚨 Đặt mặc định Status là Failed trước khi xử lý
@@ -139,7 +190,7 @@ public class PaymentService : IPaymentService
                 Amount = decimal.Parse(response.OrderDescription.Split(" ").Last()) / 100,
                 TransactionDate = DateTime.UtcNow,
                 ResponseCode = vnpResponseCode,
-                ResponseMessage = (vnpResponseCode == "00") ? "Success" : "Failed",
+                ResponseMessage = vnpResponseCode == "00" ? "Success" : "Failed",
                 Status = PaymentTransactionStatus.Failed // 🚨 Mặc định là Failed
             };
 
@@ -163,7 +214,8 @@ public class PaymentService : IPaymentService
                         confirmedAppointment.Status = AppointmentStatus.Confirmed;
                         await _unitOfWork.AppointmentRepository.Update(confirmedAppointment);
                         _logger.Success($"Appointment {confirmedAppointment.Id} confirmed after successful payment.");
-                        await _notificationService.PushPaymentSuccessNotification(confirmedAppointment.ParentId, confirmedAppointment.Id);
+                        await _notificationService.PushPaymentSuccessNotification(confirmedAppointment.ParentId,
+                            confirmedAppointment.Id);
                     }
 
                     break;
