@@ -216,29 +216,59 @@ public class FeedbackService : IFeedbackService
         }
     }
 
-    public async Task<double> GetOverallRatingAsync()
+    public async Task<(double OverallRating, int TotalFeedbackCount)> GetOverallRatingAsync()
     {
         try
         {
             _logger.Info("Fetching overall rating from feedbacks.");
 
             var feedbacks = await _unitOfWork.FeedbackRepository.GetQueryable().ToListAsync();
+            int totalFeedbackCount = feedbacks.Count;
 
-            if (!feedbacks.Any())
+            if (totalFeedbackCount == 0)
             {
                 _logger.Warn("No feedbacks found. Returning default rating: 0.");
-                return 0;
+                return (0, 0);
             }
 
             double averageRating = feedbacks.Average(f => f.Rating.GetValueOrDefault());
 
-            _logger.Success($"Overall rating calculated: {averageRating}");
-            return Math.Round(averageRating, 2);
+            _logger.Success($"Overall rating calculated: {averageRating}, Total feedbacks: {totalFeedbackCount}");
+            return (Math.Round(averageRating, 2), totalFeedbackCount);
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
             _logger.Error($"Error while calculating overall rating: {ex.Message}");
             throw new Exception("An error occurred while calculating the overall rating. Please try again later.");
+        }
+    }
+
+    public async Task<Dictionary<int, int>> GetRatingDistributionAsync()
+    {
+        try
+        {
+            _logger.Info("Fetching rating distribution.");
+
+            var feedbacks = await _unitOfWork.FeedbackRepository.GetQueryable().ToListAsync();
+
+            var distribution = feedbacks
+                .GroupBy(f => f.Rating.GetValueOrDefault())
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            for (int i = 1; i <= 5; i++)
+            {
+                if (!distribution.ContainsKey(i))
+                {
+                    distribution[i] = 0;
+                }
+            }
+
+            return distribution.OrderByDescending(d => d.Key).ToDictionary(k => k.Key, v => v.Value);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error while fetching rating distribution: {ex.Message}");
+            throw new Exception("An error occurred while calculating rating distribution.");
         }
     }
 

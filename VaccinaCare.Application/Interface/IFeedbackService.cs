@@ -14,5 +14,8 @@ public interface IFeedbackService
     Task<List<GetFeedbackDto>> GetFeedbackByUserIdAsync();
 
     Task<Pagination<GetFeedbackDto>> GetAllFeedbacksAsync(PaginationParameter pagination);
-    Task<double> GetOverallRatingAsync();
+
+    Task<(double OverallRating, int TotalFeedbackCount)> GetOverallRatingAsync();
+
+    Task<Dictionary<int, int>> GetRatingDistributionAsync();
 }
