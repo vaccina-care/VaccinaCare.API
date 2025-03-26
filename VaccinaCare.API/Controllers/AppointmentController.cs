@@ -1,5 +1,4 @@
-﻿using System.Data.Entity.Infrastructure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -37,9 +36,7 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
-            {
                 return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
-            }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
 
@@ -139,7 +136,6 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-// [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -154,8 +150,7 @@ public class AppointmentController : ControllerBase
 
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = appointments.TotalCount,
-                appointments = appointments
+                totalCount = appointments.TotalCount, appointments
             }));
         }
         catch (Exception e)

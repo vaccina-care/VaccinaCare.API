@@ -331,9 +331,7 @@ public class AppointmentService : IAppointmentService
 
             //PHASE 11: GỬI NOTI CHO USER
             if (appointments.Any())
-            {
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointments.First().Id);
-            }
 
             // PHASE 12: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
             var appointmentDTOs = new List<AppointmentDTO>();
@@ -468,9 +466,7 @@ public class AppointmentService : IAppointmentService
 
             //Noti
             foreach (var appointment in appointments)
-            {
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
-            }
 
             // Lấy thông tin của child trước vòng lặp
             var child = await _unitOfWork.ChildRepository.GetByIdAsync(request.ChildId);
@@ -566,19 +562,14 @@ public class AppointmentService : IAppointmentService
                 .AsQueryable();
 
             // Filter by status if provided
-            if (status.HasValue)
-            {
-                query = query.Where(a => a.Status == status.Value);
-            }
+            if (status.HasValue) query = query.Where(a => a.Status == status.Value);
 
             // Apply search filter if provided
             if (!string.IsNullOrEmpty(searchTerm))
-            {
                 query = query.Where(a =>
                     a.AppointmentsVaccines.Any(av => av.Vaccine.VaccineName.Contains(searchTerm)) ||
                     a.AppointmentDate.ToString().Contains(searchTerm) ||
                     a.Child.FullName.Contains(searchTerm));
-            }
 
             var totalCount = await query.CountAsync();
             var appointments = await query

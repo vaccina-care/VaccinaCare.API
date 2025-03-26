@@ -9,9 +9,9 @@ namespace VaccinaCare.Application.Service;
 
 public class NotificationService : INotificationService
 {
+    private readonly IClaimsService _claimsService;
     private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IClaimsService _claimsService;
 
     public NotificationService(ILoggerService logger, IUnitOfWork unitOfWork, IClaimsService claimsService)
     {
@@ -26,11 +26,11 @@ public class NotificationService : INotificationService
         try
         {
             var userId = _claimsService.GetCurrentUserId;
-    
+
             var notifications = await _unitOfWork.NotificationRepository.GetAllAsync(
-                predicate: n => n.UserId == userId
+                n => n.UserId == userId
             );
-    
+
             return notifications
                 .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new NotificationResponseDTO

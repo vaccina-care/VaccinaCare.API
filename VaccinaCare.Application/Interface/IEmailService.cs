@@ -14,5 +14,6 @@ public interface IEmailService
 
     Task SendPackageAppointmentConfirmationAsync(EmailRequestDTO emailRequest, List<Appointment> appointments,
         Guid packageId);
+
     Task SendRescheduledAppointmentNotificationAsync(EmailRequestDTO emailRequest, List<AppointmentDTO> appointments);
 }
