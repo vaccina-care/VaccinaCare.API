@@ -60,10 +60,8 @@ public class PaymentController : ControllerBase
             var response = await _paymentService.ProcessPaymentCallback(Request.Query);
 
             if (response.Success)
-            {
                 return Redirect(
                     $"https://vaccina-care-fe.vercel.app/payment-success?orderId={response.OrderId}&transactionid={response.TransactionId}");
-            }
 
             return Redirect("https://vaccina-care-fe.vercel.app/payment-fail");
         }

@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
-using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Ultils;
 using VaccinaCare.Domain.Entities;
+using VaccinaCare.Domain.Enums;
+using VaccinaCare.Repository.Commons;
 
 namespace VaccinaCare.API.Controllers;
 
@@ -12,20 +13,26 @@ namespace VaccinaCare.API.Controllers;
 [Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
-    private readonly IVaccinePackageService _vaccinePackageService;
-    private readonly IVaccineService _vaccineService;
+    private readonly IAppointmentService _appointmentService;
     private readonly IChildService _childService;
     private readonly IFeedbackService _feedbackService;
+    private readonly IPaymentService _paymentService;
+    private readonly IVaccinePackageService _vaccinePackageService;
+    private readonly IVaccineService _vaccineService;
+
     public DashboardController(IVaccineService vaccineService,
         IVaccinePackageService vaccinePackageService,
         IChildService childService,
-        IFeedbackService feedbackService)
+        IFeedbackService feedbackService, IAppointmentService appointmentService, IPaymentService paymentService)
     {
         _vaccineService = vaccineService;
         _vaccinePackageService = vaccinePackageService;
         _childService = childService;
         _feedbackService = feedbackService;
+        _appointmentService = appointmentService;
+        _paymentService = paymentService;
     }
+
 
     [HttpGet("vaccines/available")]
     public async Task<IActionResult> GetAvailableVaccines()
@@ -34,11 +41,11 @@ public class DashboardController : Controller
         {
             var count = await _vaccineService.GetVaccineAvailable();
 
-            return Ok(ApiResult<int>.Success(count, "Available vaccines retrieved successfully."));
+            return Ok(ApiResult<int>.Success(count));
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
 
@@ -62,10 +69,11 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
-    [HttpGet("childs/profile")]
+
+    [HttpGet("children/profile")]
     public async Task<IActionResult> GetChildProfile()
     {
         try
@@ -76,10 +84,11 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<int>.Error($"An error occurred: {ex.Message}"));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
-    [HttpGet("feedback/overallrating")]
+
+    [HttpGet("feedback/overall-rating")]
     public async Task<IActionResult> GetOverallRating()
     {
         try
@@ -96,10 +105,11 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<double>.Error($"An error occurred : {ex.Message}"));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
-    [HttpGet("feedback/ratingdistribution")]
+
+    [HttpGet("feedback/rating-distribution")]
     public async Task<IActionResult> GetRatingDistribution()
     {
         try
@@ -110,7 +120,45 @@ public class DashboardController : Controller
         }
         catch (Exception ex)
         {
-            return Ok(ApiResult<object>.Error($"An error occurred: {ex.Message}"));
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
+        }
+    }
+
+    [HttpGet("appointments/all")]
+    public async Task<IActionResult> GetAllAppointments(
+        [FromQuery] PaginationParameter pagination,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] AppointmentStatus? status = null)
+    {
+        try
+        {
+            var appointments = await _appointmentService.GetAllAppointments(pagination, searchTerm, status);
+
+            return Ok(ApiResult<object>.Success(new
+            {
+                totalCount = appointments.TotalCount, appointments
+            }));
+        }
+        catch (Exception e)
+        {
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {e.Message}"));
+        }
+    }
+
+    [HttpGet("payments/amount")]
+    public async Task<IActionResult> GetPaymentSummary(
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] PaymentTransactionStatus? status = null)
+    {
+        try
+        {
+            var result = await _paymentService.GetPaymentTransactionSummaryAsync(startDate, endDate, status);
+            return Ok(ApiResult<object>.Success(result));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
 }

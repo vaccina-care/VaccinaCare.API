@@ -223,7 +223,7 @@ public class FeedbackService : IFeedbackService
             _logger.Info("Fetching overall rating from feedbacks.");
 
             var feedbacks = await _unitOfWork.FeedbackRepository.GetQueryable().ToListAsync();
-            int totalFeedbackCount = feedbacks.Count;
+            var totalFeedbackCount = feedbacks.Count;
 
             if (totalFeedbackCount == 0)
             {
@@ -231,7 +231,7 @@ public class FeedbackService : IFeedbackService
                 return (0, 0);
             }
 
-            double averageRating = feedbacks.Average(f => f.Rating.GetValueOrDefault());
+            var averageRating = feedbacks.Average(f => f.Rating.GetValueOrDefault());
 
             _logger.Success($"Overall rating calculated: {averageRating}, Total feedbacks: {totalFeedbackCount}");
             return (Math.Round(averageRating, 2), totalFeedbackCount);
@@ -255,13 +255,9 @@ public class FeedbackService : IFeedbackService
                 .GroupBy(f => f.Rating.GetValueOrDefault())
                 .ToDictionary(g => g.Key, g => g.Count());
 
-            for (int i = 1; i <= 5; i++)
-            {
+            for (var i = 1; i <= 5; i++)
                 if (!distribution.ContainsKey(i))
-                {
                     distribution[i] = 0;
-                }
-            }
 
             return distribution.OrderByDescending(d => d.Key).ToDictionary(k => k.Key, v => v.Value);
         }

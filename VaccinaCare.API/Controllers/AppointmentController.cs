@@ -1,5 +1,4 @@
-﻿using System.Data.Entity.Infrastructure;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
@@ -30,9 +29,6 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpPost("booking/single-vaccines")]
-    [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
-    [ProducesResponseType(typeof(ApiResult<object>), 400)]
-    [ProducesResponseType(typeof(ApiResult<object>), 500)]
     public async Task<IActionResult> BookAppointmentsForSingleVaccine(
         [FromBody] CreateAppointmentSingleVaccineDto request)
     {
@@ -40,32 +36,22 @@ public class AppointmentController : ControllerBase
         {
             var parentId = _claimsService.GetCurrentUserId;
             if (request == null || request.VaccineId == Guid.Empty || request.ChildId == Guid.Empty)
-            {
-                _logger.Warn("Dữ liệu đầu vào không hợp lệ.");
                 return BadRequest(ApiResult<object>.Error("Dữ liệu đầu vào không hợp lệ."));
-            }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
-        
+
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
-        catch (DbUpdateException dbEx)
+        catch (ArgumentException ex)
         {
-            _logger.Error($"Database error: {dbEx.InnerException?.Message ?? dbEx.Message}");
-            return StatusCode(500, ApiResult<object>.Error("Lỗi hệ thống khi lưu lịch hẹn. Vui lòng thử lại."));
-        }
-        catch (ArgumentException argEx)
-        {
-            _logger.Warn($"Validation error: {argEx.Message}");
-            return BadRequest(ApiResult<object>.Error(argEx.Message));
+            return BadRequest(ApiResult<object>.Error(ex.Message));
         }
         catch (Exception ex)
         {
-            _logger.Error($"Unexpected error: {ex.Message}");
-            return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
+            return StatusCode(500, ApiResult<object>.Error(ex.Message));
         }
     }
-    
+
     [HttpPost("booking/package-vaccines")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -150,7 +136,6 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-// [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
@@ -165,8 +150,7 @@ public class AppointmentController : ControllerBase
 
             return Ok(ApiResult<object>.Success(new
             {
-                totalCount = appointments.TotalCount,
-                appointments = appointments
+                totalCount = appointments.TotalCount, appointments
             }));
         }
         catch (Exception e)
