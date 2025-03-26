@@ -10,7 +10,7 @@ public interface INotificationService
 
     Task<Notification> PushNotificationWhenUserUseService(Guid userId, NotificationForUserDTO notificationDTO);
 
-    Task<Notification> PushPaymentSuccessNotification(Guid userId, NotificationForUserDTO notificationDTO);
+    Task<NotificationForAppointmentDTO> PushPaymentSuccessNotification(Guid userId, Guid appointmentId);
 
     Task<NotificationForAppointmentDTO> PushNotificationAppointmentSuccess(Guid userId, Guid appointmentId);
 

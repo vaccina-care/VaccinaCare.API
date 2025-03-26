@@ -346,6 +346,7 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info("Appointments saved to the database.");
 
+
             // PHASE 10: GỬI EMAIL CHO USER
             var user = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
             if (user != null)
@@ -362,8 +363,14 @@ public class AppointmentService : IAppointmentService
                         request.VaccineId);
             }
 
+            //PHASE 11: GỬI NOTI CHO USER
+            foreach( var appointment in appointments)
+            {
+                await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
+            }
 
-            // PHASE 11: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
+
+            // PHASE 12: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
             var appointmentDTOs = new List<AppointmentDTO>();
 
             foreach (var a in appointments)
@@ -492,6 +499,11 @@ public class AppointmentService : IAppointmentService
 
                 await _emailService.SendPackageAppointmentConfirmationAsync(emailRequest, appointments,
                     request.PackageId);
+            }
+            //Noti
+            foreach (var appointment in appointments)
+            {
+                await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
             }
 
             // Lấy thông tin của child trước vòng lặp

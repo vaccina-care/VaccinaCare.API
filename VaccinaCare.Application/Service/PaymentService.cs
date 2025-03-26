@@ -18,15 +18,17 @@ public class PaymentService : IPaymentService
     private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IVnPayService _vnPayService;
+    private readonly INotificationService _notificationService;
 
     public PaymentService(IUnitOfWork unitOfWork, ILoggerService loggerService, IEmailService emailService,
-        IVnPayService vnPayService, VaccinaCareDbContext dbContext, IConfiguration configuration)
+        IVnPayService vnPayService, VaccinaCareDbContext dbContext, IConfiguration configuration, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _logger = loggerService;
         _emailService = emailService;
         _vnPayService = vnPayService;
         _configuration = configuration;
+        _notificationService = notificationService;
     }
 
     public async Task<string> GetPaymentUrl(Guid appointmentId, HttpContext context)
@@ -161,6 +163,7 @@ public class PaymentService : IPaymentService
                         confirmedAppointment.Status = AppointmentStatus.Confirmed;
                         await _unitOfWork.AppointmentRepository.Update(confirmedAppointment);
                         _logger.Success($"Appointment {confirmedAppointment.Id} confirmed after successful payment.");
+                        await _notificationService.PushPaymentSuccessNotification(confirmedAppointment.ParentId, confirmedAppointment.Id);
                     }
 
                     break;

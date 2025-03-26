@@ -11,4 +11,5 @@ public interface IChildService
     Task<ChildDto> UpdateChildrenAsync(Guid childId, UpdateChildDto childDto);
 
     Task DeleteChildrenByParentIdAsync(Guid childId);
+    Task<int> GetChildrenProfile();
 }

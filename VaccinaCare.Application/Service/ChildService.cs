@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Minio.Helper;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Domain.DTOs.ChildDTOs;
@@ -314,6 +315,25 @@ public class ChildService : IChildService
         {
             _loggerService.Error($"Error while updating child profile: {ex.Message}");
             throw new Exception("An error occurred while updating the child profile. Please try again later.");
+        }
+    }
+
+    public async Task<int> GetChildrenProfile()
+    {
+        try
+        {
+            _loggerService.Info("Fetching children profile....");
+
+            var totalChildrenProfile = await _unitOfWork.ChildRepository.GetAllAsync();
+            var count = totalChildrenProfile.Count(c => c.IsDeleted == false);
+
+            _loggerService.Info($"Successfully retrieved vaccine count : {count}");
+            return count;
+        }
+        catch (Exception ex)
+        {
+            _loggerService.Error($"Error occured while getting children profile count: {ex.Message}");
+            return 0;   
         }
     }
 }
