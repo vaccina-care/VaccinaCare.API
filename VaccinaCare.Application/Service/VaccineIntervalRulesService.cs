@@ -19,75 +19,76 @@ public class VaccineIntervalRulesService : IVaccineIntervalRulesService
         _logger = logger;
         _claimsService = claimsService;
     }
-    
+
     /// <summary>
     ///     Kiểm tra xem vaccine này có thể tiêm chung với các vaccine khác hay không.
-    ///     - Nếu vaccine có quy tắc "không thể tiêm chung" → trả về false.
-    ///     - Nếu vaccine có yêu cầu khoảng cách tối thiểu giữa các lần tiêm,
-    ///     kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó.
-    ///     - Nếu khoảng cách không đủ → trả về false.
-    ///     - Nếu tất cả kiểm tra hợp lệ → trả về true.
     /// </summary>
-    public async Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds,
+    public async Task<(bool isCompatible, string message)> CheckVaccineCompatibility(Guid vaccineId,
+        List<Guid> bookedVaccineIds,
         DateTime appointmentDate)
     {
-        _logger.Info(
-            $"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId} with booked vaccines: {string.Join(", ", bookedVaccineIds)} on {appointmentDate}");
-
-        foreach (var bookedVaccineId in bookedVaccineIds)
+        try
         {
-            _logger.Info(
-                $"Checking compatibility between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}");
+            _logger.Info($"[CheckVaccineCompatibility] Start checking for vaccine {vaccineId}");
 
-            // Lấy quy tắc tiêm giữa vaccine được chọn và các vaccine đã đặt lịch trước đó
-            var rule = await _unitOfWork.VaccineIntervalRulesRepository
-                .FirstOrDefaultAsync(r =>
-                    (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
-                    (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
-
-            // Nếu có quy tắc xác định
-            if (rule != null)
+            // Get current vaccine name
+            var currentVaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(vaccineId);
+            if (currentVaccine == null)
             {
+                return (false, $"Vaccine with id {vaccineId} not found");
+            }
+
+            foreach (var bookedVaccineId in bookedVaccineIds)
+            {
+                // Get booked vaccine name
+                var bookedVaccine = await _unitOfWork.VaccineRepository.GetByIdAsync(bookedVaccineId);
+                if (bookedVaccine == null) continue;
+
                 _logger.Info(
-                    $"Found VaccineIntervalRule for {vaccineId} and {bookedVaccineId}: CanBeGivenTogether = {rule.CanBeGivenTogether}, MinIntervalDays = {rule.MinIntervalDays}");
+                    $"Checking compatibility between {currentVaccine.VaccineName} and {bookedVaccine.VaccineName}");
 
-                // Nếu hai loại vaccine không thể tiêm chung, trả về false
-                if (!rule.CanBeGivenTogether)
+                var rule = await _unitOfWork.VaccineIntervalRulesRepository
+                    .FirstOrDefaultAsync(r =>
+                        (r.VaccineId == vaccineId && r.RelatedVaccineId == bookedVaccineId) ||
+                        (r.VaccineId == bookedVaccineId && r.RelatedVaccineId == vaccineId));
+
+                if (rule != null)
                 {
-                    _logger.Info($"Vaccine {vaccineId} and {bookedVaccineId} cannot be given together.");
-                    return false;
-                }
-
-                // Nếu có yêu cầu về khoảng cách tối thiểu giữa các mũi tiêm
-                if (rule.MinIntervalDays > 0)
-                {
-                    // Kiểm tra lịch hẹn gần nhất của vaccine đã đặt trước đó
-                    var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
-                        .FirstOrDefaultAsync(a =>
-                            a.VaccineId == bookedVaccineId &&
-                            a.Appointment.AppointmentDate.HasValue &&
-                            a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
-
-                    // Nếu có lịch hẹn vi phạm khoảng cách tối thiểu, từ chối lịch tiêm
-                    if (lastAppointment != null)
+                    if (!rule.CanBeGivenTogether)
                     {
-                        _logger.Info(
-                            $"Vaccine {vaccineId} must be scheduled at least {rule.MinIntervalDays} days after vaccine {bookedVaccineId}. Appointment denied.");
-                        return false;
+                        string errorMessage =
+                            $"Vaccine {currentVaccine.VaccineName} cannot be given together with {bookedVaccine.VaccineName}.";
+                        _logger.Info(errorMessage);
+                        return (false, errorMessage);
+                    }
+
+                    if (rule.MinIntervalDays > 0)
+                    {
+                        var lastAppointment = await _unitOfWork.AppointmentsVaccineRepository
+                            .FirstOrDefaultAsync(a =>
+                                a.VaccineId == bookedVaccineId &&
+                                a.Appointment.AppointmentDate.HasValue &&
+                                a.Appointment.AppointmentDate.Value.AddDays(rule.MinIntervalDays) > appointmentDate);
+
+                        if (lastAppointment != null)
+                        {
+                            string errorMessage =
+                                $"Vaccine {currentVaccine.VaccineName} must be scheduled at least {rule.MinIntervalDays} days after {bookedVaccine.VaccineName}. Appointment denied.";
+                            _logger.Info(errorMessage);
+                            return (false, errorMessage);
+                        }
                     }
                 }
             }
-            else
-            {
-                _logger.Info(
-                    $"No interval rule found between VaccineId: {vaccineId} and BookedVaccineId: {bookedVaccineId}. Assuming compatible.");
-            }
-        }
 
-        _logger.Info($"[CheckVaccineCompatibility] Vaccine {vaccineId} is compatible with all booked vaccines.");
-        return true;
+            return (true, "Vaccine is compatible with all booked vaccines.");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Error checking vaccine compatibility: {ex.Message}");
+        }
     }
-    
+
     public async Task<VaccineIntervalRulesDTO> CreateVaccineIntervalRuleAsync(
         VaccineIntervalRulesDTO vaccineIntervalRulesDTO)
     {
