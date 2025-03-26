@@ -100,7 +100,6 @@ public class PaymentService : IPaymentService
             throw;
         }
     }
-
     public async Task<PaymentResponseModel> ProcessPaymentCallback(IQueryCollection query)
     {
         try
