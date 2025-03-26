@@ -105,11 +105,15 @@ public class FeedbackController : ControllerBase
 
             _logger.Success($"Fetched {feedbacks.Count} feedbacks successfully.");
 
-            return Ok(new ApiResult<Pagination<GetFeedbackDto>>
+            return Ok(new ApiResult<object>
             {
                 IsSuccess = true,
                 Message = "Feedback list retrieved successfully.",
-                Data = feedbacks
+                Data = new 
+                {
+                    Feedbacks = feedbacks,
+                    totalCount = feedbacks.TotalCount
+                }
             });
         }
         catch (Exception ex)

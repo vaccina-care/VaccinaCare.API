@@ -9,7 +9,7 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
-//[Authorize(Policy = "AdminPolicy")]
+[Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
     private readonly IVaccinePackageService _vaccinePackageService;
@@ -84,13 +84,33 @@ public class DashboardController : Controller
     {
         try
         {
-            double overallRating = await _feedbackService.GetOverallRatingAsync();
+            var (overallRating, totalFeedbackCount) = await _feedbackService.GetOverallRatingAsync();
 
-            return Ok(ApiResult<double>.Success(overallRating, "Overall rating retrieved successfully."));
+            var response = new
+            {
+                AverageRating = overallRating,
+                TotalRatings = totalFeedbackCount
+            };
+
+            return Ok(ApiResult<object>.Success(response, "Overall rating retrieved successfully."));
         }
         catch (Exception ex)
         {
             return Ok(ApiResult<double>.Error($"An error occurred : {ex.Message}"));
+        }
+    }
+    [HttpGet("feedback/ratingdistribution")]
+    public async Task<IActionResult> GetRatingDistribution()
+    {
+        try
+        {
+            var distribution = await _feedbackService.GetRatingDistributionAsync();
+
+            return Ok(ApiResult<object>.Success(distribution, "Rating distribution retrieved successfully."));
+        }
+        catch (Exception ex)
+        {
+            return Ok(ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
 }
