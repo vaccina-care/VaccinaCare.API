@@ -299,7 +299,6 @@ public class AppointmentService : IAppointmentService
             _logger.Info(
                 $"[CheckVaccineCompatibility] Vaccine {request.VaccineId} is compatible with all booked vaccines.");
 
-
             // PHASE 7: XÁC ĐỊNH SỐ MŨI ĐÃ TIÊM & TÍNH TOÁN SỐ LỊCH CẦN TẠO
             var hasPreviousRecords = remainingDoses != vaccine.RequiredDoses;
             var completedDoses = hasPreviousRecords ? vaccine.RequiredDoses - remainingDoses : 0;
@@ -346,7 +345,6 @@ public class AppointmentService : IAppointmentService
 
             _logger.Info("Appointments saved to the database.");
 
-
             // PHASE 10: GỬI EMAIL CHO USER
             var user = await _unitOfWork.UserRepository.GetByIdAsync(parentId);
             if (user != null)
@@ -364,11 +362,10 @@ public class AppointmentService : IAppointmentService
             }
 
             //PHASE 11: GỬI NOTI CHO USER
-            foreach( var appointment in appointments)
+            foreach (var appointment in appointments)
             {
                 await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
             }
-
 
             // PHASE 12: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ
             var appointmentDTOs = new List<AppointmentDTO>();
