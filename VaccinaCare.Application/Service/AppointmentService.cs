@@ -362,9 +362,9 @@ public class AppointmentService : IAppointmentService
             }
 
             //PHASE 11: GỬI NOTI CHO USER
-            foreach (var appointment in appointments)
+            if (appointments.Any())
             {
-                await _notificationService.PushNotificationAppointmentSuccess(parentId, appointment.Id);
+                await _notificationService.PushNotificationAppointmentSuccess(parentId, appointments.First().Id);
             }
 
             // PHASE 12: CHUYỂN ĐỔI DỮ LIỆU SANG DTO VÀ TRẢ VỀ KẾT QUẢ

@@ -11,11 +11,46 @@ public class NotificationService : INotificationService
 {
     private readonly ILoggerService _logger;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IClaimsService _claimsService;
 
-    public NotificationService(ILoggerService logger, IUnitOfWork unitOfWork)
+    public NotificationService(ILoggerService logger, IUnitOfWork unitOfWork, IClaimsService claimsService)
     {
         _logger = logger;
         _unitOfWork = unitOfWork;
+        _claimsService = claimsService;
+    }
+
+    // Update the service method to return DTOs
+    public async Task<List<NotificationResponseDTO>> GetAllNotificationsByUserId()
+    {
+        try
+        {
+            var userId = _claimsService.GetCurrentUserId;
+    
+            var notifications = await _unitOfWork.NotificationRepository.GetAllAsync(
+                predicate: n => n.UserId == userId
+            );
+    
+            return notifications
+                .OrderByDescending(n => n.CreatedAt)
+                .Select(n => new NotificationResponseDTO
+                {
+                    Id = n.Id,
+                    Title = n.Title,
+                    Content = n.Content,
+                    Url = n.Url,
+                    IsRead = n.IsRead,
+                    Role = n.Role,
+                    CreatedAt = n.CreatedAt,
+                    AppointmentId = n.AppointmentId
+                })
+                .ToList();
+        }
+        catch (Exception e)
+        {
+            _logger.Error($"Error retrieving notifications for user: {e.Message}");
+            throw;
+        }
     }
 
     public async Task<NotificationForAppointmentDTO> PushNotificationAppointmentRemider(Guid userId, Guid appointmentId)
