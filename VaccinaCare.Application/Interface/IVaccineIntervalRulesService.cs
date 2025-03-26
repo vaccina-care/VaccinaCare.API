@@ -8,5 +8,8 @@ public interface IVaccineIntervalRulesService
     Task<List<GetVaccineInternalRulesDto>> GetAllVaccineIntervalRulesAsync();
     Task<bool> DeleteVaccineIntervalRuleAsync(Guid id);
     Task<VaccineIntervalRulesDTO> UpdateVaccineIntervalRuleAsync(Guid id, VaccineIntervalRulesDTO updateDto);
-    Task<bool> CheckVaccineCompatibility(Guid vaccineId, List<Guid> bookedVaccineIds, DateTime appointmentDate);
+    Task<(bool isCompatible, string message)> CheckVaccineCompatibility(Guid vaccineId,
+        List<Guid> bookedVaccineIds,
+        DateTime appointmentDate);
+    
 }
