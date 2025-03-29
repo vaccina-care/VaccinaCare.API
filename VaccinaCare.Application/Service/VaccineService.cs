@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
+using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
@@ -445,6 +447,35 @@ public class VaccineService : IVaccineService
         {
             _logger.Error($"Error occurred while getting vaccine count: {ex.Message}");
             return 0;
+        }
+    }
+
+    public async Task<List<VaccineBookingDto>> GetTop5MostBookedVaccinesAsync()
+    {
+        try
+        { 
+
+            _logger.Info("Fetching top 5 most booked vaccines...");
+
+            var result = await _unitOfWork.AppointmentsVaccineRepository.GetQueryable()
+                .Where(av => av.Vaccine != null)
+                .GroupBy(av => new { av.Vaccine.Id, av.Vaccine.VaccineName })
+                .Select(g => new VaccineBookingDto
+                {
+                    VaccineId = g.Key.Id,
+                    VaccineName = g.Key.VaccineName,
+                    BookingCount = g.Count()
+                })
+                .OrderByDescending(v => v.BookingCount)
+                .Take(5)
+                .ToListAsync();
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"Error while fetching top 5 most booked vaccines: {ex.Message}\n{ex.StackTrace}");
+            return new List<VaccineBookingDto>();
         }
     }
 }
