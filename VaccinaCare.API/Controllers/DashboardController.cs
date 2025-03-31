@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Ultils;
+using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Domain.Enums;
 using VaccinaCare.Repository.Commons;
@@ -10,7 +11,7 @@ namespace VaccinaCare.API.Controllers;
 
 [ApiController]
 [Route("api/dashboard")]
-[Authorize(Policy = "AdminPolicy")]
+//[Authorize(Policy = "AdminPolicy")]
 public class DashboardController : Controller
 {
     private readonly IAppointmentService _appointmentService;
@@ -48,7 +49,25 @@ public class DashboardController : Controller
             return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
         }
     }
+    [HttpGet("vaccines/top5-booked")]
+    public async Task<IActionResult> GetTop5MostBookedVaccines()
+    {
+        try
+        {
+            var topVaccines = await _vaccineService.GetTop5MostBookedVaccinesAsync();
 
+            if (topVaccines == null || !topVaccines.Any())
+            {
+                return Ok(ApiResult<object>.Error("No vaccine bookings found."));
+            }
+
+            return Ok(ApiResult<List<VaccineBookingDto>>.Success(topVaccines));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ApiResult<object>.Error($"An error occurred: {ex.Message}"));
+        }
+    }
     [HttpGet("vaccines/packages/most-booked")]
     public async Task<IActionResult> GetMostBookedPackage()
     {

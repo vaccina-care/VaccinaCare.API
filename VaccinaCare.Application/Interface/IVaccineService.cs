@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
+using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Interface;
 
@@ -19,4 +20,5 @@ public interface IVaccineService
 
     Task<VaccineDto> GetVaccineById(Guid id);
     Task<int> GetVaccineAvailable();
+    Task<List<VaccineBookingDto>> GetTop5MostBookedVaccinesAsync();
 }
