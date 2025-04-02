@@ -417,9 +417,9 @@ public class AppointmentService : IAppointmentService
                                 && a.Status != AppointmentStatus.Cancelled)
                     .ToListAsync();
 
-                if (recentAppointments.Any())
-                    throw new ArgumentException(
-                        $"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây. Vui lòng chọn ngày khác.");
+                //if (recentAppointments.Any())
+                //    throw new ArgumentException(
+                //        $"Trẻ đã có lịch hẹn tiêm {vaccine.VaccineName} gần đây. Vui lòng chọn ngày khác.");
 
                 for (var doseNumber = 1; doseNumber <= vaccine.RequiredDoses; doseNumber++)
                 {
