@@ -87,15 +87,6 @@ public class CustomerController : ControllerBase
                 Data = updatedUser
             });
         }
-        catch (KeyNotFoundException knfEx)
-        {
-            return NotFound(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = knfEx.Message,
-                Data = null
-            });
-        }
         catch (Exception ex)
         {
             return StatusCode(500, new ApiResult<object>

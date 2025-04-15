@@ -52,15 +52,6 @@ public class ChildController : ControllerBase
                 Data = child
             });
         }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Child creation failed: {ex.Message}");
-            return NotFound(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message
-            });
-        }
         catch (Exception ex)
         {
             _logger.Error($"Error while creating child profile: {ex.Message}");
@@ -121,10 +112,6 @@ public class ChildController : ControllerBase
             return Ok(new ApiResult<ChildDto>
                 { IsSuccess = true, Message = "Child profile updated successfully.", Data = result });
         }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
-        }
         catch (Exception)
         {
             return StatusCode(500,
@@ -147,10 +134,6 @@ public class ChildController : ControllerBase
         {
             await _childService.DeleteChildrenByParentIdAsync(childId);
             return Ok(new ApiResult<object> { IsSuccess = true, Message = "Child profile deleted successfully." });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(new ApiResult<object> { IsSuccess = false, Message = ex.Message });
         }
         catch (Exception)
         {

@@ -127,10 +127,6 @@ public class VaccineController : ControllerBase
                 await _vaccineService.UpdateVaccine(vaccineId, request, vaccinePictureFile);
             return Ok(ApiResult<VaccineDto>.Success(updatedVaccine, "Vaccine updated successfully."));
         }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ApiResult<object>.Error(ex.Message));
-        }
         catch (Exception ex)
         {
             return StatusCode(500, ApiResult<object>.Error("An unexpected error occurred during update."));

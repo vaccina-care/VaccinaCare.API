@@ -22,30 +22,6 @@ public class FeedbackService : IFeedbackService
         _claimsService = claimsService;
     }
 
-    // public async Task<List<FeedbackDTO>> GetFeedbacksByUserId(Guid userId)
-    // {
-    //     try
-    //     {
-    //         var feedbacks = _unitOfWork.FeedbackRepository.GetQueryable().Where(u => u.UserId == userId).ToList();
-    //
-    //         foreach (var feedback in feedbacks)
-    //         {
-    //             return new List<FeedbackDTO>()
-    //             {
-    //                  = feedbacks.AppointmentId.GetValueOrDefault(),
-    //                 Rating = feedback.Rating.GetValueOrDefault(),
-    //                 Comments = feedback.Comments
-    //             };
-    //         }
-    //
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Console.WriteLine(e);
-    //         throw;
-    //     }
-    // }
-
     public async Task<FeedbackDTO> CreateFeedbackAsync(FeedbackDTO feedbackDto)
     {
         try
@@ -84,8 +60,7 @@ public class FeedbackService : IFeedbackService
             {
                 AppointmentId = feedbackDto.AppointmentId,
                 Rating = feedbackDto.Rating,
-                Comments = feedbackDto.Comments ?? "No comments provided.",
-                CreatedAt = DateTime.UtcNow
+                Comments = feedbackDto.Comments
             };
 
             await _unitOfWork.FeedbackRepository.AddAsync(feedback);
@@ -109,7 +84,6 @@ public class FeedbackService : IFeedbackService
 
     public async Task DeleteFeedbackAsync(Guid feedbackId)
     {
-        {
             try
             {
                 _logger.Info($"Attempting to delete feedback with ID: {feedbackId}.");
@@ -132,7 +106,6 @@ public class FeedbackService : IFeedbackService
                 _logger.Error($"An error occurred while deleting feedback {feedbackId}: {ex.Message}");
                 throw;
             }
-        }
     }
 
     public async Task<Pagination<GetFeedbackDto>> GetAllFeedbacksAsync(PaginationParameter pagination)

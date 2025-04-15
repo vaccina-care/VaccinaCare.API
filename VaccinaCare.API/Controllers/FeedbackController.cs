@@ -62,15 +62,6 @@ public class FeedbackController : ControllerBase
                 Message = ex.Message
             });
         }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Failed to create feedback: {ex.Message}");
-            return Ok(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message
-            });
-        }
         catch (InvalidOperationException ex)
         {
             _logger.Warn($"Invalid operation: {ex.Message}");
@@ -188,15 +179,6 @@ public class FeedbackController : ControllerBase
                 Data = updatedFeedback
             });
         }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Feedback {feedbackId} not found: {ex.Message}");
-            return Ok(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message
-            });
-        }
         catch (Exception ex)
         {
             _logger.Error($"Error updating feedback {feedbackId}: {ex.Message}");
@@ -225,15 +207,6 @@ public class FeedbackController : ControllerBase
             {
                 IsSuccess = true,
                 Message = "Feedback deleted successfully."
-            });
-        }
-        catch (KeyNotFoundException ex)
-        {
-            _logger.Warn($"Feedback {feedbackId} not found: {ex.Message}");
-            return Ok(new ApiResult<object>
-            {
-                IsSuccess = false,
-                Message = ex.Message
             });
         }
         catch (Exception ex)
