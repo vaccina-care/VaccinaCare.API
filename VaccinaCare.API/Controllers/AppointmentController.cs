@@ -46,7 +46,7 @@ public class AppointmentController : ControllerBase
             }
 
             var appointmentDTOs = await _appointmentService.GenerateAppointmentsForSingleVaccine(request, parentId);
-        
+
             return Ok(ApiResult<List<AppointmentDTO>>.Success(appointmentDTOs, "Đặt lịch tiêm chủng thành công!"));
         }
         catch (DbUpdateException dbEx)
@@ -65,7 +65,7 @@ public class AppointmentController : ControllerBase
             return StatusCode(500, ApiResult<object>.Error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau."));
         }
     }
-    
+
     [HttpPost("booking/package-vaccines")]
     [ProducesResponseType(typeof(ApiResult<List<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
@@ -150,7 +150,7 @@ public class AppointmentController : ControllerBase
     }
 
     [HttpGet]
-// [Authorize(Policy = "StaffPolicy")]
+    [Authorize(Policy = "StaffPolicy")]
     [ProducesResponseType(typeof(ApiResult<Pagination<AppointmentDTO>>), 200)]
     [ProducesResponseType(typeof(ApiResult<object>), 400)]
     [ProducesResponseType(typeof(ApiResult<object>), 500)]
