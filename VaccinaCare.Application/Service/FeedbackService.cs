@@ -84,28 +84,28 @@ public class FeedbackService : IFeedbackService
 
     public async Task DeleteFeedbackAsync(Guid feedbackId)
     {
-            try
+        try
+        {
+            _logger.Info($"Attempting to delete feedback with ID: {feedbackId}.");
+
+            var feedback = await _unitOfWork.FeedbackRepository.GetByIdAsync(feedbackId);
+
+            if (feedback == null)
             {
-                _logger.Info($"Attempting to delete feedback with ID: {feedbackId}.");
-
-                var feedback = await _unitOfWork.FeedbackRepository.GetByIdAsync(feedbackId);
-
-                if (feedback == null)
-                {
-                    _logger.Warn($"Feedback {feedbackId} not found.");
-                    throw new KeyNotFoundException($"Feedback with ID {feedbackId} not found.");
-                }
-
-                await _unitOfWork.FeedbackRepository.SoftRemove(feedback);
-                await _unitOfWork.SaveChangesAsync();
-
-                _logger.Info($"Successfully deleted feedback with ID: {feedbackId}.");
+                _logger.Warn($"Feedback {feedbackId} not found.");
+                throw new KeyNotFoundException($"Feedback with ID {feedbackId} not found.");
             }
-            catch (Exception ex)
-            {
-                _logger.Error($"An error occurred while deleting feedback {feedbackId}: {ex.Message}");
-                throw;
-            }
+
+            await _unitOfWork.FeedbackRepository.SoftRemove(feedback);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.Info($"Successfully deleted feedback with ID: {feedbackId}.");
+        }
+        catch (Exception ex)
+        {
+            _logger.Error($"An error occurred while deleting feedback {feedbackId}: {ex.Message}");
+            throw;
+        }
     }
 
     public async Task<Pagination<GetFeedbackDto>> GetAllFeedbacksAsync(PaginationParameter pagination)

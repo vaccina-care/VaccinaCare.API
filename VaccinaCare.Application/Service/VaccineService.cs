@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
-using VaccinaCare.Application.Service.Common;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
 using VaccinaCare.Domain.Entities;
 using VaccinaCare.Repository.Interfaces;
@@ -453,8 +452,7 @@ public class VaccineService : IVaccineService
     public async Task<List<VaccineBookingDto>> GetTop5MostBookedVaccinesAsync()
     {
         try
-        { 
-
+        {
             _logger.Info("Fetching top 5 most booked vaccines...");
 
             var result = await _unitOfWork.AppointmentsVaccineRepository.GetQueryable()

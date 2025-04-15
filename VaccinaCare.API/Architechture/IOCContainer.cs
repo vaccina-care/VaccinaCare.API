@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Net.payOS;
+using VaccinaCare.API.Resolvers;
 using VaccinaCare.Application.Interface;
 using VaccinaCare.Application.Interface.Common;
 using VaccinaCare.Application.Interface.PaymentService;
@@ -36,12 +37,24 @@ public static class IOCContainer
 
         services.SetupCORS();
         services.SetupJWT();
-
+        services.SetupGraphQl();
         services.SetupVnpay();
         services.SetupPayOs();
         return services;
     }
 
+
+
+    public static IServiceCollection SetupGraphQl(this IServiceCollection services)
+    {
+        services
+            .AddGraphQLServer()
+            .AddErrorFilter<GraphQLErrorFilter>()
+            .AddQueryType<Query>();
+        
+        return services;
+    }
+    
     public static IServiceCollection SetupPayOs(this IServiceCollection services)
     {
         IConfiguration configuration = new ConfigurationBuilder()
@@ -84,10 +97,9 @@ public static class IOCContainer
             .AddEnvironmentVariables()
             .Build();
 
-        services.AddDbContext<VaccinaCareDbContext>(options =>
-        {
-            options.UseSqlServer(configuration["ConnectionStrings:DefaultConnection"]);
-        });
+        services.AddDbContext<VaccinaCareDbContext>(options => 
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")), 
+            ServiceLifetime.Scoped); 
 
         return services;
     }
@@ -97,6 +109,7 @@ public static class IOCContainer
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
         // Add application services
+        services.AddScoped<Query>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ICurrentTime, CurrentTime>();
         services.AddScoped<IClaimsService, ClaimsService>();

@@ -1,12 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using SwaggerThemes;
-using VaccinaCare.API.Architechture;
-using VaccinaCare.API.GraphQL.Queries;
-using VaccinaCare.API.GraphQL.Types;
 using HotChocolate.AspNetCore;
 using HotChocolate.AspNetCore.Playground;
+using SwaggerThemes;
+using VaccinaCare.API.Architechture;
 
 var builder = WebApplication.CreateBuilder(args);
 // Load cấu hình từ appsettings.json và environment variables
@@ -24,16 +22,16 @@ builder.Services.AddControllers()
 // Tắt việc map claim mặc định
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-// Đoạn code trong phương thức ConfigureServices
-builder.Services
-    .AddGraphQLServer()
-    .AddQueryType(d => d.Name("Query"))
-    .AddTypeExtension<VaccineQueries>()
-    .AddType<VaccineType>()
-    .AddType<BloodTypeEnum>()
-    .AddFiltering()
-    .AddSorting()
-    .AddProjections();
+// Thêm CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 builder.WebHost.UseUrls("http://0.0.0.0:5000");
 builder.Services.SetupIOCContainer();
@@ -52,18 +50,10 @@ if (app.Environment.IsDevelopment())
         c.InjectStylesheet("/swagger-ui/custom-theme.css");
         c.HeadContent = $"<style>{SwaggerTheme.GetSwaggerThemeCss(Theme.Dracula)}</style>";
     });
-    
-    // Thêm GraphQL Playground
-    app.UsePlayground(new PlaygroundOptions
-    {
-        QueryPath = "/graphql",
-        Path = "/playground"
-    });
 }
 
 // app.UseHttpsRedirection();
 
-app.UseRouting();
 try
 {
     app.ApplyMigrations(app.Logger);
@@ -72,6 +62,10 @@ catch (Exception e)
 {
     app.Logger.LogError(e, "An problem occurred during migration!");
 }
+
+app
+    .UseRouting()
+    .UseEndpoints(endpoints => { endpoints.MapGraphQL(); });
 
 app.UseStaticFiles();
 
@@ -82,16 +76,15 @@ app.UseSwaggerUI(c =>
     c.InjectJavascript("./custom-swagger.js");
     c.InjectStylesheet("./custom-swagger.css");
 });
+
 app.UseCors("CorsPolicy");
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapGraphQL(); 
-    
+    endpoints.MapGraphQL("/api/graphql"); // Specify a clear path
+    endpoints.MapControllers();
 });
-
-app.MapControllers();
 
 app.Run();

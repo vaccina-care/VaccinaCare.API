@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Http;
 using VaccinaCare.Domain.DTOs.VaccineDTOs;
-using VaccinaCare.Domain.Entities;
 
 namespace VaccinaCare.Application.Interface;
 
